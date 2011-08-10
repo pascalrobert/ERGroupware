@@ -1,0 +1,4 @@
+er.extensions.ERXLocalizer.defaultLanguage=English
+er.extensions.ERXLocalizer.fileNamesToWatch=("Localizable.strings","ValidationTemplate.strings")
+er.extensions.ERXLocalizer.availableLanguages=(English,French)
+er.extensions.ERXLocalizer.frameworkSearchPath=(app,ERCalendar2)

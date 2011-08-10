@@ -1,0 +1,33 @@
+Another take at ERCalendar. This time, it's using iCal4j to generate the data, so you can use all of the 
+available APIs from iCal4j to extend it to your needs.
+
+Sample call to create your calendar data:
+
+  public WOActionResults createCalendar() throws URISyntaxException, SocketException, ParseException {
+    ERCalendar calendar = new ERCalendar();
+    
+    java.util.Calendar startTime = GregorianCalendar.getInstance();
+    java.util.Calendar endTime = GregorianCalendar.getInstance();
+    endTime.add(java.util.Calendar.HOUR, 2);
+    
+    EREvent event = new EREvent(calendar);
+    event.setClassification(Classification.PUBLIC);
+    event.setDescription("Long description/note");
+    event.setEndTime(new NSTimestamp(endTime.getTimeInMillis()));
+    event.setFreeBusyStatus(FreeBusyStatus.BUSY_TENTATIVE);
+    event.setLocation(new Location("Montreal"));
+    event.setOrganizer(new Organizer("probert@macti.ca"));
+    event.setCategories("Category 1, Category 2");
+    event.setPriority(Priority.HIGH);
+    event.setStartTime(new NSTimestamp(startTime.getTimeInMillis()));
+    event.setStatus(EventStatus.CONFIRMED);
+    event.setSummary("Title of the event");
+    event.setTransparency(Transparency.TRANSPARENT);
+    event.setUrl(new URI("http://www.wowodc.com"));
+    event.addAttendee(new Attendee("probert@conatus.ca"));
+    
+    Calendar calendarData = calendar.transformToICalObject();
+    ERPublishCalendarPage nextPage = (ERPublishCalendarPage)pageWithName(ERPublishCalendarPage.class);
+    nextPage.setCalendar(calendarData);
+    return nextPage;
+  }
