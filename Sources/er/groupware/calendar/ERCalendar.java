@@ -19,6 +19,8 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 
+import er.groupware.calendar.exceptions.ZimbraTooManyObjectsException;
+
 public class ERCalendar {
 
   private NSMutableArray<EREvent> events;

@@ -1,4 +1,4 @@
-package er.groupware.calendar;
+package er.groupware.calendar.exceptions;
 
 public class ZimbraTooManyObjectsException extends Throwable {
 
