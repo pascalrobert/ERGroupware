@@ -17,7 +17,7 @@ public enum CUType implements ICalendarProperty {
   GROUP("Groupe", CuType.GROUP, ZCalendarUserType.GRO),
   RESOURCE("Ressource", CuType.RESOURCE, ZCalendarUserType.RES),
   ROOM("Salle", CuType.ROOM, ZCalendarUserType.ROO),
-  UNKNOW("Inconnu", CuType.UNKNOWN, ZCalendarUserType.UNK);
+  UNKNOWN("Inconnu", CuType.UNKNOWN, ZCalendarUserType.UNK);
 
   private String localizedDescription;
   private CuType rfc2445Value;
