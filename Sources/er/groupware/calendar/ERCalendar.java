@@ -5,6 +5,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 
 import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VToDo;
@@ -123,6 +124,21 @@ public class ERCalendar {
       icalCalendar.getComponents().add(vAlarm);
     }
     return icalCalendar;
+  }
+  
+  public static ERCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je) throws ServiceException, SocketException, URISyntaxException {
+    ERCalendar newCalendar = new ERCalendar();
+    newCalendar.setProductId(defaultProdId);
+
+    NSMutableArray<EREvent> events = new NSMutableArray<EREvent>();
+
+    for (Object component : je.getComponents(Component.VEVENT)) {
+      EREvent event = new EREvent(newCalendar);
+      EREvent.transformFromICalObject((VEvent)component, event);
+      events.addObject(event);
+    }
+    newCalendar.setEvents(events);
+    return newCalendar;
   }
 
   public static XMLElement transformToZimbraObject(ERCalendar calendar) throws ZimbraTooManyObjectsException {

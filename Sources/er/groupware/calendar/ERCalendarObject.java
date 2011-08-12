@@ -12,11 +12,16 @@ import java.util.TimeZone;
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.parameter.Cn;
+import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
+import net.fortuna.ical4j.model.property.BusyType;
 import net.fortuna.ical4j.model.property.Categories;
+import net.fortuna.ical4j.model.property.Clazz;
 import net.fortuna.ical4j.model.property.Description;
 import net.fortuna.ical4j.model.property.DtEnd;
 import net.fortuna.ical4j.model.property.DtStart;
@@ -29,16 +34,14 @@ import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.util.UidGenerator;
 
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.zclient.ZAlarm;
-import com.zimbra.cs.zclient.ZAlarm.ZTriggerType;
 import com.zimbra.cs.zclient.ZDateTime;
-import com.zimbra.cs.zclient.ZInvite;
 import com.zimbra.cs.zclient.ZInvite.ZAttendee;
 import com.zimbra.cs.zclient.ZInvite.ZClass;
 import com.zimbra.cs.zclient.ZInvite.ZComponent.ZReply;
@@ -47,8 +50,6 @@ import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
 
 import er.extensions.eof.ERXKey;
 import er.extensions.validation.ERXValidationException;
-import er.groupware.calendar.enums.AlarmAction;
-import er.groupware.calendar.enums.AlarmDurationType;
 import er.groupware.calendar.enums.AttendeeRole;
 import er.groupware.calendar.enums.CUType;
 import er.groupware.calendar.enums.Classification;
@@ -314,7 +315,7 @@ public abstract class ERCalendarObject {
     if (attendee.cutype() != null) {
       icAttendee.getParameters().add(attendee.cutype().rfc2445Value());
     } else {
-      icAttendee.getParameters().add(CUType.UNKNOW.rfc2445Value());        
+      icAttendee.getParameters().add(CUType.UNKNOWN.rfc2445Value());        
     }
     
     return icAttendee;
@@ -390,6 +391,94 @@ public abstract class ERCalendarObject {
     }
     
     return calComponent;
+  }
+  
+  public static ERCalendarObject transformFromICalObject(CalendarComponent calComponent, ERCalendarObject newObject) throws SocketException, URISyntaxException {
+    net.fortuna.ical4j.model.property.Organizer zOrg = (net.fortuna.ical4j.model.property.Organizer)calComponent.getProperty(Property.ORGANIZER);
+    net.fortuna.ical4j.model.PropertyList attendees = calComponent.getProperties(Property.ATTENDEE);
+    net.fortuna.ical4j.model.property.Clazz classification = (net.fortuna.ical4j.model.property.Clazz)calComponent.getProperty(Property.CLASS);
+    net.fortuna.ical4j.model.property.BusyType freeBusy = (net.fortuna.ical4j.model.property.BusyType)calComponent.getProperty(Property.BUSYTYPE);
+    net.fortuna.ical4j.model.property.DtStart startTime = (net.fortuna.ical4j.model.property.DtStart)calComponent.getProperty(Property.DTSTART);
+    net.fortuna.ical4j.model.property.DtEnd endTime = (net.fortuna.ical4j.model.property.DtEnd)calComponent.getProperty(Property.DTEND);
+    net.fortuna.ical4j.model.property.Summary summary = (net.fortuna.ical4j.model.property.Summary)calComponent.getProperty(Property.SUMMARY);
+    net.fortuna.ical4j.model.property.Location location = (net.fortuna.ical4j.model.property.Location)calComponent.getProperty(Property.LOCATION);
+    net.fortuna.ical4j.model.property.Categories categories = (net.fortuna.ical4j.model.property.Categories)calComponent.getProperty(Property.CATEGORIES);
+    net.fortuna.ical4j.model.property.Comment description = (net.fortuna.ical4j.model.property.Comment)calComponent.getProperty(Property.COMMENT);
+    net.fortuna.ical4j.model.PropertyList contacts = calComponent.getProperties(Property.CONTACT);
+    net.fortuna.ical4j.model.property.Geo geo = (net.fortuna.ical4j.model.property.Geo)calComponent.getProperty(Property.GEO);
+    net.fortuna.ical4j.model.property.Url url = (net.fortuna.ical4j.model.property.Url)calComponent.getProperty(Property.URL);
+    net.fortuna.ical4j.model.property.Priority priority = (net.fortuna.ical4j.model.property.Priority)calComponent.getProperty(Property.PRIORITY);
+    net.fortuna.ical4j.model.PropertyList extras = calComponent.getProperties(Property.EXPERIMENTAL_PREFIX);
+    
+    Organizer organizer = new Organizer();
+    //organizer.setEmailAddress(zOrg.getParameter(Parameter.VALUE).getValue());
+    organizer.setName(zOrg.getParameter(Parameter.CN).getValue());
+    newObject.setOrganizer(organizer);
+    
+    for (Object zAttendee: attendees) {
+      net.fortuna.ical4j.model.property.Attendee oldAttendee = (net.fortuna.ical4j.model.property.Attendee)zAttendee;
+      Attendee attendee = new Attendee();
+      CuType type = (CuType)oldAttendee.getParameter(Parameter.CUTYPE);
+      if (type == CuType.GROUP) {
+        attendee.setCutype(CUType.GROUP);
+      } else if (type == CuType.INDIVIDUAL) {
+        attendee.setCutype(CUType.INDIVIDUAL);
+      } else if (type == CuType.RESOURCE) {
+        attendee.setCutype(CUType.RESOURCE);
+      } else if (type == CuType.ROOM) {
+        attendee.setCutype(CUType.ROOM);
+      } else if (type == CuType.UNKNOWN) {
+        attendee.setCutype(CUType.UNKNOWN);
+      }      
+      attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
+      newObject.addAttendee(attendee);
+    }
+
+    if (classification == Clazz.PUBLIC) {
+      newObject.setClassification(Classification.PUBLIC);
+    } else if (classification == Clazz.PRIVATE) {
+      newObject.setClassification(Classification.PRIVATE);
+    } else if (classification == Clazz.CONFIDENTIAL) {
+      newObject.setClassification(Classification.CONFIDENTIAL);
+    } else {
+      newObject.setClassification(Classification.PUBLIC);
+    }
+
+    if (freeBusy == BusyType.BUSY) {
+      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY);
+    } else if (freeBusy == BusyType.BUSY_TENTATIVE) {
+      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY_TENTATIVE);
+    } else if (freeBusy == BusyType.BUSY_UNAVAILABLE) {
+      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY_UNAVAILABLE);
+    }
+    
+    newObject.setStartTime(new NSTimestamp(startTime.getDate()));
+    newObject.setEndTime(new NSTimestamp(endTime.getDate()));
+    newObject.setSummary(summary.getValue());
+    newObject.setLocation(location.getValue());
+    if (categories != null) {
+      newObject.setCategories(categories.getValue());
+    }
+    if (description != null) {
+      newObject.setDescription(description.getValue());
+    }
+    if (url != null) {
+      newObject.setUrl(url.getValue());
+    }
+    newObject.setGeo(geo);
+
+    if (priority == net.fortuna.ical4j.model.property.Priority.HIGH) {
+      newObject.setPriority(Priority.HIGH);
+    } else if (priority == net.fortuna.ical4j.model.property.Priority.LOW) {
+      newObject.setPriority(Priority.LOW);
+    } else if (priority == net.fortuna.ical4j.model.property.Priority.MEDIUM) {
+      newObject.setPriority(Priority.NORMAL);
+    } else {
+      newObject.setPriority(Priority.UNDEFINED);
+    }
+
+    NSLog.out.appendln(extras);
+    return newObject;
   }
 
   public static void transformFromZimbraResponse(Element e, ERCalendarObject newObject) throws ServiceException {
