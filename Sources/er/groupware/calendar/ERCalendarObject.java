@@ -575,40 +575,6 @@ public abstract class ERCalendarObject {
 
     inviteComponent.addAttribute("category", calendarObject.categories);
 
-    /*
-     * TODO: new logic for alarms
-    for (ERAlarm alarm: calendarObject.alarms) {
-      Element alarme = inviteComponent.addElement(MailConstants.E_CAL_ALARM);
-      alarme.addAttribute(MailConstants.A_CAL_ALARM_ACTION, alarm.action().toString());
-      Element declencheur = alarme.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
-      if (alarm.isAbsolute()) {
-        Element abs = declencheur.addElement(MailConstants.E_CAL_ALARM_ABSOLUTE);
-        abs.addAttribute(MailConstants.A_DATE, new DateTime(alarm.alarmDate().getTime()).toString());
-      } else {
-        Element rel = declencheur.addElement(MailConstants.E_CAL_ALARM_RELATIVE);   
-        if (alarm.isNegativeDuration()) {
-          rel.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, "1");
-        } else {
-          rel.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, "0");        
-        }
-        rel.addAttribute(MailConstants.A_CAL_ALARM_RELATED, "START");
-        if (alarm.durationType() != null) {
-          rel.addAttribute(alarm.durationType().zimbraValue(), alarm.duration());          
-        } else {
-          rel.addAttribute(AlarmDurationType.MINUTES.zimbraValue(), alarm.duration());
-        }
-      }
-      alarme.addAttribute(MailConstants.E_CAL_ALARM_DESCRIPTION, alarm.description());
-      Element repeat = alarme.addElement(MailConstants.E_CAL_ALARM_REPEAT);
-      repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, alarm.repeatCount());
-      if (alarm.action().equals(AlarmAction.EMAIL)) {
-        alarme.addAttribute(MailConstants.E_CAL_ALARM_SUMMARY,alarm.emailSubject());
-        Element xmlAttendee = alarme.addElement(MailConstants.E_CAL_ATTENDEE);
-        xmlAttendee.addAttribute(MailConstants.A_ADDRESS, alarm.emailSubject());
-      }
-    }
-    */
-
     inviteComponent.addAttribute(MailConstants.E_FRAG, calendarObject.description);
 
     if (calendarObject.parentId() != null) {

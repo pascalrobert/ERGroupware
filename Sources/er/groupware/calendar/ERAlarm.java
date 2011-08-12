@@ -1,17 +1,21 @@
 package er.groupware.calendar;
 
+import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.property.Duration;
 
+import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 
 import er.extensions.eof.ERXKey;
 import er.groupware.calendar.enums.AlarmAction;
 import er.groupware.calendar.enums.AlarmDurationType;
 
 public class ERAlarm {
-  
+
   private AlarmAction action;
   private int duration;
   private int repeatCount;
@@ -22,7 +26,7 @@ public class ERAlarm {
   private AlarmDurationType durationType;
   private String emailAddress;
   private String emailSubject;
-  
+
   public static final ERXKey<AlarmAction> ACTION = new ERXKey<AlarmAction>("action");
   public static final ERXKey<Integer> DURATION = new ERXKey<Integer>("duration");
   public static final ERXKey<Integer> REPEAT_COUNT = new ERXKey<Integer>("repeatCount");
@@ -33,10 +37,10 @@ public class ERAlarm {
   public static final ERXKey<AlarmDurationType> DURATION_TYPE = new ERXKey<AlarmDurationType>("durationType");
   public static final ERXKey<String> EMAIL_ADDRESS = new ERXKey<String>("emailAddress");
   public static final ERXKey<String> EMAIL_SUBJECT = new ERXKey<String>("emailSubject");
-  
+
   public ERAlarm() {
   }
-  
+
   public ERAlarm(ERCalendar calendar) {
     calendar.addAlarm(this);
   }
@@ -120,11 +124,11 @@ public class ERAlarm {
   public void setEmailSubject(String _emailSubject) {
     this.emailSubject = _emailSubject;
   }
-  
+
   public static VAlarm transformToICalObject(ERAlarm alarm) {
     VAlarm vAlarm = new VAlarm();
     vAlarm.getProperties().add(alarm.action().rfc2445Value());
-    
+
     Dur duration = null;
     switch (alarm.durationType()) {
     case DAYS:
@@ -146,7 +150,7 @@ public class ERAlarm {
       break;
     }
     vAlarm.getProperties().add(new Duration(duration));
-    
+
     switch (alarm.action()) {
     case AUDIO:
       break;
@@ -162,5 +166,35 @@ public class ERAlarm {
     return vAlarm;
   }
 
-  
+  public static void transformToZimbraObject(ERAlarm alarm, Element inviteComponent) {
+    Element alarme = inviteComponent.addElement(MailConstants.E_CAL_ALARM);
+    alarme.addAttribute(MailConstants.A_CAL_ALARM_ACTION, alarm.action().toString());
+    Element declencheur = alarme.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
+    if (alarm.isAbsolute()) {
+      Element abs = declencheur.addElement(MailConstants.E_CAL_ALARM_ABSOLUTE);
+      abs.addAttribute(MailConstants.A_DATE, new DateTime(alarm.alarmDate().getTime()).toString());
+    } else {
+      Element rel = declencheur.addElement(MailConstants.E_CAL_ALARM_RELATIVE);   
+      if (alarm.isNegativeDuration()) {
+        rel.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, "1");
+      } else {
+        rel.addAttribute(MailConstants.A_CAL_DURATION_NEGATIVE, "0");        
+      }
+      rel.addAttribute(MailConstants.A_CAL_ALARM_RELATED, "START");
+      if (alarm.durationType() != null) {
+        rel.addAttribute(alarm.durationType().zimbraValue(), alarm.duration());          
+      } else {
+        rel.addAttribute(AlarmDurationType.MINUTES.zimbraValue(), alarm.duration());
+      }
+    }
+    alarme.addAttribute(MailConstants.E_CAL_ALARM_DESCRIPTION, alarm.description());
+    Element repeat = alarme.addElement(MailConstants.E_CAL_ALARM_REPEAT);
+    repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, alarm.repeatCount());
+    if (alarm.action().equals(AlarmAction.EMAIL)) {
+      alarme.addAttribute(MailConstants.E_CAL_ALARM_SUMMARY,alarm.emailSubject());
+      Element xmlAttendee = alarme.addElement(MailConstants.E_CAL_ATTENDEE);
+      xmlAttendee.addAttribute(MailConstants.A_ADDRESS, alarm.emailSubject());
+    }
+  }
+
 }

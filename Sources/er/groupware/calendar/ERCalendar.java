@@ -116,22 +116,34 @@ public class ERCalendar {
       VToDo vTodo = (VToDo)ERTask.transformToICalObject(task);
       icalCalendar.getComponents().add(vTodo);
     }
-    for (ERAlarm task: calendar.alarms()) {
-      VAlarm vAlarm = (VAlarm)ERAlarm.transformToICalObject(task);
+    for (ERAlarm alarm: calendar.alarms()) {
+      VAlarm vAlarm = (VAlarm)ERAlarm.transformToICalObject(alarm);
       icalCalendar.getComponents().add(vAlarm);
     }
     return icalCalendar;
   }
 
-  public static XMLElement transformToZimbraObject(ERCalendar calendar) {
+  public static XMLElement transformToZimbraObject(ERCalendar calendar) throws ZimbraTooManyObjectsException {
+    if ((calendar.events().count() > 1) || (calendar.tasks().count() > 1)) {
+      throw new ZimbraTooManyObjectsException("Calendar objects in Zimbra can only have one event or task");
+    }
+    if ((calendar.events().count() == 1) && (calendar.tasks().count() == 1)) {
+      throw new ZimbraTooManyObjectsException("Calendar objects in Zimbra can only have one event or task, they can't have both");
+    }
     XMLElement invitation = new XMLElement(MailConstants.E_INVITE);
 
-    for (EREvent event: calendar.events()) {
-      Element vEvent = EREvent.transformToZimbraObject(event);
+    if (calendar.events().count() == 1) {
+      Element vEvent = EREvent.transformToZimbraObject(calendar.events().objectAtIndex(0));
+      for (ERAlarm alarm: calendar.alarms()) {
+        ERAlarm.transformToZimbraObject(alarm, vEvent);
+      }
       invitation.addElement(vEvent);
     }
-    for (ERTask task: calendar.tasks()) {
-      Element vTodo = ERTask.transformToZimbraObject(task);
+    if (calendar.tasks().count() == 1) {
+      Element vTodo = ERTask.transformToZimbraObject(calendar.tasks().objectAtIndex(0));
+      for (ERAlarm alarm: calendar.alarms()) {
+        ERAlarm.transformToZimbraObject(alarm, vTodo);
+      }
       invitation.addElement(vTodo);
     }
 
