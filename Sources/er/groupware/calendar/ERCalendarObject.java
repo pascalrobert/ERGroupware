@@ -393,32 +393,6 @@ public abstract class ERCalendarObject {
   }
 
   public static void transformFromZimbraResponse(Element e, ERCalendarObject newObject) throws ServiceException {
-    /*
-     * TODO: we have to change how alarms works
-    List<Element> alarms = e.listElements(MailConstants.A_CAL_ALARM);
-    for (Element xmlAlarm: alarms) {
-      ERAlarm newAlarm = new ERAlarm();
-      ZAlarm zAlarm = new ZAlarm(xmlAlarm);
-      newAlarm.setAction(AlarmAction.getByZimbraValue(zAlarm.getAction()));
-      if (zAlarm.getTriggerType().equals(ZTriggerType.RELATIVE)) {
-        newAlarm.setAbsolute(false);
-        newAlarm.setDuration(zAlarm.getTriggerRelated().getMins());
-      } else  {
-        newAlarm.setAbsolute(true);
-        //newAlarm.setAlarmDate(endTime);
-      }
-      newAlarm.setDescription(zAlarm.getDescription());
-      List<ZInvite.ZAttendee> alarmAttendees = zAlarm.getAttendees();
-      if (alarmAttendees != null) {
-        for (ZInvite.ZAttendee alarmAttendee: alarmAttendees) {
-          newAlarm.setEmailAddress(alarmAttendee.getAddress());
-        }
-      }
-      newAlarm.setEmailSubject(zAlarm.getSummary());
-      newAlarm.setRepeatCount(zAlarm.getRepeatCount());
-      newObject.addToAlarms(newAlarm);
-    }
-    */
     ZOrganizer zOrg = new ZOrganizer(e.getOptionalElement(MailConstants.E_CAL_ORGANIZER));
     Organizer organizer = new Organizer();
     organizer.setEmailAddress(zOrg.getEmailAddress().getAddress());

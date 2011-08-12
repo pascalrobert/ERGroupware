@@ -164,6 +164,7 @@ public class ERCalendar {
         EREvent event = new EREvent(newCalendar);
         EREvent.transformFromZimbraResponse(component, event);
         events.addObject(event);
+        ERAlarm.transformFromZimbraResponse(component, newCalendar);
       }
     }
     newCalendar.setEvents(events);

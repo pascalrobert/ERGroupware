@@ -1,14 +1,19 @@
 package er.groupware.calendar;
 
+import java.util.List;
+
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.property.Duration;
 
-import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSTimestamp;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.cs.zclient.ZAlarm;
+import com.zimbra.cs.zclient.ZInvite;
+import com.zimbra.cs.zclient.ZAlarm.ZTriggerType;
 
 import er.extensions.eof.ERXKey;
 import er.groupware.calendar.enums.AlarmAction;
@@ -194,6 +199,32 @@ public class ERAlarm {
       alarme.addAttribute(MailConstants.E_CAL_ALARM_SUMMARY,alarm.emailSubject());
       Element xmlAttendee = alarme.addElement(MailConstants.E_CAL_ATTENDEE);
       xmlAttendee.addAttribute(MailConstants.A_ADDRESS, alarm.emailSubject());
+    }
+  }
+  
+  public static void transformFromZimbraResponse(Element e, ERCalendar newObject) throws ServiceException {
+    List<Element> alarms = e.listElements(MailConstants.A_CAL_ALARM);
+    for (Element xmlAlarm: alarms) {
+      ERAlarm newAlarm = new ERAlarm();
+      ZAlarm zAlarm = new ZAlarm(xmlAlarm);
+      newAlarm.setAction(AlarmAction.getByZimbraValue(zAlarm.getAction()));
+      if (zAlarm.getTriggerType().equals(ZTriggerType.RELATIVE)) {
+        newAlarm.setAbsolute(false);
+        newAlarm.setDuration(zAlarm.getTriggerRelated().getMins());
+      } else  {
+        newAlarm.setAbsolute(true);
+        //newAlarm.setAlarmDate(endTime);
+      }
+      newAlarm.setDescription(zAlarm.getDescription());
+      List<ZInvite.ZAttendee> alarmAttendees = zAlarm.getAttendees();
+      if (alarmAttendees != null) {
+        for (ZInvite.ZAttendee alarmAttendee: alarmAttendees) {
+          newAlarm.setEmailAddress(alarmAttendee.getAddress());
+        }
+      }
+      newAlarm.setEmailSubject(zAlarm.getSummary());
+      newAlarm.setRepeatCount(zAlarm.getRepeatCount());
+      newObject.addAlarm(newAlarm);
     }
   }
 
