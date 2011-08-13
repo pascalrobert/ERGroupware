@@ -13,19 +13,19 @@
 	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
 	<classpathentry kind="con" path="WOFramework/JavaXML"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="Libraries/commons-codec-1.3.jar"/>
-	<classpathentry kind="lib" path="Libraries/commons-collections-3.1.jar"/>
-	<classpathentry kind="lib" path="Libraries/ical4j-1.0.jar"/>
-	<classpathentry kind="lib" path="Libraries/backport-util-concurrent-3.1.jar"/>
-	<classpathentry kind="lib" path="Libraries/commons-httpclient-3.1.jar"/>
-	<classpathentry kind="lib" path="Libraries/dom4j-1.5.jar"/>
-	<classpathentry kind="lib" path="Libraries/guava-r08.jar"/>
-	<classpathentry kind="lib" path="Libraries/jec.jar"/>
-	<classpathentry kind="lib" path="Libraries/vcard4j-1_1_3.jar"/>
-	<classpathentry kind="lib" path="Libraries/zimbracommon.jar"/>
-	<classpathentry kind="lib" path="Libraries/zimbrasoap.jar"/>
-	<classpathentry kind="lib" path="Libraries/zimbrastore.jar"/>
-	<classpathentry kind="lib" path="Libraries/json.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/commons-codec-1.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/commons-collections-3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/backport-util-concurrent-3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/commons-httpclient-3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/dom4j-1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/guava-r08.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/jec.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/vcard4j-1_1_3.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/zimbracommon.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/zimbrasoap.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/zimbrastore.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/json.jar"/>
 	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
