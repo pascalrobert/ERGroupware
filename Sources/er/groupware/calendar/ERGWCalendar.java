@@ -22,23 +22,23 @@ import com.zimbra.common.soap.MailConstants;
 
 import er.groupware.calendar.exceptions.ZimbraTooManyObjectsException;
 
-public class ERCalendar {
+public class ERGWCalendar {
 
-  private NSMutableArray<EREvent> events;
-  private NSMutableArray<ERTask> tasks;
-  private NSMutableArray<ERAlarm> alarms;
+  private NSMutableArray<ERGWEvent> events;
+  private NSMutableArray<ERGWTask> tasks;
+  private NSMutableArray<ERGWAlarm> alarms;
   private ProdId productId;
   protected Version version;
   protected CalScale scale;
   public static ProdId defaultProdId = new ProdId("-//Project Wonder//ERCalendar2//EN"); // TODO: that should go in a property
 
-  public ERCalendar() {
+  public ERGWCalendar() {
     productId = defaultProdId;
     version = Version.VERSION_2_0;
     scale = CalScale.GREGORIAN;
-    events = new NSMutableArray<EREvent>();
-    tasks = new NSMutableArray<ERTask>();
-    alarms = new NSMutableArray<ERAlarm>();
+    events = new NSMutableArray<ERGWEvent>();
+    tasks = new NSMutableArray<ERGWTask>();
+    alarms = new NSMutableArray<ERGWAlarm>();
   }
 
   public ProdId productId() {
@@ -49,43 +49,43 @@ public class ERCalendar {
     this.productId = _productId;
   }
 
-  public NSArray<EREvent> events() {
+  public NSArray<ERGWEvent> events() {
     return events.immutableClone();
   }
   
-  public NSArray<EREvent> getEvents() {
+  public NSArray<ERGWEvent> getEvents() {
     return events();
   }
 
-  public void setEvents(NSArray<EREvent> _events) {
+  public void setEvents(NSArray<ERGWEvent> _events) {
     this.events = _events.mutableClone();
   }
 
-  public void addEvent(EREvent event) {
+  public void addEvent(ERGWEvent event) {
     this.events.addObject(event);
   }
 
-  public NSArray<ERTask> tasks() {
+  public NSArray<ERGWTask> tasks() {
     return tasks.immutableClone();
   }
 
-  public void setTasks(NSArray<ERTask> _tasks) {
+  public void setTasks(NSArray<ERGWTask> _tasks) {
     this.tasks = _tasks.mutableClone();
   }
 
-  public void addTask(ERTask task) {
+  public void addTask(ERGWTask task) {
     this.tasks.addObject(task);
   }
   
-  public NSArray<ERAlarm> alarms() {
+  public NSArray<ERGWAlarm> alarms() {
     return alarms.immutableClone();
   }
 
-  public void setAlarms(NSArray<ERAlarm> _alarms) {
+  public void setAlarms(NSArray<ERGWAlarm> _alarms) {
     this.alarms = _alarms.mutableClone();
   }
 
-  public void addAlarm(ERAlarm _alarm) {
+  public void addAlarm(ERGWAlarm _alarm) {
     this.alarms.addObject(_alarm);
   }
 
@@ -105,43 +105,43 @@ public class ERCalendar {
     this.scale = _scale;
   }
 
-  public static Calendar transformToICalObject(ERCalendar calendar) throws SocketException, ParseException, URISyntaxException {
+  public static Calendar transformToICalObject(ERGWCalendar calendar) throws SocketException, ParseException, URISyntaxException {
     net.fortuna.ical4j.model.Calendar icalCalendar = new net.fortuna.ical4j.model.Calendar();
 
     icalCalendar.getProperties().add(calendar.productId());
     icalCalendar.getProperties().add(calendar.version);
     icalCalendar.getProperties().add(calendar.scale);
-    for (EREvent event: calendar.events()) {
-      VEvent vEvent = (VEvent)EREvent.transformToICalObject(event);
+    for (ERGWEvent event: calendar.events()) {
+      VEvent vEvent = (VEvent)ERGWEvent.transformToICalObject(event);
       icalCalendar.getComponents().add(vEvent);
     }
-    for (ERTask task: calendar.tasks()) {
-      VToDo vTodo = (VToDo)ERTask.transformToICalObject(task);
+    for (ERGWTask task: calendar.tasks()) {
+      VToDo vTodo = (VToDo)ERGWTask.transformToICalObject(task);
       icalCalendar.getComponents().add(vTodo);
     }
-    for (ERAlarm alarm: calendar.alarms()) {
-      VAlarm vAlarm = (VAlarm)ERAlarm.transformToICalObject(alarm);
+    for (ERGWAlarm alarm: calendar.alarms()) {
+      VAlarm vAlarm = (VAlarm)ERGWAlarm.transformToICalObject(alarm);
       icalCalendar.getComponents().add(vAlarm);
     }
     return icalCalendar;
   }
   
-  public static ERCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je) throws ServiceException, SocketException, URISyntaxException {
-    ERCalendar newCalendar = new ERCalendar();
+  public static ERGWCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je) throws ServiceException, SocketException, URISyntaxException {
+    ERGWCalendar newCalendar = new ERGWCalendar();
     newCalendar.setProductId(defaultProdId);
 
-    NSMutableArray<EREvent> events = new NSMutableArray<EREvent>();
+    NSMutableArray<ERGWEvent> events = new NSMutableArray<ERGWEvent>();
 
     for (Object component : je.getComponents(Component.VEVENT)) {
-      EREvent event = new EREvent(newCalendar);
-      EREvent.transformFromICalObject((VEvent)component, event);
+      ERGWEvent event = new ERGWEvent(newCalendar);
+      ERGWEvent.transformFromICalObject((VEvent)component, event);
       events.addObject(event);
     }
     newCalendar.setEvents(events);
     return newCalendar;
   }
 
-  public static XMLElement transformToZimbraObject(ERCalendar calendar) throws ZimbraTooManyObjectsException {
+  public static XMLElement transformToZimbraObject(ERGWCalendar calendar) throws ZimbraTooManyObjectsException {
     if ((calendar.events().count() > 1) || (calendar.tasks().count() > 1)) {
       throw new ZimbraTooManyObjectsException("Calendar objects in Zimbra can only have one event or task");
     }
@@ -151,16 +151,16 @@ public class ERCalendar {
     XMLElement invitation = new XMLElement(MailConstants.E_INVITE);
 
     if (calendar.events().count() == 1) {
-      Element vEvent = EREvent.transformToZimbraObject(calendar.events().objectAtIndex(0));
-      for (ERAlarm alarm: calendar.alarms()) {
-        ERAlarm.transformToZimbraObject(alarm, vEvent);
+      Element vEvent = ERGWEvent.transformToZimbraObject(calendar.events().objectAtIndex(0));
+      for (ERGWAlarm alarm: calendar.alarms()) {
+        ERGWAlarm.transformToZimbraObject(alarm, vEvent);
       }
       invitation.addElement(vEvent);
     }
     if (calendar.tasks().count() == 1) {
-      Element vTodo = ERTask.transformToZimbraObject(calendar.tasks().objectAtIndex(0));
-      for (ERAlarm alarm: calendar.alarms()) {
-        ERAlarm.transformToZimbraObject(alarm, vTodo);
+      Element vTodo = ERGWTask.transformToZimbraObject(calendar.tasks().objectAtIndex(0));
+      for (ERGWAlarm alarm: calendar.alarms()) {
+        ERGWAlarm.transformToZimbraObject(alarm, vTodo);
       }
       invitation.addElement(vTodo);
     }
@@ -168,19 +168,19 @@ public class ERCalendar {
     return invitation;
   }
 
-  public static ERCalendar transformFromZimbraResponse(XMLElement je) throws ServiceException {
-    ERCalendar newCalendar = new ERCalendar();
+  public static ERGWCalendar transformFromZimbraResponse(XMLElement je) throws ServiceException {
+    ERGWCalendar newCalendar = new ERGWCalendar();
     newCalendar.setProductId(defaultProdId);
     Element appt = je.getElement("appt");
 
-    NSMutableArray<EREvent> events = new NSMutableArray<EREvent>();
+    NSMutableArray<ERGWEvent> events = new NSMutableArray<ERGWEvent>();
 
     for (Element inviteEl : appt.listElements(MailConstants.E_INVITE)) {
       for (Element component : inviteEl.listElements(MailConstants.A_CAL_COMP)) {
-        EREvent event = new EREvent(newCalendar);
-        EREvent.transformFromZimbraResponse(component, event);
+        ERGWEvent event = new ERGWEvent(newCalendar);
+        ERGWEvent.transformFromZimbraResponse(component, event);
         events.addObject(event);
-        ERAlarm.transformFromZimbraResponse(component, newCalendar);
+        ERGWAlarm.transformFromZimbraResponse(component, newCalendar);
       }
     }
     newCalendar.setEvents(events);

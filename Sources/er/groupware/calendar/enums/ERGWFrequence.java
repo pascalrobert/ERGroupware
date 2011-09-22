@@ -10,7 +10,7 @@ freq       = "SECONDLY" / "MINUTELY" / "HOURLY" / "DAILY"
                 / "WEEKLY" / "MONTHLY" / "YEARLY"
  */
 
-public enum Frequence {
+public enum ERGWFrequence {
 
   SECONDLY("Aux secondes", "SECONDLY","SEC"),
   MINUTELY("Aux minutes", "MINUTELY","MIN"),
@@ -24,7 +24,7 @@ public enum Frequence {
   private String rfc2445Value;
   private String zimbraValue;
 
-  private Frequence(String description, String rfc2445Value, String zimbraValue) {
+  private ERGWFrequence(String description, String rfc2445Value, String zimbraValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
@@ -42,11 +42,11 @@ public enum Frequence {
     return rfc2445Value;
   }
   
-  public static NSArray<Frequence> frequences() {
-    return new NSArray<Frequence>(Frequence.values());
+  public static NSArray<ERGWFrequence> frequences() {
+    return new NSArray<ERGWFrequence>(ERGWFrequence.values());
   }
   
-  private Frequence() {
+  private ERGWFrequence() {
   }
   
 }

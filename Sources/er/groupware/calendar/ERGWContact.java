@@ -2,7 +2,7 @@ package er.groupware.calendar;
 
 import er.extensions.eof.ERXKey;
 
-public abstract class Contact {
+public abstract class ERGWContact {
 
   private String emailAddress;
   private String url;

@@ -4,7 +4,7 @@ import er.extensions.ERXFrameworkPrincipal;
 import er.extensions.foundation.ERXProperties;
 import er.extensions.localization.ERXLocalizer;
 
-public class ERCalendarPrincipal extends ERXFrameworkPrincipal {
+public class ERGWCalendarPrincipal extends ERXFrameworkPrincipal {
 
   @Override
   public void finishInitialization() {

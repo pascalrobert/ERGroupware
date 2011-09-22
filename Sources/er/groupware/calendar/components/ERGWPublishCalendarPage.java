@@ -7,11 +7,11 @@ import com.webobjects.appserver.WOResponse;
 
 import er.extensions.components.ERXStatelessComponent;
 
-public class ERPublishCalendarPage extends ERXStatelessComponent {
+public class ERGWPublishCalendarPage extends ERXStatelessComponent {
 
   private Calendar iCalObject;
 
-  public ERPublishCalendarPage(WOContext context) {
+  public ERGWPublishCalendarPage(WOContext context) {
     super(context);
   }
 

@@ -3,7 +3,7 @@ package er.groupware.calendar.enums;
 
 import com.webobjects.foundation.NSArray;
 
-public enum Recurrence {
+public enum ERGWRecurrence {
 
   DAILY("Chaque jour"),
   WEEKLY("Chaque semaine"),
@@ -12,7 +12,7 @@ public enum Recurrence {
     
   private String description;
 
-  private Recurrence(String description) {
+  private ERGWRecurrence(String description) {
     this.description = description;
   }
     
@@ -20,11 +20,11 @@ public enum Recurrence {
     return description;
   }
   
-  public static NSArray<Recurrence> recurrences() {
-    return new NSArray<Recurrence>(Recurrence.values());
+  public static NSArray<ERGWRecurrence> recurrences() {
+    return new NSArray<ERGWRecurrence>(ERGWRecurrence.values());
   }
   
-  private Recurrence() {
+  private ERGWRecurrence() {
   }
   
 }

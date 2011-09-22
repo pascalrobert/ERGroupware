@@ -9,9 +9,9 @@ import net.fortuna.ical4j.model.property.Clazz;
 
 import com.webobjects.foundation.NSArray;
 
-import er.groupware.calendar.ERCalendarPrincipal;
+import er.groupware.calendar.ERGWCalendarPrincipal;
 
-public enum Classification implements ICalendarProperty {
+public enum ERGWClassification implements ERGWICalendarProperty {
 
   PUBLIC("Public", Clazz.PUBLIC, "PUB"),
   PRIVATE("Privé", Clazz.PRIVATE, "PRI"),
@@ -21,24 +21,24 @@ public enum Classification implements ICalendarProperty {
   private Clazz rfc2445Value;
   private String zimbraValue;
 
-  private Classification(String localizedDescription, Clazz rfc2445Value, String zimbraValue) {
+  private ERGWClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
   }
 
-  private static final Map<String,Classification> zimbraLookup = new HashMap<String,Classification>();
-  private static final Map<Clazz,Classification> rfc2445Lookup = new HashMap<Clazz,Classification>();
+  private static final Map<String,ERGWClassification> zimbraLookup = new HashMap<String,ERGWClassification>();
+  private static final Map<Clazz,ERGWClassification> rfc2445Lookup = new HashMap<Clazz,ERGWClassification>();
 
   static {
-    for(Classification s : EnumSet.allOf(Classification.class)) {
+    for(ERGWClassification s : EnumSet.allOf(ERGWClassification.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value, s);
     }
   }
 
   public String localizedDescription() {
-    return ERCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
+    return ERGWCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
   }
 
   public Clazz rfc2445Value() {
@@ -49,14 +49,14 @@ public enum Classification implements ICalendarProperty {
     return zimbraValue;
   }
 
-  public static NSArray<Classification> clazzes() {
-    return new NSArray<Classification>(Classification.values());
+  public static NSArray<ERGWClassification> clazzes() {
+    return new NSArray<ERGWClassification>(ERGWClassification.values());
   }
 
-  private Classification() {
+  private ERGWClassification() {
   }
 
-  public static Classification getByZimbraValue(String zimbraValue) { 
+  public static ERGWClassification getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
 

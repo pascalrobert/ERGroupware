@@ -10,9 +10,9 @@ import net.fortuna.ical4j.model.property.Status;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
 
-import er.groupware.calendar.ERCalendarPrincipal;
+import er.groupware.calendar.ERGWCalendarPrincipal;
 
-public enum EventStatus implements IStatus, ICalendarProperty {
+public enum ERGWEventStatus implements ERGWIStatus, ERGWICalendarProperty {
 
   TENTATIVE("Tentatif", Status.VEVENT_TENTATIVE, ZStatus.TENT),
   CANCELLED("Annulé", Status.VEVENT_CANCELLED, ZStatus.CANC),
@@ -22,24 +22,24 @@ public enum EventStatus implements IStatus, ICalendarProperty {
   private Status statusObject;
   private ZStatus zimbraValue;
 
-  private EventStatus(String description, Status rfc2445Value, ZStatus zimbraValue) {
+  private ERGWEventStatus(String description, Status rfc2445Value, ZStatus zimbraValue) {
     this.localizedDescription = description;
     this.statusObject = rfc2445Value;
     this.zimbraValue = zimbraValue;
   }
     
-  private static final Map<ZStatus,EventStatus> zimbraLookup = new HashMap<ZStatus,EventStatus>();
-  private static final Map<Status,EventStatus> rfc2445Lookup = new HashMap<Status,EventStatus>();
+  private static final Map<ZStatus,ERGWEventStatus> zimbraLookup = new HashMap<ZStatus,ERGWEventStatus>();
+  private static final Map<Status,ERGWEventStatus> rfc2445Lookup = new HashMap<Status,ERGWEventStatus>();
   
   static {
-    for(EventStatus s : EnumSet.allOf(EventStatus.class)) {
+    for(ERGWEventStatus s : EnumSet.allOf(ERGWEventStatus.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value(), s);
     }
   }
   
   public String localizedDescription() {
-    return ERCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
+    return ERGWCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
   }
   
   public Status rfc2445Value() {
@@ -50,14 +50,14 @@ public enum EventStatus implements IStatus, ICalendarProperty {
     return zimbraValue;
   }
   
-  public static NSArray<EventStatus> statuses() {
-    return new NSArray<EventStatus>(EventStatus.values());
+  public static NSArray<ERGWEventStatus> statuses() {
+    return new NSArray<ERGWEventStatus>(ERGWEventStatus.values());
   }
   
-  private EventStatus() {
+  private ERGWEventStatus() {
   }
   
-  public static EventStatus getByZimbraValue(ZStatus zimbraValue) { 
+  public static ERGWEventStatus getByZimbraValue(ZStatus zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
   

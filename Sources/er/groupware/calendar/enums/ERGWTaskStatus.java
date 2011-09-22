@@ -6,9 +6,9 @@ import net.fortuna.ical4j.model.property.Status;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
-import er.groupware.calendar.ERCalendarPrincipal;
+import er.groupware.calendar.ERGWCalendarPrincipal;
 
-public enum TaskStatus implements IStatus, ICalendarProperty {
+public enum ERGWTaskStatus implements ERGWIStatus, ERGWICalendarProperty {
 
   NEEDS_ACTION("Non commencé", Status.VTODO_NEEDS_ACTION, IcalXmlStrMap.STATUS_NEEDS_ACTION),
   IN_PROCESS("En cours", Status.VTODO_IN_PROCESS, IcalXmlStrMap.STATUS_IN_PROCESS),
@@ -19,14 +19,14 @@ public enum TaskStatus implements IStatus, ICalendarProperty {
   private Status rfc2445Value;
   private String zimbraValue;
 
-  private TaskStatus(String localizedDescription, Status rfc2445Value, String zimbraValue) {
+  private ERGWTaskStatus(String localizedDescription, Status rfc2445Value, String zimbraValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
   }
     
   public String localizedDescription() {
-    return ERCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
+    return ERGWCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
   }
   
   public Status rfc2445Value() {
@@ -37,11 +37,11 @@ public enum TaskStatus implements IStatus, ICalendarProperty {
     return zimbraValue;
   }
 
-  public static NSArray<TaskStatus> statuses() {
-    return new NSArray<TaskStatus>(TaskStatus.values());
+  public static NSArray<ERGWTaskStatus> statuses() {
+    return new NSArray<ERGWTaskStatus>(ERGWTaskStatus.values());
   }
   
-  private TaskStatus() {
+  private ERGWTaskStatus() {
   }
   
 }

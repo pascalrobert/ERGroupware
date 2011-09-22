@@ -24,7 +24,7 @@ import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
                                                 ; status
  */
 
-public enum ParticipantStatus implements ICalendarProperty {
+public enum ERGWParticipantStatus implements ERGWICalendarProperty {
 
   NEEDS_ACTION("Requiert action", PartStat.NEEDS_ACTION, ZParticipantStatus.NE),
   ACCEPTED("Accepté", PartStat.ACCEPTED, ZParticipantStatus.AC),
@@ -36,17 +36,17 @@ public enum ParticipantStatus implements ICalendarProperty {
   private PartStat rfc2445Value;
   private ZParticipantStatus zimbraValue;
 
-  private ParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue) {
+  private ERGWParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
   }
   
-  private static final Map<ZParticipantStatus,ParticipantStatus> zimbraLookup = new HashMap<ZParticipantStatus,ParticipantStatus>();
-  private static final Map<PartStat,ParticipantStatus> rfc2445Lookup = new HashMap<PartStat,ParticipantStatus>();
+  private static final Map<ZParticipantStatus,ERGWParticipantStatus> zimbraLookup = new HashMap<ZParticipantStatus,ERGWParticipantStatus>();
+  private static final Map<PartStat,ERGWParticipantStatus> rfc2445Lookup = new HashMap<PartStat,ERGWParticipantStatus>();
   
   static {
-    for(ParticipantStatus s : EnumSet.allOf(ParticipantStatus.class)) {
+    for(ERGWParticipantStatus s : EnumSet.allOf(ERGWParticipantStatus.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value(), s);
     }
@@ -64,14 +64,14 @@ public enum ParticipantStatus implements ICalendarProperty {
     return rfc2445Value;
   }
   
-  public static NSArray<ParticipantStatus> statuses() {
-    return new NSArray<ParticipantStatus>(ParticipantStatus.values());
+  public static NSArray<ERGWParticipantStatus> statuses() {
+    return new NSArray<ERGWParticipantStatus>(ERGWParticipantStatus.values());
   }
   
-  private ParticipantStatus() {
+  private ERGWParticipantStatus() {
   }
   
-  public static ParticipantStatus getByZimbraValue(ZParticipantStatus zimbraValue) { 
+  public static ERGWParticipantStatus getByZimbraValue(ZParticipantStatus zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
   

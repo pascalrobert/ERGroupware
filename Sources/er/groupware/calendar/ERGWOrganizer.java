@@ -1,5 +1,5 @@
 package er.groupware.calendar;
 
-public class Organizer extends Contact {
+public class ERGWOrganizer extends ERGWContact {
 
 }

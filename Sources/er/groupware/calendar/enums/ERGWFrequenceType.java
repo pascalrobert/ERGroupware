@@ -18,7 +18,7 @@ The BYSETPOS rule part specifies a COMMA character (US-ASCII decimal
      RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1
  */
 
-public enum FrequenceType {
+public enum ERGWFrequenceType {
 
   BYSECOND("Aux secondes", "BYSECOND","SEC"),
   BYMINUTE("Aux minutes", "BYHOUR","MIN"),
@@ -32,7 +32,7 @@ public enum FrequenceType {
   private String rfc2445Value;
   private String zimbraValue;
 
-  private FrequenceType(String description, String rfc2445Value, String zimbraValue) {
+  private ERGWFrequenceType(String description, String rfc2445Value, String zimbraValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
@@ -50,11 +50,11 @@ public enum FrequenceType {
     return rfc2445Value;
   }
   
-  public static NSArray<FrequenceType> types() {
-    return new NSArray<FrequenceType>(FrequenceType.values());
+  public static NSArray<ERGWFrequenceType> types() {
+    return new NSArray<ERGWFrequenceType>(ERGWFrequenceType.values());
   }
   
-  private FrequenceType() {
+  private ERGWFrequenceType() {
   }
   
 }

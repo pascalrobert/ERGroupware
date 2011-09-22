@@ -10,28 +10,28 @@ import net.fortuna.ical4j.model.component.VToDo;
 import com.webobjects.appserver.xml.WOXMLCoder;
 import com.webobjects.foundation.NSTimestamp;
 
-import er.groupware.calendar.enums.IStatus;
-import er.groupware.calendar.enums.TaskStatus;
+import er.groupware.calendar.enums.ERGWIStatus;
+import er.groupware.calendar.enums.ERGWTaskStatus;
 
-public class ERTask extends ERCalendarObject {
+public class ERGWTask extends ERGWCalendarObject {
 
   private NSTimestamp completedOn;
   private NSTimestamp dueDate;
   private int percentComplete;
-  private TaskStatus status;
+  private ERGWTaskStatus status;
 
-  public ERTask(ERCalendar calendar) {
+  public ERGWTask(ERGWCalendar calendar) {
     calendar.addTask(this);
   }
 
   @Override
-  public TaskStatus status() {
+  public ERGWTaskStatus status() {
     return status;
   }
 
   @Override
-  public void setStatus(IStatus status) {
-    this.status = (TaskStatus)status;
+  public void setStatus(ERGWIStatus status) {
+    this.status = (ERGWTaskStatus)status;
   }
 
   public NSTimestamp completedOn() {
@@ -58,7 +58,7 @@ public class ERTask extends ERCalendarObject {
     this.percentComplete = percentComplete;
   }
 
-  public Class<? extends ERTask> classForCoder() {
+  public Class<? extends ERGWTask> classForCoder() {
     return this.getClass();
   }
 
@@ -67,8 +67,8 @@ public class ERTask extends ERCalendarObject {
     
   }
   
-  public static CalendarComponent transformToICalObject(ERTask task) throws SocketException, ParseException, URISyntaxException {
-    VToDo vTodo = (VToDo)ERCalendarObject.transformToICalObject(task, new VToDo());
+  public static CalendarComponent transformToICalObject(ERGWTask task) throws SocketException, ParseException, URISyntaxException {
+    VToDo vTodo = (VToDo)ERGWCalendarObject.transformToICalObject(task, new VToDo());
     return vTodo;
   }
   

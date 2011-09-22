@@ -1,6 +1,6 @@
 package er.groupware.calendar.enums;
 
-public interface ICalendarProperty {
+public interface ERGWICalendarProperty {
 
   public String localizedDescription();
   public Object zimbraValue();

@@ -10,9 +10,9 @@ import net.fortuna.ical4j.model.property.BusyType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
-import er.groupware.calendar.ERCalendarPrincipal;
+import er.groupware.calendar.ERGWCalendarPrincipal;
 
-public enum FreeBusyStatus implements ICalendarProperty {
+public enum ERGWFreeBusyStatus implements ERGWICalendarProperty {
 
   FREE("Libre", new BusyType("FREE"), IcalXmlStrMap.FBTYPE_FREE),
   BUSY("Occupé", BusyType.BUSY, IcalXmlStrMap.FBTYPE_BUSY),
@@ -23,24 +23,24 @@ public enum FreeBusyStatus implements ICalendarProperty {
   private BusyType rfc2445Value;
   private String zimbraValue;
 
-  private FreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue) {
+  private ERGWFreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
   }
   
-  private static final Map<String,FreeBusyStatus> zimbraLookup = new HashMap<String,FreeBusyStatus>();
-  private static final Map<BusyType,FreeBusyStatus> rfc2445Lookup = new HashMap<BusyType,FreeBusyStatus>();
+  private static final Map<String,ERGWFreeBusyStatus> zimbraLookup = new HashMap<String,ERGWFreeBusyStatus>();
+  private static final Map<BusyType,ERGWFreeBusyStatus> rfc2445Lookup = new HashMap<BusyType,ERGWFreeBusyStatus>();
 
   static {
-    for(FreeBusyStatus s : EnumSet.allOf(FreeBusyStatus.class)) {
+    for(ERGWFreeBusyStatus s : EnumSet.allOf(ERGWFreeBusyStatus.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value(), s);
     }
   }
     
   public String localizedDescription() {
-    return ERCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
+    return ERGWCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
   }
 
   public String zimbraValue() {
@@ -51,14 +51,14 @@ public enum FreeBusyStatus implements ICalendarProperty {
     return rfc2445Value;
   }
   
-  public static NSArray<FreeBusyStatus> statuses() {
-    return new NSArray<FreeBusyStatus>(FreeBusyStatus.values());
+  public static NSArray<ERGWFreeBusyStatus> statuses() {
+    return new NSArray<ERGWFreeBusyStatus>(ERGWFreeBusyStatus.values());
   }
   
-  private FreeBusyStatus() {
+  private ERGWFreeBusyStatus() {
   }
   
-  public static FreeBusyStatus getByZimbraValue(String zimbraValue) { 
+  public static ERGWFreeBusyStatus getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
   

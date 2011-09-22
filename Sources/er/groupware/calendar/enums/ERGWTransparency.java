@@ -10,9 +10,9 @@ import net.fortuna.ical4j.model.property.Transp;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
-import er.groupware.calendar.ERCalendarPrincipal;
+import er.groupware.calendar.ERGWCalendarPrincipal;
 
-public enum Transparency implements ICalendarProperty {
+public enum ERGWTransparency implements ERGWICalendarProperty {
 
   OPAQUE("calendar.transparency.opaque", Transp.OPAQUE, IcalXmlStrMap.TRANSP_OPAQUE),
   TRANSPARENT("calendar.transparency.transparent", Transp.TRANSPARENT, IcalXmlStrMap.TRANSP_TRANSPARENT);
@@ -21,24 +21,24 @@ public enum Transparency implements ICalendarProperty {
   private Transp transpObject;
   private String zimbraValue;
   
-  private Transparency(String localizedDescription, Transp transpObject, String zimbraValue) {
+  private ERGWTransparency(String localizedDescription, Transp transpObject, String zimbraValue) {
     this.localizedDescription = localizedDescription;
     this.transpObject = transpObject;
     this.zimbraValue = zimbraValue;
   }
   
-  private static final Map<String,Transparency> zimbraLookup = new HashMap<String,Transparency>();
-  private static final Map<Transp,Transparency> rfc2445Lookup = new HashMap<Transp,Transparency>();
+  private static final Map<String,ERGWTransparency> zimbraLookup = new HashMap<String,ERGWTransparency>();
+  private static final Map<Transp,ERGWTransparency> rfc2445Lookup = new HashMap<Transp,ERGWTransparency>();
   
   static {
-    for(Transparency s : EnumSet.allOf(Transparency.class)) {
+    for(ERGWTransparency s : EnumSet.allOf(ERGWTransparency.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value(), s);
     }
   }
     
   public String localizedDescription() {
-    return ERCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
+    return ERGWCalendarPrincipal.localizer().localizedStringForKey(localizedDescription);
   }
 
   public Transp rfc2445Value() {
@@ -49,14 +49,14 @@ public enum Transparency implements ICalendarProperty {
     return zimbraValue;
   }
       
-  public static NSArray<Transparency> transparencies() {
-    return new NSArray<Transparency>(Transparency.values());
+  public static NSArray<ERGWTransparency> transparencies() {
+    return new NSArray<ERGWTransparency>(ERGWTransparency.values());
   }
   
-  private Transparency() {
+  private ERGWTransparency() {
   }
   
-  public static Transparency getByZimbraValue(String zimbraValue) { 
+  public static ERGWTransparency getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
 

@@ -50,29 +50,29 @@ import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
 
 import er.extensions.eof.ERXKey;
 import er.extensions.validation.ERXValidationException;
-import er.groupware.calendar.enums.AttendeeRole;
-import er.groupware.calendar.enums.CUType;
-import er.groupware.calendar.enums.Classification;
-import er.groupware.calendar.enums.FreeBusyStatus;
-import er.groupware.calendar.enums.IStatus;
-import er.groupware.calendar.enums.ParticipantStatus;
-import er.groupware.calendar.enums.Priority;
+import er.groupware.calendar.enums.ERGWAttendeeRole;
+import er.groupware.calendar.enums.ERGWCUType;
+import er.groupware.calendar.enums.ERGWClassification;
+import er.groupware.calendar.enums.ERGWFreeBusyStatus;
+import er.groupware.calendar.enums.ERGWIStatus;
+import er.groupware.calendar.enums.ERGWParticipantStatus;
+import er.groupware.calendar.enums.ERGWPriority;
 
-public abstract class ERCalendarObject {
+public abstract class ERGWCalendarObject {
 
-  private NSMutableArray<Attendee> attendees;
-  private NSMutableArray<Attendee> resources;
-  private FreeBusyStatus freeBusyStatus;
+  private NSMutableArray<ERGWAttendee> attendees;
+  private NSMutableArray<ERGWAttendee> resources;
+  private ERGWFreeBusyStatus freeBusyStatus;
   private String categories;
-  private Classification classification;
+  private ERGWClassification classification;
   private String description;
   private NSTimestamp endTime;
   private NSTimestamp startTime;
   private Dur duration;
   private Geo geo;
   private String location;
-  private Organizer organizer;
-  private Priority priority;
+  private ERGWOrganizer organizer;
+  private ERGWPriority priority;
   private String summary;
   private String url;
   private boolean isFullDay;
@@ -82,37 +82,37 @@ public abstract class ERCalendarObject {
   private NSTimestamp creationDate;
   private String parentId;
 
-  public static final ERXKey<ERCalendar> CALENDAR = new ERXKey<ERCalendar>("calendar");
-  public static final ERXKey<Attendee> ATTENDEES = new ERXKey<Attendee>("attendees");
-  public static final ERXKey<Attendee> RESOURCES = new ERXKey<Attendee>("resources");
-  public static final ERXKey<FreeBusyStatus> FREE_BUSY_STATUS = new ERXKey<FreeBusyStatus>("freeBusyStatus");
+  public static final ERXKey<ERGWCalendar> CALENDAR = new ERXKey<ERGWCalendar>("calendar");
+  public static final ERXKey<ERGWAttendee> ATTENDEES = new ERXKey<ERGWAttendee>("attendees");
+  public static final ERXKey<ERGWAttendee> RESOURCES = new ERXKey<ERGWAttendee>("resources");
+  public static final ERXKey<ERGWFreeBusyStatus> FREE_BUSY_STATUS = new ERXKey<ERGWFreeBusyStatus>("freeBusyStatus");
   public static final ERXKey<String> CATEGORIES = new ERXKey<String>("categories");
-  public static final ERXKey<Classification> CLASSIFICATION = new ERXKey<Classification>("classification");
+  public static final ERXKey<ERGWClassification> CLASSIFICATION = new ERXKey<ERGWClassification>("classification");
   public static final ERXKey<String> DESCRIPTION = new ERXKey<String>("description");
   public static final ERXKey<NSTimestamp> END_TIME = new ERXKey<NSTimestamp>("endTime");
   public static final ERXKey<NSTimestamp> START_TIME = new ERXKey<NSTimestamp>("startTime");
   public static final ERXKey<Dur> DURATION = new ERXKey<Dur>("duration");
   public static final ERXKey<Geo> GEO = new ERXKey<Geo>("geo");
   public static final ERXKey<String> LOCATION = new ERXKey<String>("location");
-  public static final ERXKey<Organizer> ORGANIZER = new ERXKey<Organizer>("organizer");
-  public static final ERXKey<Priority> PRIORITY = new ERXKey<Priority>("priority");
+  public static final ERXKey<ERGWOrganizer> ORGANIZER = new ERXKey<ERGWOrganizer>("organizer");
+  public static final ERXKey<ERGWPriority> PRIORITY = new ERXKey<ERGWPriority>("priority");
   public static final ERXKey<String> SUMMARY = new ERXKey<String>("summary");
   public static final ERXKey<String> URL = new ERXKey<String>("url");
   public static final ERXKey<Boolean> IS_FULL_DAY = new ERXKey<Boolean>("isFullDay");
   public static final ERXKey<TimeZone> TIMEZONE = new ERXKey<TimeZone>("timezone");
-  public static final ERXKey<ERAlarm> ALARMS = new ERXKey<ERAlarm>("alarms");
+  public static final ERXKey<ERGWAlarm> ALARMS = new ERXKey<ERGWAlarm>("alarms");
   public static final ERXKey<String> UID = new ERXKey<String>("uid");
   public static final ERXKey<NSTimestamp> LAST_MODIFIED_DATE = new ERXKey<NSTimestamp>("lastModifiedDate");
   public static final ERXKey<NSTimestamp> CREATION_DATE = new ERXKey<NSTimestamp>("creationDate");
   public static final ERXKey<String> PARENT_ID = new ERXKey<String>("parentId");
 
-  public ERCalendarObject() {
-    this.attendees = new NSMutableArray<Attendee>();
-    this.resources = new NSMutableArray<Attendee>();
+  public ERGWCalendarObject() {
+    this.attendees = new NSMutableArray<ERGWAttendee>();
+    this.resources = new NSMutableArray<ERGWAttendee>();
   }
 
-  public abstract IStatus status();
-  public abstract void setStatus(IStatus status);
+  public abstract ERGWIStatus status();
+  public abstract void setStatus(ERGWIStatus status);
 
   /*
   protected CalendarComponent calComponent() {
@@ -132,35 +132,35 @@ public abstract class ERCalendarObject {
     this.uid = uid;
   }
   
-  public NSArray<Attendee> attendees() {
+  public NSArray<ERGWAttendee> attendees() {
     return this.attendees;
   }
 
-  public void setAttendees(NSArray<Attendee> _attendees) {
+  public void setAttendees(NSArray<ERGWAttendee> _attendees) {
     this.attendees = _attendees.mutableClone();
   }
 
-  public void addAttendee(Attendee attendee) {
+  public void addAttendee(ERGWAttendee attendee) {
     this.attendees.addObject(attendee);
   }
 
-  public NSArray<Attendee> resources() {
+  public NSArray<ERGWAttendee> resources() {
     return this.resources;
   }
 
-  public void setResources(NSArray<Attendee> _resources) {
+  public void setResources(NSArray<ERGWAttendee> _resources) {
     this.resources = _resources.mutableClone();
   }
 
-  public void addResource(Attendee resource) {
+  public void addResource(ERGWAttendee resource) {
     this.resources.addObject(resource);
   }
 
-  public FreeBusyStatus freeBusyStatus() {
+  public ERGWFreeBusyStatus freeBusyStatus() {
     return freeBusyStatus;
   }
 
-  public void setFreeBusyStatus(FreeBusyStatus _freeBusyStatus) {
+  public void setFreeBusyStatus(ERGWFreeBusyStatus _freeBusyStatus) {
     this.freeBusyStatus = _freeBusyStatus;
   }
 
@@ -172,11 +172,11 @@ public abstract class ERCalendarObject {
     this.categories = _categories;
   }
 
-  public Classification classification() {
+  public ERGWClassification classification() {
     return classification;
   }
 
-  public void setClassification(Classification _classification) {
+  public void setClassification(ERGWClassification _classification) {
     this.classification = _classification;
   }
 
@@ -228,19 +228,19 @@ public abstract class ERCalendarObject {
     this.location = _location;
   }
 
-  public Organizer organizer() {
+  public ERGWOrganizer organizer() {
     return organizer;
   }
 
-  public void setOrganizer(Organizer _organizer) {
+  public void setOrganizer(ERGWOrganizer _organizer) {
     this.organizer = _organizer;
   }
 
-  public Priority priority() {
+  public ERGWPriority priority() {
     return priority;
   }
 
-  public void setPriority(Priority _priority) {
+  public void setPriority(ERGWPriority _priority) {
     this.priority = _priority;
   }
 
@@ -300,7 +300,7 @@ public abstract class ERCalendarObject {
     this.parentId = _parentId;
   }
 
-  public static net.fortuna.ical4j.model.property.Attendee convertAttendee(Attendee attendee) {
+  public static net.fortuna.ical4j.model.property.Attendee convertAttendee(ERGWAttendee attendee) {
     net.fortuna.ical4j.model.property.Attendee icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
     
     if (attendee.role() != null) {
@@ -315,22 +315,22 @@ public abstract class ERCalendarObject {
     if (attendee.cutype() != null) {
       icAttendee.getParameters().add(attendee.cutype().rfc2445Value());
     } else {
-      icAttendee.getParameters().add(CUType.UNKNOWN.rfc2445Value());        
+      icAttendee.getParameters().add(ERGWCUType.UNKNOWN.rfc2445Value());        
     }
     
     return icAttendee;
   }
   
-  public static CalendarComponent transformToICalObject(ERCalendarObject calendarObject, CalendarComponent calComponent) throws SocketException, URISyntaxException {
+  public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent) throws SocketException, URISyntaxException {
     UidGenerator ug = new UidGenerator("1");
     calendarObject.uid = ug.generateUid().getValue();
     calComponent.getProperties().add(new Uid(calendarObject.uid));
 
-    for (Attendee attendee: calendarObject.attendees) {
+    for (ERGWAttendee attendee: calendarObject.attendees) {
       calComponent.getProperties().add(convertAttendee(attendee));      
     }
     
-    for (Attendee resource: calendarObject.resources) {
+    for (ERGWAttendee resource: calendarObject.resources) {
       calComponent.getProperties().add(convertAttendee(resource));      
     }
     
@@ -393,7 +393,7 @@ public abstract class ERCalendarObject {
     return calComponent;
   }
   
-  public static ERCalendarObject transformFromICalObject(CalendarComponent calComponent, ERCalendarObject newObject) throws SocketException, URISyntaxException {
+  public static ERGWCalendarObject transformFromICalObject(CalendarComponent calComponent, ERGWCalendarObject newObject) throws SocketException, URISyntaxException {
     net.fortuna.ical4j.model.property.Organizer zOrg = (net.fortuna.ical4j.model.property.Organizer)calComponent.getProperty(Property.ORGANIZER);
     net.fortuna.ical4j.model.PropertyList attendees = calComponent.getProperties(Property.ATTENDEE);
     net.fortuna.ical4j.model.property.Clazz classification = (net.fortuna.ical4j.model.property.Clazz)calComponent.getProperty(Property.CLASS);
@@ -410,46 +410,46 @@ public abstract class ERCalendarObject {
     net.fortuna.ical4j.model.property.Priority priority = (net.fortuna.ical4j.model.property.Priority)calComponent.getProperty(Property.PRIORITY);
     net.fortuna.ical4j.model.PropertyList extras = calComponent.getProperties(Property.EXPERIMENTAL_PREFIX);
     
-    Organizer organizer = new Organizer();
+    ERGWOrganizer organizer = new ERGWOrganizer();
     //organizer.setEmailAddress(zOrg.getParameter(Parameter.VALUE).getValue());
     organizer.setName(zOrg.getParameter(Parameter.CN).getValue());
     newObject.setOrganizer(organizer);
     
     for (Object zAttendee: attendees) {
       net.fortuna.ical4j.model.property.Attendee oldAttendee = (net.fortuna.ical4j.model.property.Attendee)zAttendee;
-      Attendee attendee = new Attendee();
+      ERGWAttendee attendee = new ERGWAttendee();
       CuType type = (CuType)oldAttendee.getParameter(Parameter.CUTYPE);
       if (type == CuType.GROUP) {
-        attendee.setCutype(CUType.GROUP);
+        attendee.setCutype(ERGWCUType.GROUP);
       } else if (type == CuType.INDIVIDUAL) {
-        attendee.setCutype(CUType.INDIVIDUAL);
+        attendee.setCutype(ERGWCUType.INDIVIDUAL);
       } else if (type == CuType.RESOURCE) {
-        attendee.setCutype(CUType.RESOURCE);
+        attendee.setCutype(ERGWCUType.RESOURCE);
       } else if (type == CuType.ROOM) {
-        attendee.setCutype(CUType.ROOM);
+        attendee.setCutype(ERGWCUType.ROOM);
       } else if (type == CuType.UNKNOWN) {
-        attendee.setCutype(CUType.UNKNOWN);
+        attendee.setCutype(ERGWCUType.UNKNOWN);
       }      
       attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
       newObject.addAttendee(attendee);
     }
 
     if (classification == Clazz.PUBLIC) {
-      newObject.setClassification(Classification.PUBLIC);
+      newObject.setClassification(ERGWClassification.PUBLIC);
     } else if (classification == Clazz.PRIVATE) {
-      newObject.setClassification(Classification.PRIVATE);
+      newObject.setClassification(ERGWClassification.PRIVATE);
     } else if (classification == Clazz.CONFIDENTIAL) {
-      newObject.setClassification(Classification.CONFIDENTIAL);
+      newObject.setClassification(ERGWClassification.CONFIDENTIAL);
     } else {
-      newObject.setClassification(Classification.PUBLIC);
+      newObject.setClassification(ERGWClassification.PUBLIC);
     }
 
     if (freeBusy == BusyType.BUSY) {
-      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY);
+      newObject.setFreeBusyStatus(ERGWFreeBusyStatus.BUSY);
     } else if (freeBusy == BusyType.BUSY_TENTATIVE) {
-      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY_TENTATIVE);
+      newObject.setFreeBusyStatus(ERGWFreeBusyStatus.BUSY_TENTATIVE);
     } else if (freeBusy == BusyType.BUSY_UNAVAILABLE) {
-      newObject.setFreeBusyStatus(FreeBusyStatus.BUSY_UNAVAILABLE);
+      newObject.setFreeBusyStatus(ERGWFreeBusyStatus.BUSY_UNAVAILABLE);
     }
     
     newObject.setStartTime(new NSTimestamp(startTime.getDate()));
@@ -468,22 +468,22 @@ public abstract class ERCalendarObject {
     newObject.setGeo(geo);
 
     if (priority == net.fortuna.ical4j.model.property.Priority.HIGH) {
-      newObject.setPriority(Priority.HIGH);
+      newObject.setPriority(ERGWPriority.HIGH);
     } else if (priority == net.fortuna.ical4j.model.property.Priority.LOW) {
-      newObject.setPriority(Priority.LOW);
+      newObject.setPriority(ERGWPriority.LOW);
     } else if (priority == net.fortuna.ical4j.model.property.Priority.MEDIUM) {
-      newObject.setPriority(Priority.NORMAL);
+      newObject.setPriority(ERGWPriority.NORMAL);
     } else {
-      newObject.setPriority(Priority.UNDEFINED);
+      newObject.setPriority(ERGWPriority.UNDEFINED);
     }
 
     NSLog.out.appendln(extras);
     return newObject;
   }
 
-  public static void transformFromZimbraResponse(Element e, ERCalendarObject newObject) throws ServiceException {
+  public static void transformFromZimbraResponse(Element e, ERGWCalendarObject newObject) throws ServiceException {
     ZOrganizer zOrg = new ZOrganizer(e.getOptionalElement(MailConstants.E_CAL_ORGANIZER));
-    Organizer organizer = new Organizer();
+    ERGWOrganizer organizer = new ERGWOrganizer();
     organizer.setEmailAddress(zOrg.getEmailAddress().getAddress());
     organizer.setLdapUrl(zOrg.getDirectoryUrl());
     organizer.setName(zOrg.getPersonalName());
@@ -494,23 +494,23 @@ public abstract class ERCalendarObject {
     List<Element> attendees = e.listElements(MailConstants.E_CAL_ATTENDEE);
     for (Element attendee: attendees) {
       ZAttendee zAttendee = new ZAttendee(attendee);
-      Attendee newAttendee = new Attendee();
+      ERGWAttendee newAttendee = new ERGWAttendee();
       newAttendee.setEmailAddress(zAttendee.getAddress());
-      newAttendee.setCutype(CUType.getByZimbraValue(zAttendee.getCalendarUserType()));
+      newAttendee.setCutype(ERGWCUType.getByZimbraValue(zAttendee.getCalendarUserType()));
       //newAttendee.setDelegatedFrom(zAttendee.getDelegatedFrom());
       //newAttendee.setDelegatedTo(zAttendee.getDelegatedTo());
       newAttendee.setLdapUrl(zAttendee.getDirectoryUrl());
       newAttendee.setMemberOf(zAttendee.getMember());
-      newAttendee.setPartStat(ParticipantStatus.getByZimbraValue(zAttendee.getParticipantStatus()));
+      newAttendee.setPartStat(ERGWParticipantStatus.getByZimbraValue(zAttendee.getParticipantStatus()));
       newAttendee.setName(zAttendee.getPersonalName());
-      newAttendee.setRole(AttendeeRole.getByZimbraValue(zAttendee.getRole()));
+      newAttendee.setRole(ERGWAttendeeRole.getByZimbraValue(zAttendee.getRole()));
       newAttendee.setSentBy(zAttendee.getSentBy());
       newAttendee.setUrl(zAttendee.getUrl());
       newObject.addAttendee(newAttendee);
     }
     
-    newObject.setClassification(Classification.getByZimbraValue(e.getAttribute(MailConstants.A_CAL_CLASS, ZClass.PUB.name())));
-    newObject.setFreeBusyStatus(FreeBusyStatus.getByZimbraValue(e.getAttribute(MailConstants.A_APPT_FREEBUSY, ZFreeBusyStatus.B.name())));
+    newObject.setClassification(ERGWClassification.getByZimbraValue(e.getAttribute(MailConstants.A_CAL_CLASS, ZClass.PUB.name())));
+    newObject.setFreeBusyStatus(ERGWFreeBusyStatus.getByZimbraValue(e.getAttribute(MailConstants.A_APPT_FREEBUSY, ZFreeBusyStatus.B.name())));
     newObject.setIsFullDay(e.getAttributeBool(MailConstants.A_CAL_ALLDAY, false));
     newObject.setSummary(e.getAttribute(MailConstants.A_NAME, null));
     newObject.setLocation(e.getAttribute(MailConstants.A_CAL_LOCATION, null));
@@ -552,7 +552,7 @@ public abstract class ERCalendarObject {
 
     newObject.setUrl(e.getAttribute(MailConstants.A_CAL_URL, null));
 
-    newObject.setPriority(Priority.getByZimbraValue(e.getAttribute(MailConstants.A_CAL_PRIORITY, "0")));
+    newObject.setPriority(ERGWPriority.getByZimbraValue(e.getAttribute(MailConstants.A_CAL_PRIORITY, "0")));
 
     ArrayList<ZReply> mReplies = new ArrayList<ZReply>();
     Element repliesEl = e.getOptionalElement(MailConstants.E_CAL_REPLIES);
@@ -586,7 +586,7 @@ public abstract class ERCalendarObject {
     
   }
 
-  public static Element transformToZimbraObject(ERCalendarObject calendarObject) {
+  public static Element transformToZimbraObject(ERGWCalendarObject calendarObject) {
 
     Element inviteComponent = new XMLElement(MailConstants.E_INVITE_COMPONENT);
     inviteComponent.addAttribute(MailConstants.A_APPT_FREEBUSY, calendarObject.freeBusyStatus.zimbraValue());
@@ -614,7 +614,7 @@ public abstract class ERCalendarObject {
       organisateur.addAttribute(MailConstants.A_DISPLAY, calendarObject.organizer.name());
     }
 
-    for (Attendee attendee: calendarObject.attendees) {
+    for (ERGWAttendee attendee: calendarObject.attendees) {
       if (attendee.emailAddress() == null) {
         // TODO: localization for the error message
         throw new ERXValidationException("for zimbra servers, emailAddress or url must be specified", attendee, attendee.emailAddress());
@@ -625,7 +625,7 @@ public abstract class ERCalendarObject {
       xmlAttendee.addAttribute(MailConstants.A_CAL_CUTYPE, attendee.cutype().zimbraValue().toString());
     }
 
-    for (Attendee resource: calendarObject.resources) {
+    for (ERGWAttendee resource: calendarObject.resources) {
       if (resource.emailAddress() == null) {
         // TODO: localization for the error message
         throw new ERXValidationException("for zimbra servers, emailAddress or url must be specified", resource, resource.emailAddress());

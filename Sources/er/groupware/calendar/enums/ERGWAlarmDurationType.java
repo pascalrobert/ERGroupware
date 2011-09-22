@@ -4,7 +4,7 @@ package er.groupware.calendar.enums;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.common.soap.MailConstants;
 
-public enum AlarmDurationType {
+public enum ERGWAlarmDurationType {
 
   MINUTES("minutes", MailConstants.A_CAL_DURATION_MINUTES),
   HOURS("hour" ,MailConstants.A_CAL_DURATION_HOURS),
@@ -15,7 +15,7 @@ public enum AlarmDurationType {
   private String localizedDescription;
   private String zimbraValue;
 
-  private AlarmDurationType(String localizedDescription, String zimbraValue) {
+  private ERGWAlarmDurationType(String localizedDescription, String zimbraValue) {
     this.localizedDescription = localizedDescription;
     this.zimbraValue = zimbraValue;
   }
@@ -28,11 +28,11 @@ public enum AlarmDurationType {
     return zimbraValue;
   }
   
-  public static NSArray<AlarmDurationType> types() {
-    return new NSArray<AlarmDurationType>(AlarmDurationType.values());
+  public static NSArray<ERGWAlarmDurationType> types() {
+    return new NSArray<ERGWAlarmDurationType>(ERGWAlarmDurationType.values());
   }
   
-  private AlarmDurationType() {
+  private ERGWAlarmDurationType() {
   }
   
 }

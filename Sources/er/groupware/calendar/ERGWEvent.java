@@ -12,39 +12,39 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
 
-import er.groupware.calendar.enums.EventStatus;
-import er.groupware.calendar.enums.IStatus;
-import er.groupware.calendar.enums.Transparency;
+import er.groupware.calendar.enums.ERGWEventStatus;
+import er.groupware.calendar.enums.ERGWIStatus;
+import er.groupware.calendar.enums.ERGWTransparency;
 
-public class EREvent extends ERCalendarObject {
+public class ERGWEvent extends ERGWCalendarObject {
 
-  private Transparency transparency;
-  private EventStatus status;
+  private ERGWTransparency transparency;
+  private ERGWEventStatus status;
 
-  public EREvent(ERCalendar calendar) {
+  public ERGWEvent(ERGWCalendar calendar) {
     calendar.addEvent(this);
   }
 
   @Override
-  public EventStatus status() {
+  public ERGWEventStatus status() {
     return status;
   }
 
   @Override
-  public void setStatus(IStatus status) {
-    this.status = (EventStatus)status;
+  public void setStatus(ERGWIStatus status) {
+    this.status = (ERGWEventStatus)status;
   }
 
-  public Transparency transparency() {
+  public ERGWTransparency transparency() {
     return transparency;
   }
 
-  public void setTransparency(Transparency transparency) {
+  public void setTransparency(ERGWTransparency transparency) {
     this.transparency = transparency;
   }
 
-  public static CalendarComponent transformToICalObject(EREvent event) throws SocketException, ParseException, URISyntaxException {
-    VEvent vEvent = (VEvent)ERCalendarObject.transformToICalObject(event, new VEvent());
+  public static CalendarComponent transformToICalObject(ERGWEvent event) throws SocketException, ParseException, URISyntaxException {
+    VEvent vEvent = (VEvent)ERGWCalendarObject.transformToICalObject(event, new VEvent());
     if (event.transparency != null) {
       vEvent.getProperties().add(event.transparency.rfc2445Value());
     }
@@ -54,17 +54,17 @@ public class EREvent extends ERCalendarObject {
     return vEvent;
   }
 
-  public static Element transformToZimbraObject(EREvent event) {
-    Element invite = ERCalendarObject.transformToZimbraObject(event);
+  public static Element transformToZimbraObject(ERGWEvent event) {
+    Element invite = ERGWCalendarObject.transformToZimbraObject(event);
     invite.addAttribute(MailConstants.A_CAL_STATUS, event.status().zimbraValue().toString());
     invite.addAttribute(MailConstants.A_APPT_TRANSPARENCY, event.transparency().zimbraValue());
     return invite;
   }
 
-  public static void transformFromZimbraResponse(Element e, EREvent newObject) throws ServiceException {
-    ERCalendarObject.transformFromZimbraResponse(e, newObject);
-    newObject.setStatus(EventStatus.getByZimbraValue(ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS))));
-    newObject.setTransparency(Transparency.getByZimbraValue(e.getAttribute(MailConstants.A_APPT_TRANSPARENCY)));
+  public static void transformFromZimbraResponse(Element e, ERGWEvent newObject) throws ServiceException {
+    ERGWCalendarObject.transformFromZimbraResponse(e, newObject);
+    newObject.setStatus(ERGWEventStatus.getByZimbraValue(ZStatus.fromString(e.getAttribute(MailConstants.A_CAL_STATUS))));
+    newObject.setTransparency(ERGWTransparency.getByZimbraValue(e.getAttribute(MailConstants.A_APPT_TRANSPARENCY)));
   }
 
 }

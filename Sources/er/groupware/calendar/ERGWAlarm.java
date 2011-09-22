@@ -16,45 +16,45 @@ import com.zimbra.cs.zclient.ZInvite;
 import com.zimbra.cs.zclient.ZAlarm.ZTriggerType;
 
 import er.extensions.eof.ERXKey;
-import er.groupware.calendar.enums.AlarmAction;
-import er.groupware.calendar.enums.AlarmDurationType;
+import er.groupware.calendar.enums.ERGWAlarmAction;
+import er.groupware.calendar.enums.ERGWAlarmDurationType;
 
-public class ERAlarm {
+public class ERGWAlarm {
 
-  private AlarmAction action;
+  private ERGWAlarmAction action;
   private int duration;
   private int repeatCount;
   private boolean isNegativeDuration;
   private String description;
   private boolean isAbsolute;
   private NSTimestamp alarmDate;
-  private AlarmDurationType durationType;
+  private ERGWAlarmDurationType durationType;
   private String emailAddress;
   private String emailSubject;
 
-  public static final ERXKey<AlarmAction> ACTION = new ERXKey<AlarmAction>("action");
+  public static final ERXKey<ERGWAlarmAction> ACTION = new ERXKey<ERGWAlarmAction>("action");
   public static final ERXKey<Integer> DURATION = new ERXKey<Integer>("duration");
   public static final ERXKey<Integer> REPEAT_COUNT = new ERXKey<Integer>("repeatCount");
   public static final ERXKey<Boolean> IS_NEGATIVE_DURATION = new ERXKey<Boolean>("isNegativeDuration");
   public static final ERXKey<String> DESCRIPTION = new ERXKey<String>("description");
   public static final ERXKey<Boolean> IS_ABSOLUTE = new ERXKey<Boolean>("isAbsolute");
   public static final ERXKey<NSTimestamp> ALARM_DATE = new ERXKey<NSTimestamp>("alarmDate");
-  public static final ERXKey<AlarmDurationType> DURATION_TYPE = new ERXKey<AlarmDurationType>("durationType");
+  public static final ERXKey<ERGWAlarmDurationType> DURATION_TYPE = new ERXKey<ERGWAlarmDurationType>("durationType");
   public static final ERXKey<String> EMAIL_ADDRESS = new ERXKey<String>("emailAddress");
   public static final ERXKey<String> EMAIL_SUBJECT = new ERXKey<String>("emailSubject");
 
-  public ERAlarm() {
+  public ERGWAlarm() {
   }
 
-  public ERAlarm(ERCalendar calendar) {
+  public ERGWAlarm(ERGWCalendar calendar) {
     calendar.addAlarm(this);
   }
 
-  public AlarmAction action() {
+  public ERGWAlarmAction action() {
     return action;
   }
 
-  public void setAction(AlarmAction _action) {
+  public void setAction(ERGWAlarmAction _action) {
     this.action = _action;
   }
 
@@ -106,11 +106,11 @@ public class ERAlarm {
     this.alarmDate = _alarmDate;
   }
 
-  public AlarmDurationType durationType() {
+  public ERGWAlarmDurationType durationType() {
     return durationType;
   }
 
-  public void setDurationType(AlarmDurationType _durationType) {
+  public void setDurationType(ERGWAlarmDurationType _durationType) {
     this.durationType = _durationType;
   }
 
@@ -130,7 +130,7 @@ public class ERAlarm {
     this.emailSubject = _emailSubject;
   }
 
-  public static VAlarm transformToICalObject(ERAlarm alarm) {
+  public static VAlarm transformToICalObject(ERGWAlarm alarm) {
     VAlarm vAlarm = new VAlarm();
     vAlarm.getProperties().add(alarm.action().rfc2445Value());
 
@@ -171,7 +171,7 @@ public class ERAlarm {
     return vAlarm;
   }
 
-  public static void transformToZimbraObject(ERAlarm alarm, Element inviteComponent) {
+  public static void transformToZimbraObject(ERGWAlarm alarm, Element inviteComponent) {
     Element alarme = inviteComponent.addElement(MailConstants.E_CAL_ALARM);
     alarme.addAttribute(MailConstants.A_CAL_ALARM_ACTION, alarm.action().toString());
     Element declencheur = alarme.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
@@ -189,25 +189,25 @@ public class ERAlarm {
       if (alarm.durationType() != null) {
         rel.addAttribute(alarm.durationType().zimbraValue(), alarm.duration());          
       } else {
-        rel.addAttribute(AlarmDurationType.MINUTES.zimbraValue(), alarm.duration());
+        rel.addAttribute(ERGWAlarmDurationType.MINUTES.zimbraValue(), alarm.duration());
       }
     }
     alarme.addAttribute(MailConstants.E_CAL_ALARM_DESCRIPTION, alarm.description());
     Element repeat = alarme.addElement(MailConstants.E_CAL_ALARM_REPEAT);
     repeat.addAttribute(MailConstants.A_CAL_ALARM_COUNT, alarm.repeatCount());
-    if (alarm.action().equals(AlarmAction.EMAIL)) {
+    if (alarm.action().equals(ERGWAlarmAction.EMAIL)) {
       alarme.addAttribute(MailConstants.E_CAL_ALARM_SUMMARY,alarm.emailSubject());
       Element xmlAttendee = alarme.addElement(MailConstants.E_CAL_ATTENDEE);
       xmlAttendee.addAttribute(MailConstants.A_ADDRESS, alarm.emailSubject());
     }
   }
   
-  public static void transformFromZimbraResponse(Element e, ERCalendar newObject) throws ServiceException {
+  public static void transformFromZimbraResponse(Element e, ERGWCalendar newObject) throws ServiceException {
     List<Element> alarms = e.listElements(MailConstants.A_CAL_ALARM);
     for (Element xmlAlarm: alarms) {
-      ERAlarm newAlarm = new ERAlarm();
+      ERGWAlarm newAlarm = new ERGWAlarm();
       ZAlarm zAlarm = new ZAlarm(xmlAlarm);
-      newAlarm.setAction(AlarmAction.getByZimbraValue(zAlarm.getAction()));
+      newAlarm.setAction(ERGWAlarmAction.getByZimbraValue(zAlarm.getAction()));
       if (zAlarm.getTriggerType().equals(ZTriggerType.RELATIVE)) {
         newAlarm.setAbsolute(false);
         newAlarm.setDuration(zAlarm.getTriggerRelated().getMins());

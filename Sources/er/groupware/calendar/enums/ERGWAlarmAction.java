@@ -12,7 +12,7 @@ import com.zimbra.cs.zclient.ZAlarm;
 
 // TODO: alarme Facebook? IM? Appel d'un service par URL?
 
-public enum AlarmAction {
+public enum ERGWAlarmAction {
 
   DISPLAY("Message", Action.DISPLAY, ZAlarm.ZAction.DISPLAY),
   AUDIO("Son", Action.AUDIO, ZAlarm.ZAction.AUDIO),
@@ -23,17 +23,17 @@ public enum AlarmAction {
   private Action rfc2445Value;
   private ZAlarm.ZAction zimbraValue;
 
-  private AlarmAction(String description, Action rfc2445Value, ZAlarm.ZAction zimbraValue) {
+  private ERGWAlarmAction(String description, Action rfc2445Value, ZAlarm.ZAction zimbraValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
   }
   
-  private static final Map<ZAlarm.ZAction,AlarmAction> zimbraLookup = new HashMap<ZAlarm.ZAction,AlarmAction>();
-  private static final Map<Action,AlarmAction> rfc2445Lookup = new HashMap<Action,AlarmAction>();
+  private static final Map<ZAlarm.ZAction,ERGWAlarmAction> zimbraLookup = new HashMap<ZAlarm.ZAction,ERGWAlarmAction>();
+  private static final Map<Action,ERGWAlarmAction> rfc2445Lookup = new HashMap<Action,ERGWAlarmAction>();
   
   static {
-    for(AlarmAction s : EnumSet.allOf(AlarmAction.class)) {
+    for(ERGWAlarmAction s : EnumSet.allOf(ERGWAlarmAction.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value(), s);
     }
@@ -51,14 +51,14 @@ public enum AlarmAction {
     return zimbraValue;
   }
   
-  public static NSArray<AlarmAction> actions() {
-    return new NSArray<AlarmAction>(AlarmAction.values());
+  public static NSArray<ERGWAlarmAction> actions() {
+    return new NSArray<ERGWAlarmAction>(ERGWAlarmAction.values());
   }
   
-  private AlarmAction() {
+  private ERGWAlarmAction() {
   }
 
-  public static AlarmAction getByZimbraValue(ZAlarm.ZAction zimbraValue) { 
+  public static ERGWAlarmAction getByZimbraValue(ZAlarm.ZAction zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
   
