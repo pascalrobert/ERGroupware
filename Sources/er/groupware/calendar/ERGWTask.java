@@ -4,8 +4,10 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 
+import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VToDo;
+import net.fortuna.ical4j.model.property.Due;
 
 import com.webobjects.appserver.xml.WOXMLCoder;
 import com.webobjects.foundation.NSTimestamp;
@@ -69,6 +71,11 @@ public class ERGWTask extends ERGWCalendarObject {
   
   public static CalendarComponent transformToICalObject(ERGWTask task) throws SocketException, ParseException, URISyntaxException {
     VToDo vTodo = (VToDo)ERGWCalendarObject.transformToICalObject(task, new VToDo());
+    vTodo.getProperties().add(new Due(new Date(task.dueDate())));
+    if (task.status != null) {
+    	vTodo.getProperties().add(task.status.rfc2445Value());
+    }
+    vTodo.getProperties().add(new Due(new Date(task.dueDate().getTime())));
     return vTodo;
   }
   
