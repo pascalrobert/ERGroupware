@@ -321,6 +321,12 @@ public abstract class ERGWCalendarObject {
     return icAttendee;
   }
   
+  public static net.fortuna.ical4j.model.property.Organizer convertOrganizer(ERGWOrganizer organizer) {
+	  net.fortuna.ical4j.model.property.Organizer icOrganizer = new net.fortuna.ical4j.model.property.Organizer(URI.create("mailto:"  + organizer.emailAddress()));
+	  icOrganizer.getParameters().add(new Cn(organizer.name()));
+	  return icOrganizer;
+  }
+  
   public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent) throws SocketException, URISyntaxException {
     UidGenerator ug = new UidGenerator("1");
     calendarObject.uid = ug.generateUid().getValue();
@@ -377,7 +383,7 @@ public abstract class ERGWCalendarObject {
     }
     
     if (calendarObject.organizer != null) {
-      calComponent.getProperties().add(calendarObject.organizer);
+      calComponent.getProperties().add(convertOrganizer(calendarObject.organizer));
     }
     
     if (calendarObject.priority != null) {
