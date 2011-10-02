@@ -6,15 +6,20 @@ import java.text.ParseException;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.model.property.XProperty;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
@@ -30,6 +35,9 @@ public class ERGWCalendar {
   private ProdId productId;
   protected Version version;
   protected CalScale scale;
+  private NSTimeZone timeZone;
+  private String calendarName;
+  
   public static ProdId defaultProdId = new ProdId("-//Project Wonder//ERCalendar2//EN"); // TODO: that should go in a property
 
   public ERGWCalendar() {
@@ -105,12 +113,34 @@ public class ERGWCalendar {
     this.scale = _scale;
   }
 
+  public NSTimeZone timeZone() {
+    return timeZone;
+  }
+
+  public void setTimeZone(NSTimeZone timeZone) {
+    this.timeZone = timeZone;
+  }
+
+  public String calendarName() {
+    return calendarName;
+  }
+
+  public void setCalendarName(String calendarName) {
+    this.calendarName = calendarName;
+  }
+
   public static Calendar transformToICalObject(ERGWCalendar calendar) throws SocketException, ParseException, URISyntaxException {
     net.fortuna.ical4j.model.Calendar icalCalendar = new net.fortuna.ical4j.model.Calendar();
 
     icalCalendar.getProperties().add(calendar.productId());
     icalCalendar.getProperties().add(calendar.version);
     icalCalendar.getProperties().add(calendar.scale);
+    icalCalendar.getProperties().add(new XProperty("X-WR-CALNAME", calendar.calendarName()));
+    
+    TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+    VTimeZone tz = registry.getTimeZone(calendar.timeZone().getID()).getVTimeZone();
+    icalCalendar.getComponents().add(tz);
+    
     for (ERGWEvent event: calendar.events()) {
       VEvent vEvent = (VEvent)ERGWEvent.transformToICalObject(event);
       icalCalendar.getComponents().add(vEvent);
