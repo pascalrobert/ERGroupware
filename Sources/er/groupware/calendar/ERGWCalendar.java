@@ -3,7 +3,7 @@ package er.groupware.calendar;
 import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-
+import java.util.TimeZone;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
@@ -16,15 +16,12 @@ import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
-
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSTimeZone;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
-
 import er.groupware.calendar.exceptions.ZimbraTooManyObjectsException;
 
 public class ERGWCalendar {
@@ -35,7 +32,7 @@ public class ERGWCalendar {
   private ProdId productId;
   protected Version version;
   protected CalScale scale;
-  private NSTimeZone timeZone;
+  private TimeZone timeZone;
   private String calendarName;
   
   public static ProdId defaultProdId = new ProdId("-//Project Wonder//ERCalendar2//EN"); // TODO: that should go in a property
@@ -113,11 +110,11 @@ public class ERGWCalendar {
     this.scale = _scale;
   }
 
-  public NSTimeZone timeZone() {
+  public TimeZone timeZone() {
     return timeZone;
   }
 
-  public void setTimeZone(NSTimeZone timeZone) {
+  public void setTimeZone(TimeZone timeZone) {
     this.timeZone = timeZone;
   }
 
