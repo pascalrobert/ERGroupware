@@ -17,8 +17,10 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
+import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.BusyType;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.Clazz;
@@ -311,6 +313,8 @@ public abstract class ERGWCalendarObject {
     
     icAttendee.getParameters().add(new Cn(attendee.name()));
     icAttendee.getParameters().add(new Rsvp(attendee.isRsvp()));        
+    icAttendee.getParameters().add(new XParameter("X-SENT", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
+    icAttendee.getParameters().add(attendee.partStat().rfc2445Value());
     
     if (attendee.cutype() != null) {
       icAttendee.getParameters().add(attendee.cutype().rfc2445Value());
@@ -328,9 +332,11 @@ public abstract class ERGWCalendarObject {
   }
   
   public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent) throws SocketException, URISyntaxException {
-    UidGenerator ug = new UidGenerator("1");
-    calendarObject.uid = ug.generateUid().getValue();
-    calComponent.getProperties().add(new Uid(calendarObject.uid));
+    if (calendarObject.uid() == null) {
+  	  UidGenerator ug = new UidGenerator("1");
+      calendarObject.setUid(ug.generateUid().getValue());
+    }
+    calComponent.getProperties().add(new Uid(calendarObject.uid()));
 
     for (ERGWAttendee attendee: calendarObject.attendees) {
       calComponent.getProperties().add(convertAttendee(attendee));      
