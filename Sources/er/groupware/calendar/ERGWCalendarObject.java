@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
-
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
@@ -17,7 +16,6 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
-import net.fortuna.ical4j.model.parameter.PartStat;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.XParameter;
@@ -34,7 +32,6 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.util.UidGenerator;
-
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
@@ -49,7 +46,6 @@ import com.zimbra.cs.zclient.ZInvite.ZClass;
 import com.zimbra.cs.zclient.ZInvite.ZComponent.ZReply;
 import com.zimbra.cs.zclient.ZInvite.ZFreeBusyStatus;
 import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
-
 import er.extensions.eof.ERXKey;
 import er.extensions.validation.ERXValidationException;
 import er.groupware.calendar.enums.ERGWAttendeeRole;
@@ -314,6 +310,7 @@ public abstract class ERGWCalendarObject {
     icAttendee.getParameters().add(new Cn(attendee.name()));
     icAttendee.getParameters().add(new Rsvp(attendee.isRsvp()));        
     icAttendee.getParameters().add(new XParameter("X-SENT", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
+    icAttendee.getParameters().add(new XParameter("SCHEDULE-STATUS", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
     icAttendee.getParameters().add(attendee.partStat().rfc2445Value());
     
     if (attendee.cutype() != null) {
