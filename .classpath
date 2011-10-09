@@ -26,6 +26,10 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbrasoap.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbrastore.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/json.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-connector-0.9.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="Libraries/jackrabbit-1.5.3-src.jar"/>
+	<classpathentry kind="lib" path="Libraries/jackrabbit-jcr-commons-1.4.2.jar"/>
+	<classpathentry kind="lib" path="Libraries/jackrabbit-webdav-1.4.jar"/>
 	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
