@@ -1,0 +1,2856 @@
+
+
+
+Network Working Group                                           C. Daboo
+Internet-Draft                                                     Apple
+Intended status: Standards Track                         B. Desruisseaux
+Expires: May 21, 2008                                             Oracle
+                                                            L. Dusseault
+                                                             CommerceNet
+                                                       November 18, 2007
+
+
+                 CalDAV Scheduling Extensions to WebDAV
+                   draft-desruisseaux-caldav-sched-04
+
+Status of This Memo
+
+   By submitting this Internet-Draft, each author represents that any
+   applicable patent or other IPR claims of which he or she is aware
+   have been or will be disclosed, and any of which he or she becomes
+   aware will be disclosed, in accordance with Section 6 of BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF), its areas, and its working groups.  Note that
+   other groups may also distribute working documents as Internet-
+   Drafts.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   The list of current Internet-Drafts can be accessed at
+   http://www.ietf.org/ietf/1id-abstracts.txt.
+
+   The list of Internet-Draft Shadow Directories can be accessed at
+   http://www.ietf.org/shadow.html.
+
+   This Internet-Draft will expire on May 21, 2008.
+
+Copyright Notice
+
+   Copyright (C) The IETF Trust (2007).
+
+Abstract
+
+   This document defines extensions to the Web Distributed Authoring and
+   Versioning (WebDAV) protocol to specify a standard way of exchanging
+   and processing scheduling messages based on the iCalendar Transport-
+   Independent Interoperability Protocol (iTIP).  This document defines
+   the "calendar-schedule" feature of CalDAV.
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 1]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  4
+     1.1.  XML Namespaces . . . . . . . . . . . . . . . . . . . . . .  4
+     1.2.  Notational Conventions . . . . . . . . . . . . . . . . . .  4
+     1.3.  Terminology  . . . . . . . . . . . . . . . . . . . . . . .  5
+   2.  Required Scheduling features . . . . . . . . . . . . . . . . .  5
+   3.  CalDAV Scheduling Support Discovery  . . . . . . . . . . . . .  6
+     3.1.  Example: Using OPTIONS for the Discovery of Support
+           for CalDAV . . . . . . . . . . . . . . . . . . . . . . . .  6
+   4.  Scheduling Process . . . . . . . . . . . . . . . . . . . . . .  6
+     4.1.  Scheduling Collections . . . . . . . . . . . . . . . . . .  8
+     4.2.  Scheduling Transactions  . . . . . . . . . . . . . . . . .  9
+   5.  New Resource Types and Properties  . . . . . . . . . . . . . . 10
+     5.1.  Scheduling Outbox Collection . . . . . . . . . . . . . . . 10
+     5.2.  Scheduling Inbox Collection  . . . . . . . . . . . . . . . 11
+     5.3.  Scheduling Inbox Collection Properties . . . . . . . . . . 11
+       5.3.1.  CALDAV:calendar-free-busy-set Property . . . . . . . . 12
+       5.3.2.  Additional Precondition for PROPPATCH  . . . . . . . . 12
+     5.4.  Calendar Object Resource Properties  . . . . . . . . . . . 13
+       5.4.1.  CALDAV:originator Property . . . . . . . . . . . . . . 13
+       5.4.2.  CALDAV:recipient Property  . . . . . . . . . . . . . . 13
+   6.  Scheduling . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+     6.1.  POST Method  . . . . . . . . . . . . . . . . . . . . . . . 15
+       6.1.1.  Originator request header  . . . . . . . . . . . . . . 16
+       6.1.2.  ORGANIZER Property . . . . . . . . . . . . . . . . . . 17
+       6.1.3.  Recipient request header . . . . . . . . . . . . . . . 17
+       6.1.4.  Response to a POST request . . . . . . . . . . . . . . 18
+       6.1.5.  Status Codes for use with the POST method  . . . . . . 18
+       6.1.6.  Example - Simple meeting invitation  . . . . . . . . . 20
+       6.1.7.  Example - Free-Busy lookup . . . . . . . . . . . . . . 22
+       6.1.8.  Example - Simple task assignment . . . . . . . . . . . 24
+     6.2.  Retrieving incoming scheduling messages  . . . . . . . . . 25
+       6.2.1.  Example - Retrieve incoming scheduling message . . . . 25
+     6.3.  Acting on incoming scheduling messages . . . . . . . . . . 26
+   7.  Additional iCalendar Property Parameters . . . . . . . . . . . 27
+     7.1.  Received Sequence  . . . . . . . . . . . . . . . . . . . . 27
+     7.2.  Received Date/Time Stamp . . . . . . . . . . . . . . . . . 28
+   8.  HTTP Request Headers for CalDAV  . . . . . . . . . . . . . . . 28
+     8.1.  Originator Request Header  . . . . . . . . . . . . . . . . 28
+     8.2.  Recipient Request Header . . . . . . . . . . . . . . . . . 28
+   9.  Scheduling Access Control  . . . . . . . . . . . . . . . . . . 29
+     9.1.  Scheduling Privileges  . . . . . . . . . . . . . . . . . . 29
+       9.1.1.  CALDAV:schedule-post Privilege . . . . . . . . . . . . 29
+       9.1.2.  CALDAV:schedule-post-vevent Privilege  . . . . . . . . 29
+       9.1.3.  CALDAV:schedule-post-vtodo Privilege . . . . . . . . . 29
+       9.1.4.  CALDAV:schedule-post-vjournal Privilege  . . . . . . . 29
+       9.1.5.  CALDAV:schedule-post-vfreebusy Privilege . . . . . . . 30
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 2]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+       9.1.6.  CALDAV:schedule-deliver Privilege  . . . . . . . . . . 30
+       9.1.7.  CALDAV:schedule-deliver-vevent Privilege . . . . . . . 30
+       9.1.8.  CALDAV:schedule-deliver-vtodo Privilege  . . . . . . . 30
+       9.1.9.  CALDAV:schedule-deliver-vjournal Privilege . . . . . . 31
+       9.1.10. CALDAV:schedule-deliver-vfreebusy Privilege  . . . . . 31
+       9.1.11. CALDAV:schedule-respond Privilege  . . . . . . . . . . 31
+       9.1.12. CALDAV:schedule-respond-vevent Privilege . . . . . . . 32
+       9.1.13. CALDAV:schedule-respond-vtodo Privilege  . . . . . . . 32
+       9.1.14. CALDAV:schedule Privilege  . . . . . . . . . . . . . . 32
+       9.1.15. Aggregation of Scheduling Privileges . . . . . . . . . 32
+     9.2.  Additional Principal Properties  . . . . . . . . . . . . . 33
+       9.2.1.  CALDAV:schedule-inbox-URL Property . . . . . . . . . . 33
+       9.2.2.  CALDAV:schedule-outbox-URL Property  . . . . . . . . . 34
+       9.2.3.  CALDAV:calendar-user-address-set Property  . . . . . . 34
+       9.2.4.  Example: Searching for calendars belonging to a
+               user based on a calendar user address  . . . . . . . . 35
+       9.2.5.  Example: Finding the scheduling Inbox and Outbox
+               Collection belonging to the currently
+               authenticated user . . . . . . . . . . . . . . . . . . 36
+   10. Reports  . . . . . . . . . . . . . . . . . . . . . . . . . . . 36
+   11. XML Element Definitions  . . . . . . . . . . . . . . . . . . . 37
+     11.1. CALDAV:schedule-response XML Element . . . . . . . . . . . 37
+     11.2. CALDAV:response XML Element  . . . . . . . . . . . . . . . 37
+     11.3. CALDAV:recipient XML Element . . . . . . . . . . . . . . . 37
+     11.4. CALDAV:request-status XML Element  . . . . . . . . . . . . 38
+   12. Security Considerations  . . . . . . . . . . . . . . . . . . . 38
+     12.1. Verifying scheduling requests  . . . . . . . . . . . . . . 38
+   13. IANA Consideration . . . . . . . . . . . . . . . . . . . . . . 39
+     13.1. Originator Header Registration . . . . . . . . . . . . . . 39
+     13.2. Recipient Header Registration  . . . . . . . . . . . . . . 39
+   14. Acknowledgements . . . . . . . . . . . . . . . . . . . . . . . 40
+   15. References . . . . . . . . . . . . . . . . . . . . . . . . . . 40
+     15.1. Normative References . . . . . . . . . . . . . . . . . . . 40
+     15.2. Informative References . . . . . . . . . . . . . . . . . . 41
+   Appendix A.  Scheduling Privileges Summary . . . . . . . . . . . . 41
+     A.1.  Scheduling Inbox Privileges  . . . . . . . . . . . . . . . 41
+     A.2.  Scheduling Outbox Privileges . . . . . . . . . . . . . . . 44
+   Appendix B.  Example Scheduling Workflow . . . . . . . . . . . . . 45
+     B.1.  Inviting Attendees to an Event . . . . . . . . . . . . . . 46
+     B.2.  Receiving and Replying to an Event Invitation  . . . . . . 46
+     B.3.  Receiving a Reply to an Event Invitation . . . . . . . . . 46
+     B.4.  Rescheduling an existing event . . . . . . . . . . . . . . 47
+     B.5.  Receiving an Updated Event Invitation  . . . . . . . . . . 47
+   Appendix C.  Changes . . . . . . . . . . . . . . . . . . . . . . . 48
+     C.1.  Changes in -04 . . . . . . . . . . . . . . . . . . . . . . 48
+     C.2.  Changes in -03 . . . . . . . . . . . . . . . . . . . . . . 49
+     C.3.  Changes in -02 . . . . . . . . . . . . . . . . . . . . . . 49
+     C.4.  Changes in -01 . . . . . . . . . . . . . . . . . . . . . . 49
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 3]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+1.  Introduction
+
+   This document specifies a set of headers, properties and privileges
+   that define the CalDAV [RFC4791] scheduling extensions to the WebDAV
+   [RFC4918] protocol.  This document also provides the transport
+   specific information necessary to convey iCalendar [RFC2445]
+   Transport-independent Interoperability Protocol iTIP [RFC2446]
+   messages over WebDAV which enables transactions such as publish,
+   schedule, reschedule, respond to scheduling requests, negotiation of
+   changes or cancel iCalendar-based calendar components, as well as
+   search for busy time information.
+
+   Discussion of this Internet-Draft is taking place on the mailing list
+   <http://lists.osafoundation.org/mailman/listinfo/ietf-caldav>.
+
+1.1.  XML Namespaces
+
+   Definitions of XML elements in this document use XML element type
+   declarations (as found in XML Document Type Declarations), described
+   in Section 3.2 of [W3C.REC-xml-20060816].
+
+   The namespace "urn:ietf:params:xml:ns:caldav" is reserved for the XML
+   elements defined in this specification, or in other Standards Track
+   IETF RFCs written to extend CalDAV.  It MUST NOT be used for
+   proprietary extensions.
+
+   Note that the XML declarations used in this document are incomplete,
+   in that they do not include namespace information.  Thus, the reader
+   MUST NOT use these declarations as the only way to create valid
+   CalDAV properties or to validate CalDAV XML element types.  Some of
+   the declarations refer to XML elements defined by WebDAV which use
+   the "DAV:" namespace.  Wherever such elements appear, they are
+   explicitly given the "DAV:" prefix to help avoid confusion.
+   Additionally, some of the elements used here are defined in CalDAV
+   [RFC4791].
+
+   Also note that some CalDAV XML element names are identical to WebDAV
+   XML element names, though their namespace differs.  Care MUST be
+   taken not to confuse the two sets of names.
+
+1.2.  Notational Conventions
+
+   The augmented BNF used by this document to describe protocol elements
+   is described in Section 2.1 of [RFC2616].  Because this augmented BNF
+   uses the basic production rules provided in Section 2.2 of [RFC2616],
+   those rules apply to this document as well.
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 4]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in [RFC2119].
+
+   When XML element types in the namespaces "DAV:" and
+   "urn:ietf:params:xml:ns:caldav" are referenced in this document
+   outside of the context of an XML fragment, the string "DAV:" and
+   "CALDAV:" will be prefixed to the element types respectively.
+
+1.3.  Terminology
+
+   Scheduling message:  A message that describes a transaction such as
+      publish, schedule, reschedule, respond to scheduling requests,
+      negotiation of changes or cancel calendar components.
+
+   Free busy message:  A message that describes a transaction such as
+      publish unsolicited busy time information, request busy time
+      information, or respond to a busy time request.
+
+   Outgoing Scheduling message:  A scheduling message that uses an
+      scheduling method set to one of PUBLISH, REQUEST, ADD, CANCEL or
+      DECLINE-COUNTER.
+
+   Incoming Scheduling message:  A scheduling message that uses an
+      scheduling method set to one of REPLY, REFRESH or COUNTER.
+
+   Calendar User Agent (CUA)  Software with which the calendar user
+      communicates with a calendar service or local calendar store to
+      access calendar information.
+
+2.  Required Scheduling features
+
+   This section lists what functionality is required of a CalDAV
+   scheduling server.  To advertise support for this specification a
+   server:
+
+   o  MUST support iCalendar [RFC2445] as a media type for the calendar
+      object resource format;
+
+   o  MUST support iTIP [RFC2446].
+
+   o  MUST support WebDAV Class 1, 2, and 3 [RFC4918];
+
+   o  MUST support WebDAV ACL [RFC3744] with the additional privileges
+      defined in Section 9.1 of this document;
+
+   o  MUST support transport over TLS [RFC2246] as defined in [RFC2818]
+      (note that [RFC2246] has been obsoleted by [RFC4346]);
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 5]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   o  MUST support ETags [RFC2616];
+
+   o  MUST support the CALDAV:schedule-inbox and CALDAV:schedule-outbox
+      collection resource types.
+
+   o  MUST support the POST method with the Recipient and Originator
+      request headers targeted at a CALDAV:schedule-outbox collection
+      resource type.
+
+   A CalDAV scheduling server MAY also support the CalDAV calendar-
+   access feature [RFC4791], and that adds the following requirements:
+
+      MUST support the CALDAV:calendar-query and CALDAV:multiget REPORTs
+      on CALDAV:schedule-inbox and CALDAV:schedule-outbox collection
+      resource types.
+
+3.  CalDAV Scheduling Support Discovery
+
+   If the server supports the calendar scheduling features described in
+   this document it MUST include "calendar-schedule" as a field in the
+   DAV response header from an OPTIONS request on any resource that
+   supports any scheduling properties, privileges or methods.
+
+3.1.  Example: Using OPTIONS for the Discovery of Support for CalDAV
+
+   >> Request <<
+
+   OPTIONS /lisa/calendar/outbox/ HTTP/1.1
+   Host: cal.example.com
+
+   >> Response <<
+
+   HTTP/1.1 200 OK
+   Allow: OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, COPY, MOVE
+   Allow: MKCOL, PROPFIND, PROPPATCH, LOCK, UNLOCK, REPORT, ACL
+   DAV: 1, 2, 3, access-control, calendar-access, calendar-schedule
+   Content-Length: 0
+
+   In this example, the OPTIONS response indicates that the server
+   supports both the calendar-access and calendar-schedule features and
+   that /lisa/calendar/outbox/ can be specified as a Request-URI to the
+   POST method.
+
+4.  Scheduling Process
+
+   The process of scheduling a meeting between different parties often
+   involves a series of steps with different "actors" playing particular
+   roles during the whole process.  Typically there is a meeting
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 6]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   "Organizer" whose role is to setup a meeting between one or more
+   meeting "Attendees", and this is done by sending out invitations and
+   handling responses from each Attendee.
+
+   This process can typically be broken down into two phases.
+
+   In the first phase the Organizer tries to determine a time for the
+   meeting that ought to be the most acceptable to each Attendee.  This
+   involves finding out when each Attendee is available during the
+   period of time in which the meeting needs to occur (or simply finding
+   a suitable time for all attendees to come together for the meeting),
+   and determining when the most appropriate time is for which each
+   Attendee is free.  This process is called a "free-busy" lookup.
+
+   In the second phase the Organizer sends out invitations to each
+   Attendee using the time determined from the free-busy lookup - or a
+   suitable guess as to an appropriate time based on other factors if
+   free-busy lookup is not feasible.  There then follows a process of
+   negotiation between Organizer and Attendees regarding the invitation.
+   Some Attendees may choose to attend at the original time provided by
+   the Organizer, others may decline to attend at that time, but suggest
+   another time, others may decline to attend at any time.  The
+   Organizer needs to process each of the replies from the Attendees and
+   take appropriate action to confirm the meeting, reschedule it or
+   perhaps cancel it depending on those replies.
+
+   The user "expectation" as to how a calendaring and scheduling system
+   should respond in each of these two phases is somewhat different.  In
+   the case of a free-busy lookup, users expect to get back results
+   immediately so that they can then move on to the invitation phase as
+   quickly as possible.  In the case of invitations, its expected that
+   each Attendee will reply in their own time, so delays in receiving
+   replies are anticipated.  Thus calendaring and scheduling systems
+   should treat these two operational phases in different ways to
+   accommodate the user expectations, and this specification does that.
+
+   The scenario above covers the case of scheduling events (VEVENT
+   components) between calendar users, and doing free-busy lookups
+   (VFREEBUSY components).  However, iCalendar [RFC2445] also allows for
+   sending VTODO and VJOURNAL components as described in iTIP [RFC2446].
+   Since this specification is based on iTIP, VTODO and VJOURNAL
+   components can also be used.  For the majority of the following
+   discussion, scheduling of events and free-busy lookups will be
+   discussed as these are the more common operations, however
+   implementations MUST be able to handle all the types of iCalendar
+   components specified for scheduling in iTIP.
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 7]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+4.1.  Scheduling Collections
+
+   This specification introduces two new collection resource types that
+   are used for managing incoming and outgoing scheduling messages
+   separate from other calendar object resources.
+
+   A calendar user may have multiple calendars representing different
+   spheres of activity, but scheduling requests are targeted at calendar
+   user addresses, and there is no formal way to have those indicate
+   which sphere of activity they might apply to.  By storing all
+   incoming scheduling requests in a separate collection, clients can
+   process the requests in that collection and choose what calendar the
+   request belongs to and make its own arrangements to place the
+   relevant calendar object in that calendar to "book" it.
+
+   The scheduling "Outbox" collection is used for sending scheduling
+   messages via a POST request targeted at the collection and containing
+   the scheduling message in the body of the request.  Servers MAY save
+   scheduling messages targeted at the scheduling Outbox collection as
+   resources in the collection, and these can then be used to track the
+   history of scheduling messages.
+
+   The scheduling "Inbox" collection is used to receive scheduling
+   messages, which are stored as calendar object resources in the
+   collection.  The server deposits scheduling messages into the
+   scheduling Inbox collection as the result of a scheduling request
+   that targets the calendar user associated with the scheduling Inbox
+   collection.  Scheduling messages could be delivered as the result of
+   a POST request targeted at a scheduling Outbox collection (as
+   described above) or as the result of some external process (not
+   defined here).
+
+   New WebDAV ACL [RFC3744] privileges on each of these new collections
+   can be used to separately control who is able to send scheduling
+   messages on behalf of a user (when applied to a scheduling Outbox
+   collection), or who a user will accept scheduling messages from (when
+   applied to an scheduling Inbox collection).
+
+   Note that calendar object resources stored in the new scheduling
+   collections MUST obey the restrictions for (iTIP) [RFC2446] calendar
+   objects.  The restrictions for calendar object resources stored in
+   regular calendar collections defined in calendar-access do not apply,
+   irrespective of whether the calendar-access feature is available or
+   not.
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 8]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+4.2.  Scheduling Transactions
+
+   The iCalendar Transport-independent Interoperability Protocol (iTIP)
+   [RFC2446] outlines a model for scheduling and free-busy message
+   exchanges to perform scheduling transactions.  This specification
+   makes use of scheduling messages to handle scheduling transactions on
+   the server by having such messages passed between different users on
+   the server depending on their role in the scheduling process.
+
+   To that end each scheduling message is modeled as a calendar object
+   resource which contains the iCalendar object that conforms to the
+   iTIP requirements for the type of transaction being requested.
+
+   This specification defines the POST method, acting on an Organizer's
+   scheduling Outbox collection, to trigger schedule processing by the
+   server.  This can take one of two forms: for free-busy messages the
+   POST request returns immediately with free busy results; for
+   scheduling messages, a copy of the scheduling message specified in
+   the request body is deposited into each recipient's scheduling Inbox
+   collection.
+
+   The server may support delivery of scheduling messages to other
+   CalDAV servers if the client specifies a remote calendar user address
+   for any recipient, but the server is not bound to support or complete
+   remote delivery operations even if it advertises support for the
+   "calendar-schedule" feature.  Note that remote delivery mechanisms
+   are not defined in this specification.  This specification does not
+   define a server-to-server or server-to-client protocol to deliver
+   remote scheduling messages.  Implementations may do this in a
+   proprietary way, with iMIP [RFC2447], or with iTIP bindings as yet
+   unspecified.
+
+   After the delivery is completed, CalDAV clients will see the
+   scheduling message the next time they synchronize or query a
+   scheduling Inbox collection.  To reply to a scheduling REQUEST, the
+   client uses the POST method to send another scheduling message (this
+   time a REPLY) back to the Organizer.  If the user has decided to
+   accept the REQUEST, the client can create a suitable calendar object
+   resource in the appropriate calendar collection for the recipient.
+   The step of putting the calendar object resource in the calendar is
+   left up to the client, so that the client can make appropriate
+   choices about where to put the calendar object resource, and with
+   what alarms, etc.  However, the server MAY be configured to
+   automatically accept or reject invitations, and if the server auto-
+   accepts invitations then the server is responsible for creating
+   calendar object resources in a calendar collection specified by the
+   user, or via some other configuration option.
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                  [Page 9]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+5.  New Resource Types and Properties
+
+   The CalDAV scheduling extension defines the following new resource
+   types for use with CalDAV.
+
+5.1.  Scheduling Outbox Collection
+
+   A scheduling Outbox collection is used as the target for initiating
+   the processing of outgoing scheduling messages.  These may be
+   requests initiated by or on behalf of the calendar user associated
+   with the scheduling Outbox collection, or responses to requests
+   received by the calendar user associated with the scheduling Outbox
+   collection.
+
+   A scheduling Outbox collection MUST report the DAV:collection and
+   CALDAV:schedule-outbox XML elements in the value of the DAV:
+   resourcetype property.  The element type declaration for CALDAV:
+   schedule-outbox is:
+
+      <!ELEMENT schedule-outbox EMPTY>
+
+   Example:
+
+      <resourcetype xmlns="DAV:">
+        <collection/>
+        <C:schedule-outbox xmlns:C="urn:ietf:params:xml:ns:caldav"/>
+      </resourcetype>
+
+   Every non-collection resource in the scheduling Outbox collection
+   MUST be a valid calendar object resource that defines a scheduling
+   message (i.e. an iCalendar object that follows the iTIP semantic).
+   When a client targets the POST method at a scheduling Outbox
+   collection, the server MAY create a copy of the scheduling message in
+   that scheduling Outbox collection, unless the request contains a
+   free-busy message, in which case the server MUST NOT store a copy of
+   the free-busy message.  Copies that are created serve as a record of
+   outgoing scheduling messages.
+
+   The server MAY auto-delete calendar object resources in the
+   scheduling Outbox collection (e.g., after a period of time or to keep
+   within a quota).
+
+   New access control privileges can be used on the scheduling Outbox
+   collection to control who is allowed to send scheduling messages on
+   behalf of the calendar user associated with the scheduling Outbox
+   collection.  See Section 9.1 for more details.
+
+   When the server also supports the calendar-access feature, a
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 10]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   scheduling Outbox collection MUST not be a child (at any depth) of a
+   calendar collection resource.
+
+5.2.  Scheduling Inbox Collection
+
+   A scheduling Inbox collection contains incoming scheduling messages.
+   These may be requests sent by an Organizer, or replies sent by an
+   Attendee in response to a request.
+
+   A scheduling Inbox collection MUST report the DAV:collection and
+   CALDAV:schedule-inbox XML elements in the value of the DAV:
+   resourcetype property.  The element type declaration for CALDAV:
+   schedule-inbox is:
+
+      <!ELEMENT schedule-inbox EMPTY>
+
+   Example:
+
+      <resourcetype xmlns="DAV:">
+        <collection/>
+        <C:schedule-inbox xmlns:C="urn:ietf:params:xml:ns:caldav"/>
+      </resourcetype>
+
+   Every non-collection resource in the scheduling Inbox collection MUST
+   be a valid calendar object resource that defines a scheduling message
+   (i.e. an iCalendar object that follows the iTIP semantic).  Note,
+   that unlike calendar collections defined by the calendar-access
+   feature, there are no restrictions on the nature of the resources
+   stored (e.g., there is no need to verify that the UIDs of each
+   resource are unique) beyond the restrictions of iTIP itself.  The
+   removal of the UID restriction, in particular, is needed because
+   multiple scheduling messages may be sent for one particular calendar
+   component, and each of those will have the same UID property in the
+   calendar object resource.
+
+   New access control privileges can be set on the scheduling Inbox
+   collection to control who is allowed to send scheduling messages to
+   the calendar user associated with the scheduling Inbox collection.
+   See Section 9.1 for more details.
+
+   When the server also supports the calendar-access feature, a
+   scheduling Inbox collection MUST not be a child (at any depth) of a
+   calendar collection resource.
+
+5.3.  Scheduling Inbox Collection Properties
+
+   This section describes new WebDAV properties on scheduling Inbox
+   collection resources.
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 11]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+5.3.1.  CALDAV:calendar-free-busy-set Property
+
+   Name:  calendar-free-busy-set
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Identify the calendars that contribute to the free-busy
+      information for the calendar user associated with the scheduling
+      Inbox collection.
+
+   Conformance:  This property MAY be protected and SHOULD NOT be
+      returned by a PROPFIND allprop request (as defined in Section 14.2
+      of [RFC4918]).  Support for this property is REQUIRED.
+
+   Description:  This property is required to allow a POST request to
+      automatically determine the free busy information for each
+      specified Recipient for immediate return in the response.  A
+      server with a fixed set of calendars per user can make this
+      property protected.  A server that allows users to create their
+      own calendars SHOULD allow users to change their own property
+      value.
+
+   Definition:
+
+      <!ELEMENT calendar-free-busy-set (DAV:href*) >
+
+   Example:
+
+      <C:calendar-free-busy-set xmlns:D="DAV:"
+                            xmlns:C="urn:ietf:params:xml:ns:caldav">
+        <D:href>/calendars/bernard/work/</D:href>
+        <D:href>/calendars/bernard/home/</D:href>
+        <D:href>/public/holidays/CA/</D:href>
+      </C:calendar-free-busy-set>
+
+5.3.2.  Additional Precondition for PROPPATCH
+
+   This specification requires an additional Precondition for the
+   PROPPATCH method.  The precondition is:
+
+      (CALDAV:valid-free-busy-set): One or more resources referenced in
+      a CALDAV:calendar-free-busy-set property being stored on a
+      scheduling Inbox collection is invalid.  For example, a DAV:href
+      element references a collection that is not a calendar collection.
+      Note that server's MUST accept unmapped URIs (i.e. ones where a
+      DAV:href refers to a non-existent resource) in the CALDAV:
+      calendar-free-busy-set property and MUST ignore those when
+      determining the free-busy information.  This ensures that clients
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 12]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+      can add and remove calendar collections without affecting the
+      validity of the CALDAV:calendar-free-busy-set property, and
+      without requiring a specific order in which the client should
+      carry out calendar create/delete operations and changes to the
+      CALDAV:calendar-free-busy-set property.
+
+5.4.  Calendar Object Resource Properties
+
+   This section describes new WebDAV properties for calendar object
+   resources stored in scheduling Inbox or Outbox collections.
+
+5.4.1.  CALDAV:originator Property
+
+   Name:  originator
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Indicates the Originator of the scheduling message
+      contained in a scheduling Inbox or Outbox collection.
+
+   Conformance:  This property MUST be protected and SHOULD NOT be
+      returned by [RFC4918]).
+
+   Description:  The CALDAV:originator property MUST be defined on
+      calendar object resources stored in a scheduling Inbox or Outbox
+      collection.  Typically this will be as the result of a POST
+      request on a scheduling Outbox collection.  In that case, the
+      value of the property MUST be the value of the Originator request
+      header in the POST request.
+
+   Definition:
+
+      <!ELEMENT originator (DAV:href)>
+      DAV:href value: a CAL-ADDRESS (see Section 4.3.3 in [RFC 2445])
+
+   Example:
+
+      <C:originator xmlns:D="DAV:"
+                    xmlns:C="urn:ietf:params:xml:ns:caldav">
+        <D:href>mailto:bernard@example.com</D:href>
+      </C:originator>
+
+5.4.2.  CALDAV:recipient Property
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 13]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   Name:  recipient
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  On a calendar object resource contained in a scheduling
+      Outbox collection, this indicates the list of Recipients to whom
+      the scheduling message was sent.  On a calendar object resource in
+      a scheduling Inbox collection, this indicates the recipient
+      calendar user address that caused the scheduling message to be
+      delivered into the scheduling Inbox collection.
+
+   Conformance:  This property MUST be protected and SHOULD NOT be
+      returned by a PROPFIND allprop request (as defined in Section 14.2
+      of [RFC4918]).
+
+   Description:  The CALDAV:recipient property MUST be defined on
+      calendar object resources stored in a scheduling Outbox or Inbox
+      collection.  Typically this will be as the result of a POST
+      request.  In that case, for calendar object resources in a
+      scheduling Outbox collection, the value of the property MUST be a
+      list of calendar user addresses formed from all the addresses in
+      any Recipient request headers in the POST request that caused the
+      resource to be created in the collection.  For calendar object
+      resources in a scheduling Inbox collection, the value of the
+      property MUST be the calendar user address from the Recipient
+      request header in the POST request that caused the resource to be
+      created in the collection.  Typically this calendar user address
+      will be one of those listed in the CALDAV:calendar-user-address-
+      set (see Section 9.2.3) property for the principal that owns the
+      scheduling Inbox collection.  However, it could, for example, be a
+      calendar user address of a group that includes the calendar user
+      associated with the scheduling Inbox collection.
+
+   Definition:
+
+      <!ELEMENT recipient (DAV:href+)>
+      DAV:href value: a CAL-ADDRESS (see Section 4.3.3 in [RFC 2445])
+
+   Example:
+
+      <C:recipient xmlns:D="DAV:"
+                   xmlns:C="urn:ietf:params:xml:ns:caldav">
+        <D:href>mailto:cyrus@example.com</D:href>
+        <D:href>mailto:lisa@example.com</D:href>
+      </C:recipient>
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 14]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+6.  Scheduling
+
+6.1.  POST Method
+
+   The POST method submits a scheduling or free-busy message to one or
+   more recipients by targeting the request at the URI of a scheduling
+   Outbox collection.  The request body of a POST method MUST contain a
+   scheduling message or free-busy message (e.g., an iCalendar object
+   that follows the iTIP semantic).  The resource identified by the
+   Request-URI MUST be a resource collection of type CALDAV:schedule-
+   outbox (Section 5.1).
+
+   A submitted scheduling message will be delivered to the calendar user
+   addresses specified in the Recipient request header.  A submitted
+   free-busy message will be immediately executed and a free-busy
+   response returned.
+
+   Preconditions:
+
+      (CALDAV:supported-collection): The Request-URI MUST identify the
+      location of a scheduling Outbox collection;
+
+      (CALDAV:supported-calendar-data): The resource submitted in the
+      POST request MUST be a supported media type (i.e. text/calendar)
+      for scheduling or free-busy messages;
+
+      (CALDAV:valid-calendar-data): The resource submitted in the POST
+      request MUST be valid data for the media type being specified
+      (i.e. valid iCalendar object);
+
+      (CALDAV:valid-scheduling-message): The resource submitted in the
+      POST request MUST obey all restrictions specified for the POST
+      request (e.g., the scheduling message follows the restrictions of
+      iTIP);
+
+      (CALDAV:originator-specified): The POST request MUST include a
+      valid Originator request header specifying a single calendar user
+      address of the currently authenticated user;
+
+      (CALDAV:originator-allowed): The calendar user identified by the
+      Originator request header in the POST request MUST be granted the
+      CALDAV:schedule privilege or a suitable sub-privilege on the
+      scheduling Outbox collection being targeted by the request;
+
+      (CALDAV:organizer-allowed): The calendar user identified by the
+      ORGANIZER property in the POST request's scheduling message MUST
+      be the calendar user (or one of the calendar users) associated
+      with the scheduling Outbox collection being targeted by the
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 15]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+      request when the scheduling message is an outgoing scheduling
+      message;
+
+      (CALDAV:recipient-specified): The POST request MUST include one or
+      more valid Recipient request headers specifying the calendar user
+      address of users to whom the scheduling message will be delivered.
+
+      (CALDAV:originator-reply): The calendar user identified by the
+      Originator request header in the POST request MUST have previously
+      received the scheduling message that is being replied to when the
+      scheduling message is an incoming scheduling message;
+
+      (CALDAV:max-resource-size): The resource submitted in the POST
+      request MUST have an octet size less than or equal to the value of
+      the CALDAV:max-resource-size property value [RFC4791] on the
+      scheduling Outbox collection targeted by the request;
+
+      (CALDAV:attachments-allowed): The resource submitted in the POST
+      request MUST NOT contain any inline ATTACH properties;
+
+   Postconditions: None
+
+6.1.1.  Originator request header
+
+   Every POST request MUST include a single Originator request header
+   that specifies the calendar user address of the originator of a given
+   scheduling message.  The value specified in this request header MUST
+   be a calendar user address specified in the CALDAV:calendar-user-
+   address-set property defined on the principal resource of the
+   currently authenticated user.  Also, the currently authenticated user
+   MUST have the CALDAV:schedule privilege or a suitable sub-privilege
+   granted on the targeted scheduling Outbox collection.
+
+   In the case of an outgoing scheduling message the value of the
+   Originator request header will typically match that of the ORGANIZER
+   property in the scheduling message, or be one of the calendar user
+   addresses of the calendar user associated with the scheduling Outbox
+   collection being targeted.
+
+   In the case of an incoming scheduling message the value of the
+   Originator request header will typically match that of one of the
+   ATTENDEE properties in the scheduling message, or be one of the
+   calendar user addresses of the calendar user associated with the
+   scheduling Outbox collection being targeted.
+
+   However, in both of the above cases, another user may be acting on
+   behalf of the actual calendar user to send scheduling messages.  To
+   allow for this a new privilege has been defined to allow the calendar
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 16]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   user associated with a scheduling Outbox collection to grant to other
+   users the right to execute POST requests on that scheduling Outbox
+   collection.
+
+   The value of the Originator request header is kept in the CALDAV:
+   originator property on any resources saved as a result of the
+   schedule request.  This includes the copy of the scheduling message
+   saved in the scheduling Outbox collection (if saved by the server),
+   and scheduling messages delivered to any scheduling Inbox collection.
+
+6.1.2.  ORGANIZER Property
+
+   iTIP requires that every scheduling message contains an ORGANIZER
+   property identifying the calendar user address of the Organizer of
+   the calendar object.  To prevent 'spoofing' (forgeries) of outgoing
+   scheduling messages, CalDAV servers MUST verify that the calendar
+   user address identified by the ORGANIZER property in the outgoing
+   scheduling message data corresponds to the principal owning the
+   scheduling Outbox collection targeted by the POST request.  This MUST
+   be done during the processing of the POST request.  Note that this
+   check is not required for incoming scheduling messages.
+
+6.1.3.  Recipient request header
+
+   Every POST request MUST include one or more Recipient request
+   headers.  The value of this header is a list of one or more calendar
+   user addresses and corresponds to the set of calendar users who will
+   have the scheduling message delivered to them.  The calendar user
+   associated with of the scheduling Outbox collection being targeted by
+   the POST method MUST have the CALDAV:schedule privilege or a suitable
+   sub-privilege granted on the scheduling Inbox collection of each
+   recipient.
+
+   In the case of outgoing scheduling messages, typically the list of
+   recipients would correspond to any ATTENDEE property values listed in
+   the scheduling message data.  However, there are cases when an
+   ATTENDEE property valie is not listed as a Recipient, or when a
+   Recipient is not one of the ATTENDEE property values.
+
+   For example, if the Organizer of an event wishes to attend the event
+   themselves, they must do that by including ATTENDEE property with
+   their calendar user address as the value, as the Organizer of an
+   event does not implicitly attend.  However, the Organizer does not
+   need to receive an invitation as they know their own participation
+   status, so there is no need to be listed as a Recipient of the
+   scheduling message.
+
+   Alternatively, a client may have determined participation status of
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 17]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   some Attendee's out-of-band and has no need to send another request
+   via CalDAV.
+
+   In some cases it is handy to be able to send information about a
+   meeting to someone who is not an Attendee.  In that case, there would
+   be a Recipient in the request without a corresponding ATTENDEE
+   property in the scheduling message data.
+
+   Note that the recipient of a CalDAV scheduling message has no
+   knowledge of who the other recipients are - they only get to see the
+   ATTENDEE property information listed in the scheduling message data.
+   So listing a calendar user as a Recipient and not in an ATTENDEE
+   property is the equivalent of a 'Bcc' (blind-carbon-copy) operation
+   in email.
+
+   In the case of incoming scheduling messages, there would be one
+   Recipient corresponding to the ORGANIZER property value listed in the
+   scheduling message.
+
+6.1.4.  Response to a POST request
+
+   A POST request may deliver a scheduling message to one or more
+   calendar users specified in the Recipient request header.  Since the
+   behavior of each recipient may vary, it is useful to get response
+   status information for each recipient in the overall POST response.
+   This specification defines a new XML response to convey multiple
+   recipient status.
+
+   A response to a POST method that indicates status for one or more
+   recipients MUST be a CALDAV:schedule-response XML element.  This MUST
+   contain one or more CALDAV:response elements for each recipient, with
+   each of those containing elements that indicate which recipient they
+   correspond to, the scheduling status of the request for that
+   recipient, any error codes and an optional description.  See
+   Section 11.1.
+
+   In the case of a free-busy request, the CALDAV:response elements can
+   also contain CALDAV:calendar-data elements which contain free busy
+   information (e.g., an iCalendar VFREEBUSY component) indicating the
+   busy state of the corresponding recipient, assuming that the free-
+   busy request for that recipient succeeded.
+
+6.1.5.  Status Codes for use with the POST method
+
+   The following are examples of response codes one would expect to be
+   used for this method.  Note, however, that unless explicitly
+   prohibited any 2/3/4/5xx series response code may be used in a
+   response.
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 18]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+      200 (OK) - The command succeeded.
+
+      201 (Created) - The command succeeded and a new resource was
+      created in the scheduling Outbox collection.
+
+      400 (Bad Request) - The client has provided an invalid scheduling
+      message.
+
+      403 (Forbidden) - The client cannot submit a scheduling message to
+      the specified Request-URI.
+
+      404 (Not Found) - The URL in the Request-URI was not present.
+
+      423 (Locked) - The specified resource is locked and the client
+      either is not a lock owner or the lock type requires a lock token
+      to be submitted and the client did not submit it.
+
+      507 (Insufficient Storage) - The server did not have sufficient
+      space to record the scheduling message in a scheduling outbox
+      being targeted by the POST request.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 19]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+6.1.6.  Example - Simple meeting invitation
+
+   >> Request <<
+
+   POST /lisa/calendar/outbox/ HTTP/1.1
+   Host: cal.example.com
+   Originator: mailto:lisa@example.com
+   Recipient: mailto:bernard@example.com
+   Recipient: mailto:cyrus@example.com
+   Content-Type: text/calendar
+   Content-Length: xxxx
+
+   BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Client//EN
+   METHOD:REQUEST
+   BEGIN:VEVENT
+   DTSTAMP:20040901T200200Z
+   ORGANIZER:mailto:lisa@example.com
+   DTSTART:20040902T130000Z
+   DTEND:20040902T140000Z
+   SUMMARY:Design meeting
+   UID:34222-232@example.com
+   ATTENDEE;PARTSTAT=ACCEPTED;ROLE=CHAIR;CUTYPE=IND
+    IVIDUAL;CN=Lisa Dusseault:mailto:lisa@example.c
+    om
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=RE
+    Q-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=Bernard Desr
+    uisseaux:mailto:bernard@example.com
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=RE
+    Q-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=Cyrus Daboo:
+    mailto:cyrus@example.com
+   END:VEVENT
+   END:VCALENDAR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 20]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   >> Response <<
+
+   HTTP/1.1 200 OK
+   Date: Thu, 02 Sep 2004 16:53:32 GMT
+   Content-Type: application/xml; charset="utf-8"
+   Content-Length: xxxx
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <C:schedule-response xmlns:D="DAV:"
+                xmlns:C="urn:ietf:params:xml:ns:caldav">
+   <C:response>
+     <C:recipient>mailto:bernard@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <D:responsedescription>Delivered to recipient
+     scheduling inbox</D:responsedescription>
+   </C:response>
+   <C:response>
+     <C:recipient>mailto:cyrus@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <D:responsedescription>Delivered to recipient
+     scheduling inbox</D:responsedescription>
+   </C:response>
+   </C:schedule-response>
+
+
+   In this example, the client requests the server to deliver a meeting
+   invitation (scheduling REQUEST) to the calendar users
+   mailto:bernard@example.com and mailto:cyrus@example.com.  The
+   response indicates that delivery to the relevant scheduling Inbox
+   collections of each recipient was accomplished successfully.
+
+   Note that the Originator and Organizer calendar user addresses were
+   both set to mailto:lisa@example.com.  In order to indicate that she
+   is also attending the meeting, mailto:lisa@example.com also included
+   an ATTENDEE property in the iCalendar data corresponding to her
+   calendar user address, however she did not include a Recipient
+   request header for that calendar user address since she already has
+   here own copy of the meeting stored in a calendar collection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 21]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+6.1.7.  Example - Free-Busy lookup
+
+   >> Request <<
+
+   POST /lisa/calendar/outbox/ HTTP/1.1
+   Host: cal.example.com
+   Originator: mailto:lisa@example.com
+   Recipient: mailto:bernard@example.com
+   Recipient: mailto:cyrus@example.com
+   Content-Type: text/calendar
+   Content-Length: xxxx
+
+   BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Client//EN
+   METHOD:REQUEST
+   BEGIN:VFREEBUSY
+   DTSTAMP:20040901T200200Z
+   ORGANIZER:mailto:lisa@example.com
+   DTSTART:20040902T000000Z
+   DTEND:20040903T000000Z
+   UID:34222-232@example.com
+   ATTENDEE;CN=Bernard Desruisseaux:mailto:bernard@
+    example.com
+   ATTENDEE;CN=Cyrus Daboo:mailto:cyrus@example.com
+   END:VFREEBUSY
+   END:VCALENDAR
+
+
+   >> Response <<
+
+   HTTP/1.1 200 OK
+   Date: Thu, 02 Sep 2004 16:53:32 GMT
+   Content-Type: application/xml; charset="utf-8"
+   Content-Length: xxxx
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <C:schedule-response xmlns:D="DAV:"
+                xmlns:C="urn:ietf:params:xml:ns:caldav">
+   <C:response>
+     <C:recipient>mailto:bernard@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <C:calendar-data>BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Server//EN
+   METHOD:REPLY
+   BEGIN:VFREEBUSY
+   DTSTAMP:20040901T200200Z
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 22]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   ORGANIZER:mailto:lisa@example.com
+   DTSTART:20040902T000000Z
+   DTEND:20040903T000000Z
+   UID:34222-232@example.com
+   ATTENDEE;CN=Bernard Desruisseaux:mailto:bernard@
+    example.com
+   FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:20040902T000000Z/
+    20040902T090000Z,20040902T170000Z/20040903T000000Z
+   END:VFREEBUSY
+   END:VCALENDAR
+   </C:calendar-data>
+   </C:response>
+   <C:response>
+     <C:recipient>mailto:cyrus@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <C:calendar-data>BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Server//EN
+   METHOD:REPLY
+   BEGIN:VFREEBUSY
+   DTSTAMP:20040901T200200Z
+   ORGANIZER:mailto:lisa@example.com
+   DTSTART:20040902T000000Z
+   DTEND:20040903T000000Z
+   UID:34222-232@example.com
+   ATTENDEE;CN=Cyrus Daboo:mailto:cyrus@example.com
+   FREEBUSY;FBTYPE=BUSY-UNAVAILABLE:20040902T000000Z/
+    20040902T090000Z,20040902T170000Z/20040903T000000Z
+   FREEBUSY;FBTYPE=BUSY:20040902T120000Z/20040902T130000Z
+   END:VFREEBUSY
+   END:VCALENDAR
+   </C:calendar-data>
+   </C:response>
+   </C:schedule-response>
+
+
+   In this example, the client requests the server to determine the busy
+   information of the calendar users mailto:bernard@example.com and
+   mailto:cyrus@example.com, over the time range specified by the
+   scheduling message sent in the request.  The response includes
+   VFREEBUSY components for each of those calendar users with their busy
+   time indicated.
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 23]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+6.1.8.  Example - Simple task assignment
+
+   >> Request <<
+
+   POST /lisa/calendar/outbox/ HTTP/1.1
+   Host: cal.example.com
+   Originator: mailto:lisa@example.com
+   Recipient: mailto:bernard@example.com
+   Recipient: mailto:cyrus@example.com
+   Content-Type: text/calendar
+   Content-Length: xxxx
+
+   BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Client//EN
+   METHOD:REQUEST
+   BEGIN:VTODO
+   DTSTAMP:20040901T200200Z
+   ORGANIZER:mailto:lisa@example.com
+   DUE:20070505
+   SUMMARY:Finish CalDAV schedule spec
+   UID:34222-456@example.com
+   ATTENDEE;PARTSTAT=ACCEPTED;ROLE=CHAIR;CUTYPE=IND
+    IVIDUAL;CN=Lisa Dusseault:mailto:lisa@example.c
+    om
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=RE
+    Q-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=Bernard Desr
+    uisseaux:mailto:bernard@example.com
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP=TRUE;ROLE=RE
+    Q-PARTICIPANT;CUTYPE=INDIVIDUAL;CN=Cyrus Daboo:
+    mailto:cyrus@example.com
+   END:VEVENT
+   END:VCALENDAR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 24]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   >> Response <<
+
+   HTTP/1.1 200 OK
+   Date: Thu, 02 Sep 2004 16:53:32 GMT
+   Content-Type: application/xml; charset="utf-8"
+   Content-Length: xxxx
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <C:schedule-response xmlns:D="DAV:"
+                xmlns:C="urn:ietf:params:xml:ns:caldav">
+   <C:response>
+     <C:recipient>mailto:bernard@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <D:responsedescription>Delivered to recipient
+     scheduling inbox</D:responsedescription>
+   </C:response>
+   <C:response>
+     <C:recipient>mailto:cyrus@example.com</C:recipient>
+     <C:request-status>2.0;Success</C:request-status>
+     <D:responsedescription>Delivered to recipient
+     scheduling inbox</D:responsedescription>
+   </C:response>
+   </C:schedule-response>
+
+
+   In this example, the client requests the server to deliver a task
+   assignment (scheduling REQUEST) to the calendar users
+   mailto:bernard@example.com and mailto:cyrus@example.com.  The
+   response indicates that delivery to the relevant scheduling Inbox
+   collections of each recipient was accomplished successfully.
+
+6.2.  Retrieving incoming scheduling messages
+
+   Incoming scheduling messages will be stored in a scheduling Inbox
+   collection.  As per Section 10, CalDAV calendar-access reports work
+   on scheduling collections, so the client can use those to get partial
+   information on scheduling messages in the scheduling inbox.
+
+6.2.1.  Example - Retrieve incoming scheduling message
+
+   >> Request <<
+
+   GET /bernard/calendar/inbox/mtg456.ics HTTP/1.1
+   Host: cal.example.com
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 25]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   >> Response <<
+
+   HTTP/1.1 200 OK
+   Date: Thu, 02 Sep 2004 17:05:23 GMT
+   Content-Type: text/calendar
+   Content-Length: xxxx
+
+   BEGIN:VCALENDAR
+   VERSION:2.0
+   PRODID:-//Example Corp.//CalDAV Server//EN
+   METHOD:REQUEST
+   BEGIN:VEVENT
+   DTSTAMP:20040901T200200Z
+   CATEGORIES:APPOINTMENT
+   ORGANIZER:mailto:lisa@example.com
+   DTSTART:20040902T130000Z
+   DTEND:20040902T140000Z
+   SUMMARY:CalDAV draft review
+   UID:34222-232@example.com
+   ATTENDEE;PARTSTAT=ACCEPTED;ROLE=CHAIR;CUTYPE=IND
+    IVIDUAL;CN=Lisa Dusseault:mailto:lisa@example.com
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIP
+    ANT;CUTYPE=INDIVIDUAL;CN=Bernard Desruisseaux:
+    mailto:bernard@example.com
+   ATTENDEE;PARTSTAT=NEEDS-ACTION;ROLE=REQ-PARTICIP
+    ANT;CUTYPE=INDIVIDUAL;CN=Cyrus Daboo:mailto:cyr
+    us@example.com
+   END:VEVENT
+   END:VCALENDAR
+
+
+6.3.  Acting on incoming scheduling messages
+
+   Scheduling messages are delivered into a recipient's scheduling Inbox
+   collection.  To process these messages a calendar user agent client
+   needs to follow a sequence of steps to ensure good interoperability
+   with other clients that may also be monitoring or processing the
+   scheduling Inbox collection.
+
+   Processing a scheduling message in a scheduling Inbox collection
+   requires the client to read the message, determine the nature of the
+   scheduling operation, make appropriate adjustments to the recipients
+   actual calendars, and then, if required, send a response.
+
+   In order to ensure that only one client at a time is processing
+   scheduling messages in a scheduling Inbox collection, clients SHOULD
+   use the WebDAV locking feature to lock the entire scheduling Inbox
+   collection for the duration of its processing step.  Once a
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 26]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   collection is locked, other clients attempting to obtain their own
+   lock will fail as the WebDAV server will return a protocol error at
+   that point.
+
+   When a scheduling message has been processed by a client it MUST
+   delete that message from the scheduling Inbox collection before
+   removing the WebDAV lock on the scheduling Inbox collection.  This
+   ensures that other clients will not in the future attempt to process
+   the scheduling message again.
+
+   Appendix B describes some sample workflows of scheduling message
+   processing.
+
+7.  Additional iCalendar Property Parameters
+
+   This specification defines additional property parameters to allow
+   the Organizer and the Attendees to register state information about
+   incoming scheduling messages to allow them to handle messages that
+   arrive in an unexpected order, as per Section 2.1.5 in [RFC2446].
+
+7.1.  Received Sequence
+
+   Parameter Name:  RECEIVED-SEQUENCE
+
+   Purpose:  To specify the value of the SEQUENCE iCalendar property
+      that was specified in the most recent scheduling message received
+      by the Organizer.
+
+   Format Definition:  This iCalendar property parameter is defined by
+      the following notation:
+
+        received-sequenceparam = "RECEIVED-SEQUENCE" "=" integer
+
+   Description:  This iCalendar parameter can be specified on the
+      ATTENDEE iCalendar property to specify the value of the SEQUENCE
+      iCalendar property that was specified in the most recent
+      scheduling message received from the corresponding Attendee.
+
+   Example:  The following is an example of this parameter on the
+      ATTENDEE property:
+
+        ATTENDEE;CN="Cyrus Daboo";PARTSTAT=ACCEPTED;RECEIVED-SEQUENCE=2;
+         RECEIVED-DTSTAMP=20070214T123456Z:mailto:cyrus@example.com
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 27]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+7.2.  Received Date/Time Stamp
+
+   Parameter Name:  RECEIVED-DTSTAMP
+
+   Purpose:  To specify the value of the DTSTAMP iCalendar property that
+      was specified in the most recent scheduling message received by
+      the Organizer or an Attendee.
+
+   Format Definition:  This iCalendar property parameter is defined by
+      the following notation:
+
+        received-dtstampparam = "RECEIVED-DTSTAMP" "=" date-time
+
+   Description:  This iCalendar parameter can be specified on the
+      ATTENDEE and ORGANIZER iCalendar properties.  When specified on
+      the ATTENDEE iCalendar property this parameter specifies the value
+      of the DTSTAMP iCalendar property that was specified in the most
+      recent reply scheduling message received from the corresponding
+      Attendee.  When specified on the ORGANIZER iCalendar property this
+      parameter specifies the value of the DTSTAMP iCalendar property
+      that was specified in the most recent scheduling message received
+      from the Organizer.  This parameter MUST be specified as a DATE-
+      TIME value in UTC.
+
+   Example:  The following are examples of this parameter on the
+      ATTENDEE and ORGANIZER iCalendar properties:
+
+        ATTENDEE;CN="Cyrus Daboo";PARTSTAT=ACCEPTED;RECEIVED-SEQUENCE=2;
+         RECEIVED-DTSTAMP=20070214T123456Z:mailto:cyrus@example.com
+
+        ORGANIZER;CN="Bernard Desruisseaux";RECEIVED-DTSTAMP=20070214T11
+         4523Z:mailto:bernard@example.com
+
+8.  HTTP Request Headers for CalDAV
+
+8.1.  Originator Request Header
+
+      Originator = "Originator" ":" absoluteURI
+
+
+   The Originator request header value is a URI which specifies the
+   calendar user address of the originator of the scheduling message.
+   Note that the absoluteURI production is defined in RFC3986 [RFC3986].
+
+8.2.  Recipient Request Header
+
+      Recipient = "Recipient" ":" 1#absoluteURI
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 28]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   The Recipient request header value is a URI which specifies the
+   calendar user address of the recipients to which the POST method
+   should deliver the submitted scheduling message.  Note that the
+   absoluteURI production is defined in RFC3986 [RFC3986]
+
+9.  Scheduling Access Control
+
+9.1.  Scheduling Privileges
+
+   Server implementations that advertise support for the "calendar-
+   schedule" feature of CalDAV MUST support WebDAV ACL [RFC3744] as well
+   as the scheduling privileges defined in this section.
+
+   The tables specified in Appendix A clarifies which scheduling methods
+   (e.g., REQUEST, REPLY, etc.) are controlled by each scheduling
+   privilege defined in this section.
+
+9.1.1.  CALDAV:schedule-post Privilege
+
+   The CALDAV:schedule-post privilege controls the use of the POST
+   method to submit scheduling messages for any type of calendar
+   components on the resource.  It is ignored for resources that are not
+   scheduling Outbox collections.
+
+   <!ELEMENT schedule-post EMPTY >
+
+9.1.2.  CALDAV:schedule-post-vevent Privilege
+
+   The CALDAV:schedule-post-vevent privilege controls the use of the
+   POST method to submit scheduling messages for VEVENT calendar
+   components on the resource.  It is ignored for resources that are not
+   scheduling Outbox collections.
+
+   <!ELEMENT schedule-post-vevent EMPTY >
+
+9.1.3.  CALDAV:schedule-post-vtodo Privilege
+
+   The CALDAV:schedule-post-vtodo privilege controls the use of the POST
+   method to submit scheduling messages for VTODO calendar components on
+   the resource.  It is ignored for resources that are not scheduling
+   Outbox collections.
+
+   <!ELEMENT schedule-post-vtodo EMPTY >
+
+9.1.4.  CALDAV:schedule-post-vjournal Privilege
+
+   The CALDAV:schedule-post-vjournal privilege controls the use of the
+   POST method to submit scheduling messages for VJOURNAL calendar
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 29]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   components on the resource.  It is ignored for resources that are not
+   scheduling Outbox collections.
+
+   <!ELEMENT schedule-post-vjournal EMPTY >
+
+9.1.5.  CALDAV:schedule-post-vfreebusy Privilege
+
+   The CALDAV:schedule-post-vfreebusy privilege controls the use of the
+   POST method to submit scheduling messages for VFREEBUSY calendar
+   components on the resource.  It is ignored for resources that are not
+   scheduling Outbox collections.
+
+   <!ELEMENT schedule-post-vfreebusy EMPTY >
+
+9.1.6.  CALDAV:schedule-deliver Privilege
+
+   The CALDAV:schedule-deliver privilege controls the delivery of a
+   scheduling message containing any type of calendar components coming
+   from an Organizer.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message coming
+   from an Organizer when the Originator is granted this privilege (or
+   an appropriate sub-privilege) on the scheduling Inbox collection of
+   the Recipient.
+
+   <!ELEMENT schedule-deliver EMPTY >
+
+9.1.7.  CALDAV:schedule-deliver-vevent Privilege
+
+   The CALDAV:schedule-deliver-vevent privilege controls the delivery of
+   a scheduling message containing VEVENT calendar components coming
+   from an Organizer.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message for
+   VEVENT calendar components coming from an Organizer when the
+   Originator is granted this privilege on the scheduling Inbox
+   collection of the Recipient.
+
+   <!ELEMENT schedule-deliver-vevent EMPTY >
+
+9.1.8.  CALDAV:schedule-deliver-vtodo Privilege
+
+   The CALDAV:schedule-deliver-vtodo privilege controls the delivery of
+   a scheduling message containing VTODO calendar components coming from
+   an Organizer.  It is ignored for resources that are not scheduling
+   Inbox collections.
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 30]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   Server implementations MUST only deliver a scheduling message for
+   VTODO calendar components coming from an Organizer when the
+   Originator is granted this privilege on the scheduling Inbox
+   collection of the Recipient.
+
+   <!ELEMENT schedule-deliver-vtodo EMPTY >
+
+9.1.9.  CALDAV:schedule-deliver-vjournal Privilege
+
+   The CALDAV:schedule-deliver-vjournal privilege controls the delivery
+   of a scheduling message containing VJOURNAL calendar components
+   coming from an Organizer.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message for
+   VJOURNAL calendar components coming from an Organizer when the
+   Originator is granted this privilege on the scheduling Inbox
+   collection of the Recipient.
+
+   <!ELEMENT schedule-deliver-vjournal EMPTY >
+
+9.1.10.  CALDAV:schedule-deliver-vfreebusy Privilege
+
+   The CALDAV:schedule-deliver-vfreebusy privilege controls the delivery
+   of a scheduling message containing VFREEBUSY calendar components
+   coming from an Organizer.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message for
+   VFREEBUSY calendar components coming from an Organizer when the
+   Originator is granted this privilege on the scheduling Inbox
+   collection of the Recipient.
+
+   Only the delivery of VFREEBUSY calendar components that specify the
+   PUBLISH scheduling method is allowed in scheduling Inbox collections.
+   The use of VFREEBUSY calendar components that specify the REQUEST
+   scheduling method is controlled by the DAV:read and CALDAV:read-free-
+   busy privileges.
+
+   <!ELEMENT schedule-deliver-vfreebusy EMPTY >
+
+9.1.11.  CALDAV:schedule-respond Privilege
+
+   The CALDAV:schedule-respond privilege controls the delivery of a
+   scheduling message containing any type of calendar components coming
+   from an Attendee.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 31]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   Server implementations MUST only deliver a scheduling message coming
+   from an Attendee when the Originator is granted this privilege (or an
+   appropriate sub-privilege) on the scheduling Inbox collection of the
+   Recipient.
+
+   <!ELEMENT schedule-respond EMPTY >
+
+9.1.12.  CALDAV:schedule-respond-vevent Privilege
+
+   The CALDAV:schedule-respond-vevent privilege controls the delivery of
+   a scheduling message containing VEVENT calendar components coming
+   from an Attendee.  It is ignored for resources that are not
+   scheduling Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message for
+   VEVENT calendar components coming from an Attendee when the
+   Originator is granted this privilege on the scheduling Inbox
+   collection of the Recipient.
+
+   <!ELEMENT schedule-deliver-vevent EMPTY >
+
+9.1.13.  CALDAV:schedule-respond-vtodo Privilege
+
+   The CALDAV:schedule-respond-vtodo privilege controls the delivery of
+   a scheduling message containing VTODO calendar components coming from
+   an Attendee.  It is ignored for resources that are not scheduling
+   Inbox collections.
+
+   Server implementations MUST only deliver a scheduling message for
+   VTODO calendar components coming from an Attendee when the Originator
+   is granted this privilege on the scheduling Inbox collection of the
+   Recipient.
+
+   <!ELEMENT schedule-deliver-vtodo EMPTY >
+
+9.1.14.  CALDAV:schedule Privilege
+
+   CALDAV:schedule is an aggregate privilege that contains the entire
+   set of scheduling privileges that can be applied to the resource.  It
+   is ignored for resources that are not scheduling Outbox or Inbox
+   collections.
+
+   <!ELEMENT schedule EMPTY >
+
+9.1.15.  Aggregation of Scheduling Privileges
+
+   Server implementations MUST aggregate the scheduling privileges as
+   follows:
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 32]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+      DAV:bind MUST contain CALDAV:schedule.
+
+      CALDAV:schedule MUST contain CALDAV:schedule-post, CALDAV:
+      schedule-deliver, and CALDAV:schedule-respond.
+
+      CALDAV:schedule-post MUST contain CALDAV:schedule-post-vevent,
+      CALDAV:schedule-post-vtodo, CALDAV:schedule-post-vjournal, and
+      CALDAV:schedule-post-vfreebusy.
+
+      CALDAV:schedule-deliver MUST contain CALDAV:schedule-deliver-
+      vevent, CALDAV:schedule-deliver-vtodo, CALDAV:schedule-deliver-
+      vjournal, and CALDAV:schedule-deliver-vfreebusy.
+
+      CALDAV:schedule-respond MUST contain CALDAV:schedule-respond-
+      vevent, and CALDAV:schedule-respond-vtodo.
+
+   All the scheduling privileges MUST be non-abstract and MUST appear in
+   the DAV:supported-privilege-set property of scheduling Outbox and
+   Inbox collections.
+
+9.2.  Additional Principal Properties
+
+   This section defines new properties for WebDAV principal resources as
+   defined in RFC3744 [RFC3744].  These properties are likely to be
+   protected but the server MAY allow them to be written by appropriate
+   users.
+
+9.2.1.  CALDAV:schedule-inbox-URL Property
+
+   Name:  schedule-inbox-URL
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Identify the URL of the scheduling Inbox collection owned
+      by the associated principal resource.
+
+   Conformance:  This property MAY be protected and SHOULD NOT be
+      returned by a PROPFIND allprop request (as defined in Section 14.2
+      of [RFC4918]).
+
+   Description:  This property is needed for a client to determine where
+      the scheduling Inbox collection of the current user is located so
+      that processing of scheduling messages can occur.
+
+   Definition:
+
+      <!ELEMENT schedule-inbox-URL (DAV:href)>
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 33]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+9.2.2.  CALDAV:schedule-outbox-URL Property
+
+   Name:  schedule-outbox-URL
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Identify the URL of the scheduling Outbox collection owned
+      by the associated principal resource.
+
+   Conformance:  This property MAY be protected and SHOULD NOT be
+      returned by a PROPFIND allprop request (as defined in Section 14.2
+      of [RFC4918]).
+
+   Description:  This property is needed for a client to determine where
+      the scheduling Outbox collection of the current user is located so
+      that sending of scheduling messages can occur.
+
+   Definition:
+
+      <!ELEMENT schedule-outbox-URL DAV:href>
+
+9.2.3.  CALDAV:calendar-user-address-set Property
+
+   Name:  calendar-user-address-set
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Identify the calendar addresses of the associated principal
+      resource.
+
+   Conformance:  This property MAY be protected and SHOULD NOT be
+      returned by a PROPFIND allprop request (as defined in Section 14.2
+      of [RFC4918]).  Support for this property is REQUIRED.  This
+      property SHOULD be searchable using the DAV:principal-property-
+      search REPORT.  The DAV:principal-search-property-set REPORT
+      SHOULD identify this property as such.
+
+   Description:  This property is needed to map Originator and Recipient
+      values in a POST request to principal resources and their
+      associated scheduling Inbox and Outbox collections.  In the event
+      that a user has no well defined identifier for their calendar user
+      address, the URI of their principal resource can be used.
+
+   Definition:
+
+      <!ELEMENT calendar-user-address-set (DAV:href*)>
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 34]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   Example:
+
+      <C:calendar-user-address-set xmlns:D="DAV:"
+                            xmlns:C="urn:ietf:params:xml:ns:caldav">
+        <D:href>mailto:bernard@example.com</D:href>
+        <D:href>mailto:bernard.desruisseaux@example.com</D:href>
+      </C:calendar-user-address-set>
+
+9.2.4.  Example: Searching for calendars belonging to a user based on a
+        calendar user address
+
+   In this example, the client requests the CALDAV:calendar-home-set of
+   the principal resources whose CALDAV:calendar-user-address-set
+   property contains the substring "mailto:bernard@example.com".  In
+   addition, the client requests the DAV:displayname of each principal
+   to also be returned for the matching principals.
+
+   The response shows that only one principal resource meets the search
+   specification, "mailto:bernard@example.com".
+
+   >> Request <<
+
+   REPORT /users/ HTTP/1.1
+   Host: cal.example.com
+   Content-Type: application/xml; charset="utf-8"
+   Content-Length: xxxx
+   Depth: 0
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <D:principal-property-search xmlns:D="DAV:"
+               xmlns:C="urn:ietf:params:xml:ns:caldav">
+     <D:property-search>
+       <D:prop>
+         <C:calendar-user-address-set/>
+       </D:prop>
+       <D:match>mailto:bernard@example.com</D:match>
+     </D:property-search>
+     <D:prop>
+       <C:calendar-home-set/>
+       <D:displayname/>
+     </D:prop>
+   </D:principal-property-search>
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 35]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   >> Response <<
+
+   HTTP/1.1 207 Multi-Status
+   Content-Type: application/xml; charset="utf-8"
+   Content-Length: xxxx
+
+   <?xml version="1.0" encoding="utf-8" ?>
+   <D:multistatus xmlns:D="DAV:"
+            xmlns:C="urn:ietf:params:xml:ns:caldav">
+     <D:response>
+       <D:href>/users/bernard</D:href>
+       <D:propstat>
+         <D:prop>
+           <C:calendar-home-set>
+             <D:href>/home/bernard/</D:href>
+           </C:calendar-home-set>
+           <D:displayname>Bernard Desruisseaux</D:displayname>
+         </D:prop>
+         <D:status>HTTP/1.1 200 OK</D:status>
+       </D:propstat>
+     </D:response>
+   </D:multistatus>
+
+9.2.5.  Example: Finding the scheduling Inbox and Outbox Collection
+        belonging to the currently authenticated user
+
+   In this example, the client requests the CALDAV:schedule-inbox-URL
+   and CALDAV:schedule-outbox-URL of the currently authenticated user.
+
+   TODO: principal-match report
+
+10.  Reports
+
+   When the calendar-access feature is supported in addition to
+   calendar-schedule, this specification extends the CALDAV:calendar-
+   query and CALDAV:calendar-multiget reports to return results for
+   calendar object resources in scheduling Inbox and Outbox collections
+   when the report directly targets such a collection. i.e. the Request-
+   URI for a REPORT MUST be the URI of the scheduling Inbox or Outbox
+   collection or of a child resource within a scheduling Inbox or Outbox
+   collection.  A report run on a regular collection that includes a
+   scheduling Inbox or Outbox collection as a child resource at any
+   depth MUST NOT examine or return any calendar object resources from
+   within any scheduling Inbox or Outbox collections.
+
+   Note that the CALDAV:free-busy-query report is NOT supported on
+   scheduling Inbox or Outbox collections when the calendar-access
+   feature is also present.
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 36]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+11.  XML Element Definitions
+
+11.1.  CALDAV:schedule-response XML Element
+
+   Name:  schedule-response
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Contains the set of responses for a POST method request.
+
+   Description:  See Section 6.1.4.
+
+   Definition:
+
+       <!ELEMENT schedule-response (response*)>
+
+11.2.  CALDAV:response XML Element
+
+   Name:  response
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  Contains a single response for a POST method request.
+
+   Description:  See Section 6.1.4.
+
+   Definition:
+
+   <!ELEMENT response (recipient,
+                       request-status,
+                       calendar-data?,
+                       DAV:error?,
+                       DAV:responsedescription?)>
+
+11.3.  CALDAV:recipient XML Element
+
+   Name:  recipient
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  The calendar user address (recipient header value) that the
+      enclosing response for a POST method request is for.
+
+   Description:  See Section 6.1.4.
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 37]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   Definition:
+
+
+       <!ELEMENT recipient (DAV:href)>
+
+
+11.4.  CALDAV:request-status XML Element
+
+   Name:  request-status
+
+   Namespace:  urn:ietf:params:xml:ns:caldav
+
+   Purpose:  The iTIP REQUEST-STATUS property value for this response.
+
+   Description:  See Section 6.1.4.
+
+   Definition:
+
+
+       <!ELEMENT request-status (#PCDATA)>
+
+
+12.  Security Considerations
+
+   The process of scheduling involves the sending and receiving of
+   scheduling messages.  As a result, the security problems related to
+   messaging in general are relevant here.  In particular the
+   authenticity of the scheduling messages needs to be verified
+   absolutely.  Servers and clients MUST use an HTTP connection
+   protected with TLS as defined in [RFC2818] for all scheduling
+   transactions.
+
+12.1.  Verifying scheduling requests
+
+   When handling a POST request on a scheduling Outbox collection:
+
+      Servers MUST verify that the principal associated with the
+      calendar user address specified in the Originator request header
+      in the request matches the currently authenticated user.
+
+      Servers MUST verify that the currently authenticated user has the
+      CALDAV:schedule privilege or a suitable sub-privilege on the
+      scheduling Outbox collection targeted by the request.
+
+      Servers MUST verify that the principal associated with the
+      calendar user address specified in the ORGANIZER property of the
+      scheduling message data in the request contains a CALDAV:schedule-
+      outbox-URL property value that matches the scheduling Outbox
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 38]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+      collection targeted by the request.
+
+      Servers MUST verify that the principal associated with the
+      calendar user address specified in the ORGANIZER property of the
+      scheduling message data in the request has the CALDAV:schedule
+      privilege or a suitable sub-privilege on all of the scheduling
+      Inbox collections for the principals associated with all of the
+      calendar user addresses specified in any Recipient request headers
+      in the request.
+
+      The CALDAV:calendar-free-busy-set property on principal resources
+      SHOULD only be accessible when that principal is authenticated
+      (i.e., the property SHOULD be hidden from other principals).
+
+13.  IANA Consideration
+
+   This specification registers two new headers for use with HTTP as per
+   [RFC3864].
+
+13.1.  Originator Header Registration
+
+   Header field name: Originator
+
+   Applicable protocol: http
+
+   Status: standard
+
+   Author/Change controller: IETF
+
+   Specification document(s): this specification
+
+   Related information: none
+
+13.2.  Recipient Header Registration
+
+   Header field name: Recipient
+
+   Applicable protocol: http
+
+   Status: standard
+
+   Author/Change controller: IETF
+
+   Specification document(s): this specification
+
+   Related information: none
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 39]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+14.  Acknowledgements
+
+   The authors would like to thank the following individuals for
+   contributing their ideas and support for writing this specification:
+   Mike Douglass, Julian F. Reschke, Wilfredo Sanchez Vega, Simon
+   Vaillancourt, and Jim Whitehead.
+
+   The authors would also like to thank the Calendaring and Scheduling
+   Consortium for advice with this specification, and for organizing
+   interoperability testing events to help refine it.
+
+15.  References
+
+15.1.  Normative References
+
+   [RFC2119]               Bradner, S., "Key words for use in RFCs to
+                           Indicate Requirement Levels", BCP 14,
+                           RFC 2119, March 1997.
+
+   [RFC2246]               Dierks, T. and C. Allen, "The TLS Protocol
+                           Version 1.0", RFC 2246, January 1999.
+
+   [RFC2445]               Dawson, F. and Stenerson, D., "Internet
+                           Calendaring and Scheduling Core Object
+                           Specification (iCalendar)", RFC 2445,
+                           November 1998.
+
+   [RFC2446]               Silverberg, S., Mansour, S., Dawson, F., and
+                           R. Hopson, "iCalendar Transport-Independent
+                           Interoperability Protocol (iTIP) Scheduling
+                           Events, BusyTime, To-dos and Journal
+                           Entries", RFC 2446, November 1998.
+
+   [RFC2616]               Fielding, R., Gettys, J., Mogul, J., Frystyk,
+                           H., Masinter, L., Leach, P., and T. Berners-
+                           Lee, "Hypertext Transfer Protocol --
+                           HTTP/1.1", RFC 2616, June 1999.
+
+   [RFC2818]               Rescorla, E., "HTTP Over TLS", RFC 2818,
+                           May 2000.
+
+   [RFC3744]               Clemm, G., Reschke, J., Sedlar, E., and J.
+                           Whitehead, "Web Distributed Authoring and
+                           Versioning (WebDAV) Access Control Protocol",
+                           RFC 3744, May 2004.
+
+   [RFC3986]               Berners-Lee, T., Fielding, R., and L.
+                           Masinter, "Uniform Resource Identifier (URI):
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 40]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+                           Generic Syntax", STD 66, RFC 3986,
+                           January 2005.
+
+   [RFC4346]               Dierks, T. and E. Rescorla, "The Transport
+                           Layer Security (TLS) Protocol Version 1.1",
+                           RFC 4346, April 2006.
+
+   [RFC4791]               Daboo, C., Desruisseaux, B., and L.
+                           Dusseault, "Calendaring Extensions to WebDAV
+                           (CalDAV)", RFC 4791, March 2007.
+
+   [RFC4918]               Dusseault, L., "HTTP Extensions for Web
+                           Distributed Authoring and Versioning
+                           (WebDAV)", RFC 4918, June 2007.
+
+   [W3C.REC-xml-20060816]  Bray, T., Paoli, J., Sperberg-McQueen, C.,
+                           Yergeau, F., and E. Maler, "Extensible Markup
+                           Language (XML) 1.0 (Fourth Edition)", World
+                           Wide Web Consortium Recommendation REC-xml-
+                           20060816, August 2006,
+                           <http://www.w3.org/TR/2006/REC-xml-20060816>.
+
+15.2.  Informative References
+
+   [RFC2447]               Dawson, F., Mansour, S., and S. Silverberg,
+                           "iCalendar Message-Based Interoperability
+                           Protocol (iMIP)", RFC 2447, November 1998.
+
+   [RFC3864]               Klyne, G., Nottingham, M., and J. Mogul,
+                           "Registration Procedures for Message Header
+                           Fields", BCP 90, RFC 3864, September 2004.
+
+Appendix A.  Scheduling Privileges Summary
+
+A.1.  Scheduling Inbox Privileges
+
+   The following tables specify which scheduling privileges can grant
+   the right to a user to have a scheduling message of a specific
+   calendar component type with a specific scheduling method be
+   delivered in the scheduling Inbox of another user.
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 41]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+                                     +---------------------------------+
+                                     |   Scheduling METHOD for VEVENT  |
+                                     +---+---+---+---+---+---+---+-----+
+                                     | P | R | R | A | C | R | C | D C |
+                                     | U | E | E | D | A | E | O | E O |
+                                     | B | Q | P | D | N | F | U | C U |
+                                     | L | U | L |   | C | R | N | L N |
+                                     | I | E | Y |   | E | E | T | I T |
+   +--------------------------------+| S | S |   |   | L | S | E | N E |
+   | Scheduling Inbox Privilege     || H | T |   |   |   | H | R | E R |
+   +================================++===+===+===+===+===+===+===+=====+
+   | schedule                       || * | * | * | * | * | * | * |  *  |
+   |   schedule-deliver             || * | * |   | * | * |   |   |  *  |
+   |     schedule-deliver-vevent    || * | * |   | * | * |   |   |  *  |
+   |     schedule-deliver-vtodo     ||   |   |   |   |   |   |   |     |
+   |     schedule-deliver-vjournal  ||   |   |   |   |   |   |   |     |
+   |     schedule-deliver-vfreebusy ||   |   |   |   |   |   |   |     |
+   |   schedule-respond             ||   |   | * |   |   | * | * |     |
+   |     schedule-respond-vevent    ||   |   | * |   |   | * | * |     |
+   |     schedule-respond-vtodo     ||   |   |   |   |   |   |   |     |
+   +--------------------------------++---+---+---+---+---+---+---+-----+
+
+
+                                     +---------------------------------+
+                                     |   Scheduling METHOD for VTODO   |
+                                     +---+---+---+---+---+---+---+-----+
+                                     | P | R | R | A | C | R | C | D C |
+                                     | U | E | E | D | A | E | O | E O |
+                                     | B | Q | P | D | N | F | U | C U |
+                                     | L | U | L |   | C | R | N | L N |
+                                     | I | E | Y |   | E | E | T | I T |
+   +--------------------------------+| S | S |   |   | L | S | E | N E |
+   | Scheduling Inbox Privilege     || H | T |   |   |   | H | R | E R |
+   +================================++===+===+===+===+===+===+===+=====+
+   | schedule                       || * | * | * | * | * | * | * |  *  |
+   |   schedule-deliver             || * | * |   | * | * |   |   |  *  |
+   |     schedule-deliver-vevent    ||   |   |   |   |   |   |   |     |
+   |     schedule-deliver-vtodo     || * | * |   | * | * |   |   |  *  |
+   |     schedule-deliver-vjournal  ||   |   |   |   |   |   |   |     |
+   |     schedule-deliver-vfreebusy ||   |   |   |   |   |   |   |     |
+   |   schedule-respond             ||   |   | * |   |   | * | * |     |
+   |     schedule-respond-vevent    ||   |   |   |   |   |   |   |     |
+   |     schedule-respond-vtodo     ||   |   | * |   |   | * | * |     |
+   +--------------------------------++---+---+---+---+---+---+---+-----+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 42]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+                                     +-----------------------+
+                                     | Scheduling METHOD for |
+                                     |        VJOURNAL       |
+                                     +-------+-------+-------+
+                                     |   P   |   A   |   C   |
+                                     |   U   |   D   |   A   |
+                                     |   B   |   D   |   N   |
+                                     |   L   |       |   C   |
+                                     |   I   |       |   E   |
+   +--------------------------------+|   S   |       |   L   |
+   | Scheduling Inbox Privilege     ||   H   |       |       |
+   +================================++=======+=======+=======+
+   | schedule                       ||   *   |   *   |   *   |
+   |  schedule-deliver              ||   *   |   *   |   *   |
+   |    schedule-deliver-vevent     ||       |       |       |
+   |    schedule-deliver-vtodo      ||       |       |       |
+   |    schedule-deliver-vjournal   ||   *   |   *   |   *   |
+   |    schedule-deliver-vfreebusy  ||       |       |       |
+   |  schedule-respond              ||       |       |       |
+   |    schedule-respond-vevent     ||       |       |       |
+   |    schedule-respond-vtodo      ||       |       |       |
+   +--------------------------------++-------+-------+-------+
+
+
+                                     +-----------------------+
+                                     | Scheduling METHOD for |
+                                     |       VFREEBUSY       |
+                                     +-------+-------+-------+
+                                     |   P   |   R   |   R   |
+                                     |   U   |   E   |   E   |
+                                     |   B   |   Q   |   P   |
+                                     |   L   |   U   |   L   |
+                                     |   I   |   E   |   Y   |
+   +--------------------------------+|   S   |   S   |       |
+   | Scheduling Inbox Privilege     ||   H   |   T   |       |
+   +================================++=======+=======+=======+
+   | schedule                       ||   *   |   *   | xxxxx |
+   |  schedule-deliver              ||   *   |       | xxxxx |
+   |    schedule-deliver-vevent     ||       |       | xxxxx |
+   |    schedule-deliver-vtodo      ||       |       | xxxxx |
+   |    schedule-deliver-vjournal   ||       |       | xxxxx |
+   |    schedule-deliver-vfreebusy  ||   *   |       | xxxxx |
+   |  schedule-respond              ||       |       | xxxxx |
+   |    schedule-respond-vevent     ||       |       | xxxxx |
+   |    schedule-respond-vtodo      ||       |       | xxxxx |
+   +--------------------------------++-------+-------+-------+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 43]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+A.2.  Scheduling Outbox Privileges
+
+   The following tables specify which scheduling privileges can grant
+   the right to a user to submit, with the POST request method, a
+   scheduling message of a specific calendar component type with a
+   specific scheduling method on a scheduling Outbox collection.
+
+                                     +---------------------------------+
+                                     |   Scheduling METHOD for VEVENT  |
+                                     +---+---+---+---+---+---+---+-----+
+                                     | P | R | R | A | C | R | C | D C |
+                                     | U | E | E | D | A | E | O | E O |
+                                     | B | Q | P | D | N | F | U | C U |
+                                     | L | U | L |   | C | R | N | L N |
+                                     | I | E | Y |   | E | E | T | I T |
+   +--------------------------------+| S | S |   |   | L | S | E | N E |
+   | Scheduling Outbox Privilege    || H | T |   |   |   | H | R | E R |
+   +================================++===+===+===+===+===+===+===+=====+
+   | schedule                       || * | * | * | * | * | * | * |  *  |
+   |   schedule-post                || * | * | * | * | * | * | * |  *  |
+   |     schedule-post-vevent       || * | * | * | * | * | * | * |  *  |
+   |     schedule-post-vtodo        ||   |   |   |   |   |   |   |     |
+   |     schedule-post-vjournal     ||   |   |   |   |   |   |   |     |
+   |     schedule-post-vfreebusy    ||   |   |   |   |   |   |   |     |
+   +--------------------------------++---+---+---+---+---+---+---+-----+
+
+
+                                     +---------------------------------+
+                                     |   Scheduling METHOD for VTODO   |
+                                     +---+---+---+---+---+---+---+-----+
+                                     | P | R | R | A | C | R | C | D C |
+                                     | U | E | E | D | A | E | O | E O |
+                                     | B | Q | P | D | N | F | U | C U |
+                                     | L | U | L |   | C | R | N | L N |
+                                     | I | E | Y |   | E | E | T | I T |
+   +--------------------------------+| S | S |   |   | L | S | E | N E |
+   | Scheduling Outbox Privilege    || H | T |   |   |   | H | R | E R |
+   +================================++===+===+===+===+===+===+===+=====+
+   | schedule                       || * | * | * | * | * | * | * |  *  |
+   |   schedule-post                || * | * | * | * | * | * | * |  *  |
+   |     schedule-post-vevent       ||   |   |   |   |   |   |   |     |
+   |     schedule-post-vtodo        || * | * | * | * | * | * | * |  *  |
+   |     schedule-post-vjournal     ||   |   |   |   |   |   |   |     |
+   |     schedule-post-vfreebusy    ||   |   |   |   |   |   |   |     |
+   +--------------------------------++---+---+---+---+---+---+---+-----+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 44]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+                                     +-----------------------+
+                                     | Scheduling METHOD for |
+                                     |        VJOURNAL       |
+                                     +-------+-------+-------+
+                                     |   P   |   A   |   C   |
+                                     |   U   |   D   |   A   |
+                                     |   B   |   D   |   N   |
+                                     |   L   |       |   C   |
+                                     |   I   |       |   E   |
+   +--------------------------------+|   S   |       |   L   |
+   | Scheduling Outbox Privilege    ||   H   |       |       |
+   +================================++=======+=======+=======+
+   | schedule                       ||   *   |   *   |   *   |
+   |  schedule-post                 ||   *   |   *   |   *   |
+   |    schedule-post-vevent        ||       |       |       |
+   |    schedule-post-vtodo         ||       |       |       |
+   |    schedule-post-vjournal      ||   *   |   *   |   *   |
+   |    schedule-post-vfreebusy     ||       |       |       |
+   +--------------------------------++-------+-------+-------+
+
+
+                                     +-----------------------+
+                                     | Scheduling METHOD for |
+                                     |       VFREEBUSY       |
+                                     +-------+-------+-------+
+                                     |   P   |   R   |   R   |
+                                     |   U   |   E   |   E   |
+                                     |   B   |   Q   |   P   |
+                                     |   L   |   U   |   L   |
+                                     |   I   |   E   |   Y   |
+   +--------------------------------+|   S   |   S   |       |
+   | Scheduling Outbox Privilege    ||   H   |   T   |       |
+   +================================++=======+=======+=======+
+   | schedule                       ||   *   |   *   | xxxxx |
+   |  schedule-post                 ||   *   |   *   | xxxxx |
+   |    schedule-post-vevent        ||       |       | xxxxx |
+   |    schedule-post-vtodo         ||       |       | xxxxx |
+   |    schedule-post-vjournal      ||       |       | xxxxx |
+   |    schedule-post-vfreebusy     ||   *   |   *   | xxxxx |
+   +--------------------------------++-------+-------+-------+
+
+Appendix B.  Example Scheduling Workflow
+
+   This section describes some example scheduling workflows that give a
+   general idea of how scheduling is carried out between CalDAV clients
+   and servers from the perspective of meeting organizers and attendees.
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 45]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+B.1.  Inviting Attendees to an Event
+
+   1.  Bernard creates a new event with Lisa, Cyrus and himself as
+       attendees and decides to send Lisa and Cyrus an invitation to
+       this event.
+
+   2.  Bernard's CUA creates a new event in a calendar collection and
+       submits a scheduling request message through Bernard's scheduling
+       Outbox collection to cause the server to deliver the event
+       invitation to Lisa and Cyrus.
+
+   3.  Lisa and Cyrus will receive the scheduling request message in
+       their scheduling Inbox collection.
+
+B.2.  Receiving and Replying to an Event Invitation
+
+   1.  Cyrus' CUA polls his scheduling Inbox collection for new
+       scheduling messages.  When the new scheduling request message
+       from Bernard is found, the CUA alerts Cyrus.
+
+   2.  When Cyrus is ready to process the new scheduling request
+       message, Cyrus' CUA locks the scheduling Inbox collection and
+       retrieves the new scheduling request message.  The CUA then
+       searches Cyrus' calendar collections to find an event with the
+       same UID property value as the one specified in the scheduling
+       request message.  Here, no event is found since the scheduling
+       request message is for a new event.
+
+   3.  Cyrus is presented with the new scheduling request message and
+       decides to accept the event invitation and to reply to Bernard.
+
+   4.  Cyrus' CUA creates a new event in a calendar collection for the
+       event invitation that was received.  The created event specifies
+       Cyrus' updated PARTSTAT parameter on his ATTENDEE property, as
+       well as the RECEIVED-DTSTAMP parameter on the ORGANIZER property.
+
+   5.  Cyrus' CUA submits a scheduling reply message through Cyrus'
+       scheduling Outbox collection to cause the server to deliver the
+       reply to Bernard.
+
+   6.  Cyrus' CUA deletes the scheduling request message contained in
+       Cyrus' scheduling Inbox collection and unlocks the collection.
+
+B.3.  Receiving a Reply to an Event Invitation
+
+   1.  Bernard's CUA polls his scheduling Inbox collection to retrieve
+       the list of scheduling messages currently contained in the
+       collection.  When the new scheduling reply message is found,
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 46]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+       Bernard's CUA locks the scheduling Inbox collection and retrieves
+       the new scheduling reply message.  The CUA will then search
+       Bernard's calendar collections to find an event with the same UID
+       property value as the one specified in the scheduling reply
+       message.  The original event created by Bernard will be found.
+
+   2.  Bernard's CUA updates the PARTSTAT, RECEIVED-DTSTAMP, and
+       RECEIVED-SEQUENCE parameters of Cyrus' ATTENDEE property in the
+       original event that was found.
+
+   3.  Bernard's CUA deletes the scheduling reply message contained in
+       the Bernard's scheduling Inbox collection and unlocks the
+       collection.
+
+B.4.  Rescheduling an existing event
+
+   1.  Bernard reschedules the event with Lisa and Cyrus and decides to
+       send an updated event invitation to Lisa and Cyrus.
+
+   2.  Bernard's CUA updates the event in the calendar collection and
+       submits a new scheduling request message through Bernard's
+       scheduling Outbox collection to cause the server to deliver the
+       event invitation to Lisa and Cyrus.
+
+   3.  Lisa and Cyrus will receive the scheduling request message in
+       their scheduling Inbox collection.
+
+B.5.  Receiving an Updated Event Invitation
+
+   1.  Lisa's CUA polls her scheduling Inbox collection for new
+       scheduling messages.
+
+   2.  When the new scheduling request message from Bernard is found,
+       Lisa's CUA locks the scheduling Inbox collection and retrieves
+       the new scheduling request message.  The CUA will then search
+       Lisa's calendar collections to find an event with the same UID
+       property value as the one specified in the scheduling request
+       message.  The event previously created in Lisa's calendar
+       collection will be found.
+
+   3.  Lisa's CUA automatically updates the event with the new
+       information provided in the new scheduling request message and
+       also updates the PARTSTAT parameter of Lisa's ATTENDEE property
+       to NEEDS-ACTION, as well as the value of the RECEIVED-DTSTAMP
+       parameter on the ORGANIZER property to match the value of the
+       DTSTAMP property specified in the received scheduling request
+       message.
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 47]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   4.  Lisa's CUA deletes the scheduling request messages contained in
+       Lisa's scheduling Inbox collection and unlocks the collection.
+
+   5.  At some later point, Lisa decides to accept the updated event.
+       Lisa's CUA updates the PARTSTAT parameter on her ATTENDEE
+       property for the event stored in her calendar collection.
+
+   6.  Lisa's CUA submits a scheduling reply message through Lisa's
+       scheduling Outbox collection to cause the server to deliver the
+       reply to Bernard.
+
+Appendix C.  Changes
+
+C.1.  Changes in -04
+
+   a.  Updated to rfc3986 reference.
+
+   b.  Added Appendix with example workflow.
+
+   c.  Change calendar-home-URL to calendar-home-set.
+
+   d.  Updated to RFC 4791 reference.
+
+   e.  Updated to RFC 4918 reference.
+
+   f.  Changed title.
+
+   g.  Added text to explain that VTODO and VJOURNAL are also valid
+       scheduling components in CalDAV.
+
+   h.  Changed order of Inbox and Outbox definition in section 5.
+
+   i.  Added CALDAV:valid-free-busy-set pre-condition.
+
+   j.  Re-worked descriptions of originator, recipient request headers
+       to distinguish between iTIP outgoing and incoming modes.
+
+   k.  Removed 502 status code description for POST.
+
+   l.  Modified 507 status code description for POST to apply to Outbox
+       storage only.
+
+   m.  Added example of task assignment.
+
+   n.  Use application/xml instead of text/xml.
+
+   o.  Inbox and Outbox cannot be contained within a calendar
+       collection.
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 48]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   p.  Added an appendix summarizing scheduling privileges.
+
+   q.  Added registration for the new HTTP headers.
+
+   r.  Redefined the set of scheduling privileges.
+
+   s.  Minor terminology/formatting tweaks.
+
+C.2.  Changes in -03
+
+   a.  Added free-busy example.
+
+   b.  Better abstract.
+
+   c.  Requiring DAV level 2 for locking of Inbox.
+
+   d.  Do not require servers to actually save Outbox requests.
+
+   e.  Removed CALDAV:schedule-state Property.  Clients now must remove
+       inbox items after processing them, using locking etc to prevent
+       race conditions.
+
+   f.  Switched back to 2518 reference from 2518bis.
+
+   g.  Updated to more recent XML reference.
+
+   h.  Revised required features section to better match caldav-access.
+
+C.3.  Changes in -02
+
+   a.  Split schedule privilege into three sub-privileges.
+
+   b.  Made support for caldav-access optional.
+
+   c.  Changed SCHEDULE method to POST.
+
+C.4.  Changes in -01
+
+   a.  Updated to latest references including 2518bis.
+
+   b.  Added principal property CALDAV:calendar-user-address-set.
+
+   c.  Major changes to schedule method, including addition of
+       preconditions.
+
+   d.  New principal properties added.
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 49]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+   e.  Text related to alternative ways of doing scheduling (some
+       speculative) removed.
+
+   f.  Added Security Considerations text.
+
+   g.  Added IANA consideration text.
+
+Authors' Addresses
+
+   Cyrus Daboo
+   Apple Inc.
+   1 Infinite Loop
+   Cupertino, CA  95014
+   USA
+
+   EMail: cyrus@daboo.name
+   URI:   http://www.apple.com/
+
+
+   Bernard Desruisseaux
+   Oracle Corporation
+   600 Blvd. de Maisonneuve West
+   Suite 1900
+   Montreal, QC  H3A 3J2
+   CANADA
+
+   EMail: bernard.desruisseaux@oracle.com
+   URI:   http://www.oracle.com/
+
+
+   Lisa Dusseault
+   CommerceNet
+   169 University Ave.
+   Palo Alto, CA  94301
+   USA
+
+   EMail: ldusseault@commerce.net
+   URI:   http://commerce.net/
+
+
+
+
+
+
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 50]
+
+Internet-Draft               CalDAV Schedule               November 2007
+
+
+Full Copyright Statement
+
+   Copyright (C) The IETF Trust (2007).
+
+   This document is subject to the rights, licenses and restrictions
+   contained in BCP 78, and except as set forth therein, the authors
+   retain all their rights.
+
+   This document and the information contained herein are provided on an
+   "AS IS" basis and THE CONTRIBUTOR, THE ORGANIZATION HE/SHE REPRESENTS
+   OR IS SPONSORED BY (IF ANY), THE INTERNET SOCIETY, THE IETF TRUST AND
+   THE INTERNET ENGINEERING TASK FORCE DISCLAIM ALL WARRANTIES, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF
+   THE INFORMATION HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED
+   WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+Intellectual Property
+
+   The IETF takes no position regarding the validity or scope of any
+   Intellectual Property Rights or other rights that might be claimed to
+   pertain to the implementation or use of the technology described in
+   this document or the extent to which any license under such rights
+   might or might not be available; nor does it represent that it has
+   made any independent effort to identify any such rights.  Information
+   on the procedures with respect to rights in RFC documents can be
+   found in BCP 78 and BCP 79.
+
+   Copies of IPR disclosures made to the IETF Secretariat and any
+   assurances of licenses to be made available, or the result of an
+   attempt made to obtain a general license or permission for the use of
+   such proprietary rights by implementers or users of this
+   specification can be obtained from the IETF on-line IPR repository at
+   http://www.ietf.org/ipr.
+
+   The IETF invites any interested party to bring to its attention any
+   copyrights, patents or patent applications, or other proprietary
+   rights that may cover technology that may be required to implement
+   this standard.  Please address the information to the IETF at
+   ietf-ipr@ietf.org.
+
+Acknowledgement
+
+   Funding for the RFC Editor function is provided by the IETF
+   Administrative Support Activity (IASA).
+
+
+
+
+
+
+
+Daboo, et al.             Expires May 21, 2008                 [Page 51]
+
