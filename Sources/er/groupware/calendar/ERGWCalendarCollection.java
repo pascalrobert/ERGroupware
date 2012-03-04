@@ -8,13 +8,12 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import net.fortuna.ical4j.connector.dav.CalDavConstants;
 import net.fortuna.ical4j.connector.dav.property.CalDavPropertyName;
+import net.fortuna.ical4j.connector.dav.property.ICalPropertyName;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.property.CalScale;
-import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
 
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
@@ -235,15 +234,15 @@ public class ERGWCalendarCollection {
 
     properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, collection.displayName()));
     properties.add(new DefaultDavProperty(CalDavPropertyName.CALENDAR_DESCRIPTION, collection.description()));
-    properties.add(new DefaultDavProperty(CalDavPropertyName.CALENDAR_COLOR, collection.color()));
-    properties.add(new DefaultDavProperty(CalDavPropertyName.CALENDAR_ORDER, collection.calendarOrder()));
+    properties.add(new DefaultDavProperty(ICalPropertyName.CALENDAR_COLOR, collection.color()));
+    properties.add(new DefaultDavProperty(ICalPropertyName.CALENDAR_ORDER, collection.calendarOrder()));
     
     ArrayList<Element> componentsProperty = new ArrayList<Element>();
     for (String component: collection.supportedComponents()) {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
       Document document = builder.newDocument();
-      Element xmlProp = DomUtil.createElement(document, CalDavPropertyName.COMPONENT.getName(), CalDavConstants.NAMESPACE);
+      Element xmlProp = DomUtil.createElement(document, CalDavPropertyName.COMPONENT.getName(), CalDavConstants.CALDAV_NAMESPACE);
       xmlProp.setAttribute("name", component);
       componentsProperty.add(xmlProp);
     }
