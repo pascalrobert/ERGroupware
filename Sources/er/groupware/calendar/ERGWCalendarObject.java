@@ -16,6 +16,7 @@ import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.model.parameter.RelType;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
 import net.fortuna.ical4j.model.parameter.XParameter;
@@ -55,6 +56,7 @@ import er.groupware.calendar.enums.ERGWFreeBusyStatus;
 import er.groupware.calendar.enums.ERGWIStatus;
 import er.groupware.calendar.enums.ERGWParticipantStatus;
 import er.groupware.calendar.enums.ERGWPriority;
+import er.groupware.calendar.enums.ERGWRelationType;
 
 public abstract class ERGWCalendarObject {
 
@@ -79,6 +81,8 @@ public abstract class ERGWCalendarObject {
   private NSTimestamp lastModifiedDate;
   private NSTimestamp creationDate;
   private String parentId;
+  private ERGWRelationType relationType;
+  private NSArray<String> relatedObjects;
 
   public static final ERXKey<ERGWCalendar> CALENDAR = new ERXKey<ERGWCalendar>("calendar");
   public static final ERXKey<ERGWAttendee> ATTENDEES = new ERXKey<ERGWAttendee>("attendees");
@@ -297,6 +301,25 @@ public abstract class ERGWCalendarObject {
   public void setParentId(String _parentId) {
     this.parentId = _parentId;
   }
+  
+  public ERGWRelationType relationType() {
+    return relationType;
+  }
+
+  public void setRelationType(ERGWRelationType _relationType) {
+    this.relationType = _relationType;
+  }
+  
+  public NSArray<String> relatedObjects() {
+    if (relatedObjects == null) {
+      setRelatedObjects(new NSArray<String>());
+    }
+    return relatedObjects;
+  }
+
+  public void setRelatedObjects(NSArray<String> _relatedObjects) {
+    this.relatedObjects = _relatedObjects;
+  }
 
   public static net.fortuna.ical4j.model.property.Attendee convertAttendee(ERGWAttendee attendee) {
     net.fortuna.ical4j.model.property.Attendee icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
@@ -417,6 +440,7 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.Geo geo = (net.fortuna.ical4j.model.property.Geo)calComponent.getProperty(Property.GEO);
     net.fortuna.ical4j.model.property.Url url = (net.fortuna.ical4j.model.property.Url)calComponent.getProperty(Property.URL);
     net.fortuna.ical4j.model.property.Priority priority = (net.fortuna.ical4j.model.property.Priority)calComponent.getProperty(Property.PRIORITY);
+    net.fortuna.ical4j.model.property.RelatedTo relatedTo = (net.fortuna.ical4j.model.property.RelatedTo)calComponent.getProperty(Property.RELATED_TO);
     net.fortuna.ical4j.model.PropertyList extras = calComponent.getProperties(Property.EXPERIMENTAL_PREFIX);
     
     ERGWOrganizer organizer = new ERGWOrganizer();
@@ -464,7 +488,9 @@ public abstract class ERGWCalendarObject {
     newObject.setStartTime(new NSTimestamp(startTime.getDate()));
     newObject.setEndTime(new NSTimestamp(endTime.getDate()));
     newObject.setSummary(summary.getValue());
-    newObject.setLocation(location.getValue());
+    if (location != null) {
+      newObject.setLocation(location.getValue());
+    }
     if (categories != null) {
       newObject.setCategories(categories.getValue());
     }
@@ -485,8 +511,20 @@ public abstract class ERGWCalendarObject {
     } else {
       newObject.setPriority(ERGWPriority.UNDEFINED);
     }
+    
+    if (relatedTo != null) {
+      if (relatedTo.getParameter(Parameter.RELTYPE) == RelType.SIBLING) {
+        newObject.setRelationType(ERGWRelationType.SIBLING);
+      } else if (relatedTo.getParameter(Parameter.RELTYPE) == RelType.CHILD) {
+        newObject.setRelationType(ERGWRelationType.CHILD);
+      } else {
+        newObject.setRelationType(ERGWRelationType.PARENT);
+      }
+      
+      String[] relatedObjectsId = relatedTo.getValue().split(",");
+      newObject.setRelatedObjects(new NSArray<String>(relatedObjectsId));
+    }
 
-    NSLog.out.appendln(extras);
     return newObject;
   }
 

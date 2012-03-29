@@ -158,13 +158,20 @@ public class ERGWCalendar {
     newCalendar.setProductId(defaultProdId);
 
     NSMutableArray<ERGWEvent> events = new NSMutableArray<ERGWEvent>();
+    NSMutableArray<ERGWTask> tasks = new NSMutableArray<ERGWTask>();
 
     for (Object component : je.getComponents(Component.VEVENT)) {
       ERGWEvent event = new ERGWEvent(newCalendar);
       ERGWEvent.transformFromICalObject((VEvent)component, event);
       events.addObject(event);
     }
+    for (Object component : je.getComponents(Component.VTODO)) {
+      ERGWTask task = new ERGWTask(newCalendar);
+      ERGWTask.transformFromICalObject((VToDo)component, task);
+      tasks.addObject(task);
+    }
     newCalendar.setEvents(events);
+    newCalendar.setTasks(tasks);
     return newCalendar;
   }
 
