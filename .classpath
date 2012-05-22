@@ -30,8 +30,7 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-webdav-1.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.jar"/>
 	<classpathentry kind="lib" path="Libraries/CGProCLI.jar"/>
+	<classpathentry kind="lib" path="Libraries/ical4j-connector-0.9.3.jar"/>
 	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
-	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/ical4j-connector"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/ical4j"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
