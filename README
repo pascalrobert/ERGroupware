@@ -31,3 +31,64 @@ Sample call to create your calendar data:
     nextPage.setCalendar(calendarData);
     return nextPage;
   }
+  
+Basic Exchange support was added. It's raw right now, but you can use it like this (this sample will create a empty contact)
+
+    URL urlToWSDL = ERXApplication.application().resourceManager().pathURLForResourceNamed("Services.wsdl", "ERGroupware", null);
+    
+    ExchangeWebService service = new ExchangeWebService(urlToWSDL, new QName("http://schemas.microsoft.com/exchange/services/2006/messages", "ExchangeWebService"));
+    ExchangeServicePortType port = service.getExchangeWebPort();
+    ((BindingProvider)port).getRequestContext().put(BindingProvider.USERNAME_PROPERTY, "youruser");
+    ((BindingProvider)port).getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, "yourpassword");
+    ((BindingProvider)port).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, "http://nameofyourexchangehost/EWS/exchange.asmx");
+    
+    MailboxCultureType culture = new MailboxCultureType();
+    culture.setValue("en-US");
+
+    RequestServerVersion serverVersion = new RequestServerVersion();
+    serverVersion.setVersion(ExchangeVersionType.EXCHANGE_2007_SP_1);
+
+    TimeZoneDefinitionType tzType = new TimeZoneDefinitionType();
+    tzType.setId("Eastern Standard Time");
+    TimeZoneContextType tzContext = new TimeZoneContextType();
+    tzContext.setTimeZoneDefinition(tzType);
+
+    Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
+
+    ExchangeImpersonationType impersonation = new ExchangeImpersonationType();
+    ConnectingSIDType sid = new ConnectingSIDType();
+    sid.setPrimarySmtpAddress("email@yourexchangehost.com");
+    impersonation.setConnectingSID(sid);
+    
+    ContactItemType contact = new ContactItemType();
+
+    CreateItemType contactItemDetails = new CreateItemType();
+    NonEmptyArrayOfAllItemsType contactsArray = new NonEmptyArrayOfAllItemsType();
+    contactsArray.getItemOrMessageOrCalendarItem().add(contact);
+    contactItemDetails.setItems(contactsArray);
+
+    TargetFolderIdType contactFolderId = new TargetFolderIdType();
+    DistinguishedFolderIdType contactFolderType = new DistinguishedFolderIdType();
+    contactFolderType.setId(DistinguishedFolderIdNameType.CONTACTS);
+    contactFolderId.setDistinguishedFolderId(contactFolderType);
+    contactItemDetails.setSavedItemFolderId(contactFolderId);
+
+    port.createItem(contactItemDetails, culture, serverVersion, tzContext, responseHolder, null);
+    
+    CreateItemResponseType response = responseHolder.value;
+    ArrayOfResponseMessagesType responses = response.getResponseMessages();
+    for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
+      ItemInfoResponseMessageType itemResponse = (ItemInfoResponseMessageType)responseObject.getValue();
+      NSLog.out.appendln(itemResponse.getResponseCode());
+      ArrayOfRealItemsType items = itemResponse.getItems();
+      for (ItemType item: items.getItemOrMessageOrCalendarItem()) {
+        NSLog.out.appendln(((ContactItemType)item).getItemId().getId());
+        NSLog.out.appendln(((ContactItemType)item).getItemId().getChangeKey());
+      }
+    }
+    
+If your Exchange server is only accepting NTLM auth, add the following:
+
+    ExchangeAuthenticator authenticator = new ExchangeAuthenticator("YOURDOMAIN\\yourusername", "yourpassword".toCharArray());
+	Authenticator.setDefault(authenticator);
+
