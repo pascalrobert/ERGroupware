@@ -1,4 +1,4 @@
-package er.groupware.calendar.zimbra;
+package er.groupware.zimbra.soap;
 
 import java.net.URI;
 import java.net.URISyntaxException;

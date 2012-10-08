@@ -22,7 +22,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
-import er.groupware.calendar.exceptions.ZimbraTooManyObjectsException;
+
+import er.groupware.exceptions.ZimbraTooManyObjectsException;
 
 public class ERGWCalendar {
 

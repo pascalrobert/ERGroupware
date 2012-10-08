@@ -1,4 +1,4 @@
-package er.groupware.calendar.caldav;
+package er.groupware.caldav;
 
 import java.net.SocketException;
 import java.net.URISyntaxException;
