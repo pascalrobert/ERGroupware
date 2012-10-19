@@ -266,8 +266,6 @@ public interface ExchangeServicePortType {
     public void createFolder(
         @WebParam(name = "CreateFolder", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", partName = "request")
         CreateFolderType request,
-        @WebParam(name = "MailboxCulture", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "MailboxCulture")
-        MailboxCultureType mailboxCulture,
         @WebParam(name = "RequestServerVersion", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "RequestVersion")
         RequestServerVersion requestVersion,
         @WebParam(name = "TimeZoneContext", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "TimeZoneContext")
