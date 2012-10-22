@@ -749,6 +749,30 @@ public interface ExchangeServicePortType {
 
     /**
      * 
+     * @param timeZoneContext
+     * @param request
+     * @param serverVersion
+     * @param createAttachmentResult
+     * @param requestVersion
+     * @param mailboxCulture
+     */
+    @WebMethod(operationName = "CreateAttachment", action = "http://schemas.microsoft.com/exchange/services/2006/messages/CreateAttachment")
+    public void createAttachment(
+        @WebParam(name = "CreateAttachment", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", partName = "request")
+        CreateAttachmentType request,
+        @WebParam(name = "MailboxCulture", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "MailboxCulture")
+        MailboxCultureType mailboxCulture,
+        @WebParam(name = "RequestServerVersion", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "RequestVersion")
+        RequestServerVersion requestVersion,
+        @WebParam(name = "TimeZoneContext", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "TimeZoneContext")
+        TimeZoneContextType timeZoneContext,
+        @WebParam(name = "CreateAttachmentResponse", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", mode = WebParam.Mode.OUT, partName = "CreateAttachmentResult")
+        Holder<CreateAttachmentResponseType> createAttachmentResult,
+        @WebParam(name = "ServerVersionInfo", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, mode = WebParam.Mode.OUT, partName = "ServerVersion")
+        Holder<ServerVersionInfo> serverVersion);
+    
+    /**
+     * 
      * @param request
      * @param serverVersion
      * @param impersonation
