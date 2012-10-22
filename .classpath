@@ -28,11 +28,9 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/CGProCLI.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-connector-0.9.4-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-vcard-0.9.5-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="Libraries/jackrabbit-core-2.4.2.jar"/>
-	<classpathentry kind="lib" path="Libraries/jackrabbit-webdav-2.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-core-2.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-webdav-2.4.2.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-vcard-0.9.6-SNAPSHOT.jar"/>
 	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jackrabbit-core"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/jackrabbit-webdav"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
