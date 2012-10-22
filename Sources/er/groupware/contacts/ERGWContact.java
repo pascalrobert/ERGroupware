@@ -15,6 +15,7 @@ import net.fortuna.ical4j.vcard.property.Clazz;
 import net.fortuna.ical4j.vcard.property.Email;
 import net.fortuna.ical4j.vcard.property.N;
 import net.fortuna.ical4j.vcard.property.Org;
+import net.fortuna.ical4j.vcard.property.Photo;
 import net.fortuna.ical4j.vcard.property.Telephone;
 import net.fortuna.ical4j.vcard.property.Url;
 
@@ -490,8 +491,11 @@ public class ERGWContact {
     if (notes != null)
       newContact.setNotes(notes.getValue());
        
-    // TODO
-    vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.PHOTO);
+    Property photoProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.PHOTO);
+    if (photoProp != null) {
+      Photo photo = (Photo)photoProp;
+      newContact.setPhoto(new NSData(photo.getBinary()));
+    }
     
     Property organizationProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.ORG);
     if (organizationProp != null) {
