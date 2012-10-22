@@ -2,25 +2,31 @@ package er.groupware.contacts;
 
 import java.net.SocketException;
 import java.net.URISyntaxException;
+import java.util.Iterator;
 
 import net.fortuna.ical4j.vcard.Parameter;
 import net.fortuna.ical4j.vcard.Property;
 import net.fortuna.ical4j.vcard.VCard;
 import net.fortuna.ical4j.vcard.parameter.Type;
 import net.fortuna.ical4j.vcard.property.Address;
+import net.fortuna.ical4j.vcard.property.BDay;
+import net.fortuna.ical4j.vcard.property.Categories;
+import net.fortuna.ical4j.vcard.property.Clazz;
 import net.fortuna.ical4j.vcard.property.Email;
 import net.fortuna.ical4j.vcard.property.N;
+import net.fortuna.ical4j.vcard.property.Org;
 import net.fortuna.ical4j.vcard.property.Telephone;
+import net.fortuna.ical4j.vcard.property.Url;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSData;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 
-import er.groupware.calendar.enums.ERGWClassification;
 import er.groupware.contacts.enums.ERGWContactEmailType;
 import er.groupware.contacts.enums.ERGWContactPhysicalAddressType;
 import er.groupware.contacts.enums.ERGWContactTelephoneType;
+import er.groupware.contacts.enums.ERGWContactUrlType;
 
 public class ERGWContact {
 
@@ -50,7 +56,7 @@ public class ERGWContact {
   protected NSArray<String> hobbies; // X-HOBBIES
   protected String spouseName; // X-SPOUSE-NAME
   protected NSArray<String> children; // X-CHILDREN, multiple lines
-  protected ERGWClassification classification;
+  protected ERGWContactClassification classification;
   protected NSArray<String> imAddresses; // ICQ if only one
   protected String manager; // X-MANAGER
   protected String assistant; // X-ASSISTANT
@@ -312,11 +318,11 @@ public class ERGWContact {
     this.children = children;
   }
 
-  public ERGWClassification classification() {
+  public ERGWContactClassification classification() {
     return classification;
   }
 
-  public void setClassification(ERGWClassification classification) {
+  public void setClassification(ERGWContactClassification classification) {
     this.classification = classification;
   }
 
@@ -373,6 +379,7 @@ public class ERGWContact {
     
     java.util.List<Property> telephones = vCardComponent.getProperties(net.fortuna.ical4j.vcard.Property.Id.TEL);
     if (telephones != null) {
+      NSMutableArray<ERGWContactTelephone> telephonesToAdd = new NSMutableArray<ERGWContactTelephone>();
       for (Property telephoneProp: telephones) {
         Telephone telDetails = (Telephone)telephoneProp;
         ERGWContactTelephone telephone = new ERGWContactTelephone();
@@ -402,19 +409,25 @@ public class ERGWContact {
           telephone.setIsPrefered(true);
         }
         telephone.setTypes(phoneTypes.immutableClone());
+        telephonesToAdd.addObject(telephone);
       }
+      newContact.setTelephones(telephonesToAdd);
     }
     
     java.util.List<Property> emails = vCardComponent.getProperties(net.fortuna.ical4j.vcard.Property.Id.EMAIL);
     if (emails != null) {
+      NSMutableArray<ERGWContactEmail> emailsToAdd = new NSMutableArray<ERGWContactEmail>();
       for (Property emailProp: emails) {
         Email emailDetails = (Email)emailProp;
         ERGWContactEmail email = new ERGWContactEmail();
         email.setEmail(emailDetails.getValue());
+        // FIXME
+        /*
         Parameter commonName = emailDetails.getParameter(net.fortuna.ical4j.vcard.Parameter.Id.CN);
         if (commonName != null) {
           email.setCommonName(commonName.getValue());
         }
+      */
         Parameter typeParam = emailDetails.getParameter(net.fortuna.ical4j.vcard.Parameter.Id.TYPE);
         NSMutableArray<ERGWContactEmailType> emailTypes = new NSMutableArray<ERGWContactEmailType>();
         if (typeParam != null) {
@@ -432,9 +445,152 @@ public class ERGWContact {
         } else {
           email.setIsPrefered(true);
         } 
+        emailsToAdd.addObject(email);
       }
+      newContact.setEmails(emailsToAdd);
     }
 
+    java.util.List<Property> addresses = vCardComponent.getProperties(net.fortuna.ical4j.vcard.Property.Id.ADR);
+    if (addresses != null) {
+      NSMutableArray<ERGWContactPhysicalAddress> addressesToAdd = new NSMutableArray<ERGWContactPhysicalAddress>();
+      for (Property adresseProp: addresses) {
+        Address addressDetails = (Address)adresseProp;
+        ERGWContactPhysicalAddress physicalAddress = new ERGWContactPhysicalAddress();
+        physicalAddress.setCountry(addressDetails.getCountry());
+        physicalAddress.setCity(addressDetails.getLocality());
+        physicalAddress.setPostOfficeBox(addressDetails.getPoBox());
+        physicalAddress.setPostalCode(addressDetails.getPostcode());
+        physicalAddress.setRegion(addressDetails.getRegion());
+        physicalAddress.setStreet(addressDetails.getStreet());
+        physicalAddress.setExtendedAddress(addressDetails.getExtended());
+        
+        Parameter typeParam = addressDetails.getParameter(net.fortuna.ical4j.vcard.Parameter.Id.TYPE);
+        NSMutableArray<ERGWContactPhysicalAddressType> addressTypes = new NSMutableArray<ERGWContactPhysicalAddressType>();
+        if (typeParam != null) {
+          String[] paramValues = typeParam.getValue().split(",");
+          for (int paramIterator = 0; paramIterator < paramValues.length; paramIterator++) {
+            String typeFromVCard = paramValues[paramIterator];
+            if (Type.PREF.getValue().equals(typeFromVCard)) {
+              physicalAddress.setIsPrefered(true);              
+            }
+            ERGWContactPhysicalAddressType type = ERGWContactPhysicalAddressType.getByRFC2445Value(paramValues[paramIterator]);            
+            if (type != null) {
+              addressTypes.addObject(type);
+            }
+          }
+        } else {
+          physicalAddress.setIsPrefered(true);
+        } 
+        addressesToAdd.addObject(physicalAddress);
+      }
+      newContact.setPhysicalAddresses(addressesToAdd);
+    }
+    
+    Property notes = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.NOTE);
+    if (notes != null)
+      newContact.setNotes(notes.getValue());
+       
+    // TODO
+    vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.PHOTO);
+    
+    Property organizationProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.ORG);
+    if (organizationProp != null) {
+      Org organization = (Org)organizationProp;
+      String[] organizationDetails = organization.getValues();
+      if (organizationDetails.length == 1) {
+        newContact.setBusinessName(organizationDetails[0]);
+      } else if (organizationDetails.length == 2) {
+        newContact.setBusinessName(organizationDetails[0]);
+        newContact.setDepartmentName(organizationDetails[1]);
+      } else if (organizationDetails.length > 2) {
+        newContact.setBusinessName(organizationDetails[0]);
+        newContact.setDepartmentName(organizationDetails[1]);
+        NSMutableArray<String> businessUnits = new NSMutableArray<String>(organizationDetails);
+        businessUnits.remove(0);
+        businessUnits.remove(0);
+      }
+    }
+    
+    Property titleProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.TITLE);
+    if (titleProp != null) {
+      newContact.setJobTitle(titleProp.getValue());
+    }
+    
+    // TODO X-ANNIVERSARY;VALUE=DATE:20121021
+    Property anniversaryProp = vCardComponent.getExtendedProperty("X-ANNIVERSARY");
+    if (anniversaryProp != null) {
+      
+    }
+    
+    Property birthdayProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.BDAY);
+    if (birthdayProp != null) 
+      newContact.setBirthday(new NSTimestamp(((BDay)birthdayProp).getDate()));
+    
+    Property hobbiesProp = vCardComponent.getExtendedProperty("X-HOBBIES");
+    if (hobbiesProp != null)
+      newContact.setHobbies(new NSArray<String>(hobbiesProp.getValue().split(",")));
+    
+    Property spouseNameProp = vCardComponent.getExtendedProperty("X-SPOUSE-NAME");
+    if (spouseNameProp != null)
+      newContact.setSpouseName(spouseNameProp.getValue());
+    
+    java.util.List<Property> urlsProp = vCardComponent.getProperties(net.fortuna.ical4j.vcard.Property.Id.URL);
+    if (urlsProp != null) {
+      NSMutableArray<ERGWContactUrl> urlsToAdd = new NSMutableArray<ERGWContactUrl>();
+      for (Property urlProp: urlsProp) {
+        Url url = (Url)urlProp;
+        ERGWContactUrl newUrl = new ERGWContactUrl();
+        newUrl.setValue(urlProp.getValue());
+
+        Parameter typeParam = url.getParameter(net.fortuna.ical4j.vcard.Parameter.Id.TYPE);
+        NSMutableArray<ERGWContactUrlType> urlTypes = new NSMutableArray<ERGWContactUrlType>();
+        if (typeParam != null) {
+          String[] paramValues = typeParam.getValue().split(",");
+          for (int paramIterator = 0; paramIterator < paramValues.length; paramIterator++) {
+            ERGWContactUrlType type = ERGWContactUrlType.getByRFC2445Value(paramValues[paramIterator]);            
+            if (type != null) {
+              urlTypes.addObject(type);
+            }
+          }
+        } 
+        urlsToAdd.addObject(newUrl);
+      }
+      newContact.setUrls(urlsToAdd);
+    }
+    
+    java.util.List<Property> childrensProp = vCardComponent.getExtendedProperties("X-CHILDREN");
+    if (childrensProp != null) {
+      NSMutableArray<String> childrenToAdd = new NSMutableArray<String>();
+      for (Property childrenProp: childrensProp) {
+        childrenToAdd.addObject(childrenProp.getValue());
+      }
+      newContact.setChildren(childrenToAdd);
+    }
+
+    Property classificationProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.CLASS);
+    if (classificationProp != null) {
+      newContact.setClassification(ERGWContactClassification.getByRFC2445Value((Clazz)classificationProp));
+    }
+    
+    Property categoriesProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.CATEGORIES);
+    if (categoriesProp != null) {
+      NSMutableArray<String> categoriesToAdd = new NSMutableArray<String>();
+      Categories categories = (Categories)categoriesProp;
+      Iterator<String> categoriesIterator = categories.getCategories().iterator();
+      while (categoriesIterator.hasNext()) {
+        categoriesToAdd.addObject(categoriesIterator.next());
+      }
+      newContact.setCategories(categoriesToAdd);
+    }
+    
+    Property managerProp = vCardComponent.getExtendedProperty("X-MANAGER");
+    if (managerProp != null)
+      newContact.setManager(managerProp.getValue());
+    
+    Property imppProp = vCardComponent.getProperty(net.fortuna.ical4j.vcard.Property.Id.IMPP);
+    if (imppProp != null)
+       newContact.setImAddresses(new NSArray<String>(imppProp.getValue()));
+    
     Property fileAs = vCardComponent.getExtendedProperty("X-FILE-AS");
     if (fileAs != null)
       newContact.setFileAs(fileAs.getValue());

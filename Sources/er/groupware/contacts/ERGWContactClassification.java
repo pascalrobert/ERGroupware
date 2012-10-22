@@ -1,18 +1,19 @@
-package er.groupware.calendar.enums;
+package er.groupware.contacts;
 
 
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.fortuna.ical4j.model.property.Clazz;
+import net.fortuna.ical4j.vcard.property.Clazz;
 
 import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
 import com.webobjects.foundation.NSArray;
 
 import er.groupware.calendar.ERGWCalendarPrincipal;
+import er.groupware.calendar.enums.ERGWICalendarProperty;
 
-public enum ERGWClassification implements ERGWICalendarProperty {
+public enum ERGWContactClassification implements ERGWICalendarProperty {
 
   PUBLIC("Public", Clazz.PUBLIC, "PUB", SensitivityChoicesType.NORMAL),
   PRIVATE("Privé", Clazz.PRIVATE, "PRI", SensitivityChoicesType.PRIVATE),
@@ -24,17 +25,17 @@ public enum ERGWClassification implements ERGWICalendarProperty {
   private String zimbraValue;
   private SensitivityChoicesType ewsValue;
   
-  private ERGWClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue, SensitivityChoicesType ewsValue) {
+  private ERGWContactClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue, SensitivityChoicesType ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
   }
 
-  private static final Map<String,ERGWClassification> zimbraLookup = new HashMap<String,ERGWClassification>();
-  private static final Map<Clazz,ERGWClassification> rfc2445Lookup = new HashMap<Clazz,ERGWClassification>();
+  private static final Map<String,ERGWContactClassification> zimbraLookup = new HashMap<String,ERGWContactClassification>();
+  private static final Map<Clazz,ERGWContactClassification> rfc2445Lookup = new HashMap<Clazz,ERGWContactClassification>();
 
   static {
-    for(ERGWClassification s : EnumSet.allOf(ERGWClassification.class)) {
+    for(ERGWContactClassification s : EnumSet.allOf(ERGWContactClassification.class)) {
       zimbraLookup.put(s.zimbraValue(), s);
       rfc2445Lookup.put(s.rfc2445Value, s);
     }
@@ -52,18 +53,18 @@ public enum ERGWClassification implements ERGWICalendarProperty {
     return zimbraValue;
   }
 
-  public static NSArray<ERGWClassification> clazzes() {
-    return new NSArray<ERGWClassification>(ERGWClassification.values());
+  public static NSArray<ERGWContactClassification> clazzes() {
+    return new NSArray<ERGWContactClassification>(ERGWContactClassification.values());
   }
 
-  private ERGWClassification() {
+  private ERGWContactClassification() {
   }
 
-  public static ERGWClassification getByZimbraValue(String zimbraValue) { 
+  public static ERGWContactClassification getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
   
-  public static ERGWClassification getByRFC2445Value(Clazz rfcValue) { 
+  public static ERGWContactClassification getByRFC2445Value(Clazz rfcValue) { 
     return rfc2445Lookup.get(rfcValue); 
   }
 
