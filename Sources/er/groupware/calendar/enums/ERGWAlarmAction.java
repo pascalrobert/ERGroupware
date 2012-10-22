@@ -62,4 +62,8 @@ public enum ERGWAlarmAction {
     return zimbraLookup.get(zimbraValue); 
   }
   
+  public static ERGWAlarmAction getByRFC2455Value(Action rfcValue) { 
+    return rfc2445Lookup.get(rfcValue); 
+  }
+  
 }

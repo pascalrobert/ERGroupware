@@ -8,12 +8,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
+
 import net.fortuna.ical4j.model.Date;
 import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.component.CalendarComponent;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.RelType;
@@ -33,8 +37,8 @@ import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.util.UidGenerator;
+
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.zimbra.common.service.ServiceException;
@@ -47,6 +51,7 @@ import com.zimbra.cs.zclient.ZInvite.ZClass;
 import com.zimbra.cs.zclient.ZInvite.ZComponent.ZReply;
 import com.zimbra.cs.zclient.ZInvite.ZFreeBusyStatus;
 import com.zimbra.cs.zclient.ZInvite.ZOrganizer;
+
 import er.extensions.eof.ERXKey;
 import er.extensions.validation.ERXValidationException;
 import er.groupware.calendar.enums.ERGWAttendeeRole;
@@ -56,6 +61,8 @@ import er.groupware.calendar.enums.ERGWFreeBusyStatus;
 import er.groupware.calendar.enums.ERGWIStatus;
 import er.groupware.calendar.enums.ERGWParticipantStatus;
 import er.groupware.calendar.enums.ERGWPriority;
+import er.groupware.calendar.enums.ERGWRecurrenceFrequency;
+import er.groupware.calendar.enums.ERGWRecurrencePeriodType;
 import er.groupware.calendar.enums.ERGWRelationType;
 
 public abstract class ERGWCalendarObject {
@@ -63,7 +70,7 @@ public abstract class ERGWCalendarObject {
   private NSMutableArray<ERGWAttendee> attendees;
   private NSMutableArray<ERGWAttendee> resources;
   private ERGWFreeBusyStatus freeBusyStatus;
-  private String categories;
+  private NSArray<String> categories;
   private ERGWClassification classification;
   private String description;
   private NSTimestamp endTime;
@@ -83,6 +90,8 @@ public abstract class ERGWCalendarObject {
   private String parentId;
   private ERGWRelationType relationType;
   private NSArray<String> relatedObjects;
+  private NSMutableArray<ERGWAlarm> alarms;
+  private ERGWRecurrenceRule recurrenceRule;
 
   public static final ERXKey<ERGWCalendar> CALENDAR = new ERXKey<ERGWCalendar>("calendar");
   public static final ERXKey<ERGWAttendee> ATTENDEES = new ERXKey<ERGWAttendee>("attendees");
@@ -111,6 +120,7 @@ public abstract class ERGWCalendarObject {
   public ERGWCalendarObject() {
     this.attendees = new NSMutableArray<ERGWAttendee>();
     this.resources = new NSMutableArray<ERGWAttendee>();
+    this.alarms = new NSMutableArray<ERGWAlarm>();
   }
 
   public abstract ERGWIStatus status();
@@ -157,6 +167,18 @@ public abstract class ERGWCalendarObject {
   public void addResource(ERGWAttendee resource) {
     this.resources.addObject(resource);
   }
+  
+  public NSArray<ERGWAlarm> alarms() {
+    return this.alarms;
+  }
+
+  public void setAlarms(NSArray<ERGWAlarm> _alarms) {
+    this.alarms = _alarms.mutableClone();
+  }
+
+  public void addResource(ERGWAlarm alarm) {
+    this.alarms.addObject(alarm);
+  }
 
   public ERGWFreeBusyStatus freeBusyStatus() {
     return freeBusyStatus;
@@ -166,12 +188,18 @@ public abstract class ERGWCalendarObject {
     this.freeBusyStatus = _freeBusyStatus;
   }
 
-  public String categories() {
+  public NSArray<String> categories() {
     return categories;
   }
 
-  public void setCategories(String _categories) {
+  public void setCategories(NSArray<String> _categories) {
     this.categories = _categories;
+  }
+  
+  public void addToCategories(String category) {
+    NSMutableArray<String> mutableCategories = categories.mutableClone();
+    mutableCategories.addObject(category);
+    categories = mutableCategories.immutableClone();
   }
 
   public ERGWClassification classification() {
@@ -320,6 +348,14 @@ public abstract class ERGWCalendarObject {
   public void setRelatedObjects(NSArray<String> _relatedObjects) {
     this.relatedObjects = _relatedObjects;
   }
+  
+  public void setRecurrenceRule(ERGWRecurrenceRule recurrenceRule) {
+    this.recurrenceRule = recurrenceRule;
+  }
+  
+  public ERGWRecurrenceRule recurrenceRule() {
+    return this.recurrenceRule;
+  }
 
   public static net.fortuna.ical4j.model.property.Attendee convertAttendee(ERGWAttendee attendee) {
     net.fortuna.ical4j.model.property.Attendee icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
@@ -366,12 +402,20 @@ public abstract class ERGWCalendarObject {
       calComponent.getProperties().add(convertAttendee(resource));      
     }
     
+    for (ERGWAlarm alarm: calendarObject.alarms) {
+      if (calComponent instanceof VEvent)
+        ((VEvent)calComponent).getAlarms().add(ERGWAlarm.transformToICalObject(alarm));      
+      if (calComponent instanceof VToDo)
+        ((VToDo)calComponent).getAlarms().add(ERGWAlarm.transformToICalObject(alarm));      
+    }
+    
     if (calendarObject.freeBusyStatus != null) {
       calComponent.getProperties().add(calendarObject.freeBusyStatus.rfc2445Value());
     }
     
     if (calendarObject.categories != null) {
-      calComponent.getProperties().add(new Categories(calendarObject.categories));
+      Categories rfcCategories = new Categories(new TextList((String[])calendarObject.categories.toArray()));
+      calComponent.getProperties().add(rfcCategories);
     }
     
     if (calendarObject.classification != null) {
@@ -442,11 +486,16 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.Priority priority = (net.fortuna.ical4j.model.property.Priority)calComponent.getProperty(Property.PRIORITY);
     net.fortuna.ical4j.model.property.RelatedTo relatedTo = (net.fortuna.ical4j.model.property.RelatedTo)calComponent.getProperty(Property.RELATED_TO);
     net.fortuna.ical4j.model.PropertyList extras = calComponent.getProperties(Property.EXPERIMENTAL_PREFIX);
+    net.fortuna.ical4j.model.property.RRule recurrenceRule = (net.fortuna.ical4j.model.property.RRule)calComponent.getProperty(Property.RRULE);
     
-    ERGWOrganizer organizer = new ERGWOrganizer();
-    //organizer.setEmailAddress(zOrg.getParameter(Parameter.VALUE).getValue());
-    organizer.setName(zOrg.getParameter(Parameter.CN).getValue());
-    newObject.setOrganizer(organizer);
+    if (zOrg != null) {
+      ERGWOrganizer organizer = new ERGWOrganizer();
+      //organizer.setEmailAddress(zOrg.getParameter(Parameter.VALUE).getValue());
+      Parameter commonName = zOrg.getParameter(Parameter.CN);
+      if (commonName != null)
+        organizer.setName(commonName.getValue());
+      newObject.setOrganizer(organizer);
+    }
     
     for (Object zAttendee: attendees) {
       net.fortuna.ical4j.model.property.Attendee oldAttendee = (net.fortuna.ical4j.model.property.Attendee)zAttendee;
@@ -462,7 +511,13 @@ public abstract class ERGWCalendarObject {
         attendee.setCutype(ERGWCUType.ROOM);
       } else if (type == CuType.UNKNOWN) {
         attendee.setCutype(ERGWCUType.UNKNOWN);
-      }      
+      }
+      Parameter role = oldAttendee.getParameter(Parameter.ROLE);
+      if (role != null) {
+        attendee.setRole(ERGWAttendeeRole.getByRFC2445ValueValue((Role)role));
+      } else {
+        attendee.setRole(ERGWAttendeeRole.REQ_PARTICIPANT);        
+      }
       attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
       newObject.addAttendee(attendee);
     }
@@ -492,7 +547,13 @@ public abstract class ERGWCalendarObject {
       newObject.setLocation(location.getValue());
     }
     if (categories != null) {
-      newObject.setCategories(categories.getValue());
+      Iterator<String> categoriesIterator = categories.getCategories().iterator();
+      NSMutableArray<String> mutableCategories = new NSMutableArray<String>();
+      while (categoriesIterator.hasNext()) {
+        String category = categoriesIterator.next();
+        mutableCategories.addObject(category);
+      }
+      newObject.setCategories(mutableCategories.immutableClone());
     }
     if (description != null) {
       newObject.setDescription(description.getValue());
@@ -523,6 +584,42 @@ public abstract class ERGWCalendarObject {
       
       String[] relatedObjectsId = relatedTo.getValue().split(",");
       newObject.setRelatedObjects(new NSArray<String>(relatedObjectsId));
+    }
+    
+    if (recurrenceRule != null) {
+      ERGWRecurrenceRule rrule = new ERGWRecurrenceRule();
+
+      String frequency = recurrenceRule.getRecur().getFrequency();
+      rrule.setFrequency(ERGWRecurrenceFrequency.getByRFC2445Value(frequency));
+
+      if (recurrenceRule.getRecur().getInterval() > 0)
+        rrule.setInterval(recurrenceRule.getRecur().getInterval());
+
+      if (recurrenceRule.getRecur().getCount() > 0) 
+        rrule.setRepeatCount(recurrenceRule.getRecur().getCount());
+
+      if (recurrenceRule.getRecur().getUntil() != null) 
+        rrule.setUntil(new NSTimestamp(recurrenceRule.getRecur().getUntil()));
+
+      if (recurrenceRule.getRecur().getWeekStartDay() != null) 
+        rrule.setWorkweekStart(recurrenceRule.getRecur().getWeekStartDay());
+      
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYDAY, recurrenceRule, recurrenceRule.getRecur().getDayList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYHOUR, recurrenceRule, recurrenceRule.getRecur().getHourList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYMINUTE, recurrenceRule, recurrenceRule.getRecur().getMinuteList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYMONTH, recurrenceRule, recurrenceRule.getRecur().getMonthList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYMONTHDAY, recurrenceRule, recurrenceRule.getRecur().getMonthDayList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYSECOND, recurrenceRule, recurrenceRule.getRecur().getSecondList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYWEEKNO, recurrenceRule, recurrenceRule.getRecur().getWeekNoList());
+      rrule.addPeriod(ERGWRecurrencePeriodType.BYYEARDAY, recurrenceRule, recurrenceRule.getRecur().getYearDayList());
+
+      if (recurrenceRule.getRecur().getSetPosList().size() > 0) {
+        for (Object setPost: recurrenceRule.getRecur().getSetPosList()) {
+          rrule.addPosition((Integer)setPost);
+        }
+      }
+      
+      newObject.setRecurrenceRule(rrule);
     }
 
     return newObject;
@@ -569,7 +666,7 @@ public abstract class ERGWCalendarObject {
         String cat = catIter.next().getTextTrim();
         categories.add(cat);
       }
-      newObject.setCategories(categories.toString());
+      newObject.setCategories(new NSArray<String>(categories));
     }
 
     Iterator<Element> cmtIter = e.elementIterator(MailConstants.E_CAL_COMMENT);
@@ -683,7 +780,7 @@ public abstract class ERGWCalendarObject {
       xmlResource.addAttribute(MailConstants.A_CAL_CUTYPE, resource.cutype().zimbraValue().toString());
     }
 
-    inviteComponent.addAttribute("category", calendarObject.categories);
+    inviteComponent.addAttribute("category", calendarObject.categories.componentsJoinedByString(","));
 
     inviteComponent.addAttribute(MailConstants.E_FRAG, calendarObject.description);
 

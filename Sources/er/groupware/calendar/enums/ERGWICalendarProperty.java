@@ -5,5 +5,6 @@ public interface ERGWICalendarProperty {
   public String localizedDescription();
   public Object zimbraValue();
   public Object rfc2445Value();
+  public Object ewsValue();
   
 }

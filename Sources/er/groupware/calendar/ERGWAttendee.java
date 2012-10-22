@@ -5,22 +5,22 @@ import er.groupware.calendar.enums.ERGWAttendeeRole;
 import er.groupware.calendar.enums.ERGWCUType;
 import er.groupware.calendar.enums.ERGWParticipantStatus;
 
-public class ERGWAttendee extends ERGWContact {
+public class ERGWAttendee extends ERGWCalendarContact {
 
   private ERGWParticipantStatus partStat;
   private boolean rsvp;
   private ERGWCUType cutype;
   private String memberOf; // http://tools.ietf.org/html/rfc2445#section-4.2.11
-  private ERGWContact delegatedFrom;
-  private ERGWContact delegatedTo;
+  private ERGWCalendarContact delegatedFrom;
+  private ERGWCalendarContact delegatedTo;
   private boolean rsvpSent;
   
   public static final ERXKey<ERGWParticipantStatus> PART_STAT = new ERXKey<ERGWParticipantStatus>("partStat");
   public static final ERXKey<Boolean> RSVP = new ERXKey<Boolean>("rsvp");
   public static final ERXKey<ERGWCUType> CUTYPE = new ERXKey<ERGWCUType>("cutype");
   public static final ERXKey<String> MEMBER_OF = new ERXKey<String>("memberOf");
-  public static final ERXKey<ERGWContact> DELEGATED_FROM = new ERXKey<ERGWContact>("delegatedFrom");
-  public static final ERXKey<ERGWContact> DELEGATED_TO = new ERXKey<ERGWContact>("delegatedTo");
+  public static final ERXKey<ERGWCalendarContact> DELEGATED_FROM = new ERXKey<ERGWCalendarContact>("delegatedFrom");
+  public static final ERXKey<ERGWCalendarContact> DELEGATED_TO = new ERXKey<ERGWCalendarContact>("delegatedTo");
   
   public ERGWAttendee() {
     
@@ -58,19 +58,19 @@ public class ERGWAttendee extends ERGWContact {
     this.memberOf = _memberOf;
   }
 
-  public ERGWContact delegatedFrom() {
+  public ERGWCalendarContact delegatedFrom() {
     return delegatedFrom;
   }
 
-  public void setDelegatedFrom(ERGWContact _delegatedFrom) {
+  public void setDelegatedFrom(ERGWCalendarContact _delegatedFrom) {
     this.delegatedFrom = _delegatedFrom;
   }
 
-  public ERGWContact delegatedTo() {
+  public ERGWCalendarContact delegatedTo() {
     return delegatedTo;
   }
 
-  public void setDelegatedTo(ERGWContact _delegatedTo) {
+  public void setDelegatedTo(ERGWCalendarContact _delegatedTo) {
     this.delegatedTo = _delegatedTo;
   }
   

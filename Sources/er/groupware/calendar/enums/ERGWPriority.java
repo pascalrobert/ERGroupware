@@ -5,22 +5,22 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.microsoft.schemas.exchange.services._2006.types.ImportanceChoicesType;
 import com.webobjects.foundation.NSArray;
-
-import er.extensions.eof.ERXKey;
 
 public enum ERGWPriority implements ERGWICalendarProperty {
   
-  UNDEFINED("Non défini",net.fortuna.ical4j.model.property.Priority.UNDEFINED, "0"),
-  NORMAL("Normal",net.fortuna.ical4j.model.property.Priority.MEDIUM, "5"),
-  HIGH("Haute",net.fortuna.ical4j.model.property.Priority.HIGH, "1"),
-  LOW("Basse",net.fortuna.ical4j.model.property.Priority.LOW, "9");
+  UNDEFINED("Non défini",net.fortuna.ical4j.model.property.Priority.UNDEFINED, "0", ImportanceChoicesType.NORMAL),
+  NORMAL("Normal",net.fortuna.ical4j.model.property.Priority.MEDIUM, "5", ImportanceChoicesType.NORMAL),
+  HIGH("Haute",net.fortuna.ical4j.model.property.Priority.HIGH, "1", ImportanceChoicesType.HIGH),
+  LOW("Basse",net.fortuna.ical4j.model.property.Priority.LOW, "9", ImportanceChoicesType.LOW);
 
   private String description;
   private net.fortuna.ical4j.model.property.Priority rfc2445Value;
   private String zimbraValue;
+  private ImportanceChoicesType ewsValue;
 
-  private ERGWPriority(String description, net.fortuna.ical4j.model.property.Priority rfc2445Value, String zimbraValue) {
+  private ERGWPriority(String description, net.fortuna.ical4j.model.property.Priority rfc2445Value, String zimbraValue, ImportanceChoicesType ewsValue) {
     this.description = description;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
@@ -57,6 +57,10 @@ public enum ERGWPriority implements ERGWICalendarProperty {
 
   public static ERGWPriority getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
+  }
+
+  public ImportanceChoicesType ewsValue() {
+    return ewsValue;
   }
 
 }

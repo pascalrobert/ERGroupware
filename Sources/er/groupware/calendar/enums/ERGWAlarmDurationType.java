@@ -8,7 +8,7 @@ public enum ERGWAlarmDurationType {
 
   MINUTES("minutes", MailConstants.A_CAL_DURATION_MINUTES),
   HOURS("hour" ,MailConstants.A_CAL_DURATION_HOURS),
-  DAYS("jour", MailConstants.A_CAL_DURATION_DAYS),
+  DAYS("day", MailConstants.A_CAL_DURATION_DAYS),
   SECONDS("seconds", MailConstants.A_CAL_DURATION_SECONDS),
   WEEKS("week", MailConstants.A_CAL_DURATION_WEEKS);
     

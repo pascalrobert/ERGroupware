@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.fortuna.ical4j.model.parameter.PartStat;
 
+import com.microsoft.schemas.exchange.services._2006.types.ResponseTypeType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
 
@@ -26,20 +27,22 @@ import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
 
 public enum ERGWParticipantStatus implements ERGWICalendarProperty {
 
-  NEEDS_ACTION("Requiert action", PartStat.NEEDS_ACTION, ZParticipantStatus.NE),
-  ACCEPTED("Accepté", PartStat.ACCEPTED, ZParticipantStatus.AC),
-  DECLINED("Refusé", PartStat.DECLINED, ZParticipantStatus.DE),
-  TENTATIVE("Tentatif", PartStat.TENTATIVE, ZParticipantStatus.TE),
-  DELEGATED("Délégué à autrui", PartStat.DELEGATED, ZParticipantStatus.DG);
+  NEEDS_ACTION("Requiert action", PartStat.NEEDS_ACTION, ZParticipantStatus.NE, ResponseTypeType.NO_RESPONSE_RECEIVED),
+  ACCEPTED("Accepté", PartStat.ACCEPTED, ZParticipantStatus.AC, ResponseTypeType.ACCEPT),
+  DECLINED("Refusé", PartStat.DECLINED, ZParticipantStatus.DE, ResponseTypeType.DECLINE),
+  TENTATIVE("Tentatif", PartStat.TENTATIVE, ZParticipantStatus.TE, ResponseTypeType.TENTATIVE),
+  DELEGATED("Délégué à autrui", PartStat.DELEGATED, ZParticipantStatus.DG, ResponseTypeType.UNKNOWN);
   
   private String description;
   private PartStat rfc2445Value;
   private ZParticipantStatus zimbraValue;
+  private ResponseTypeType ewsValue;
 
-  private ERGWParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue) {
+  private ERGWParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue, ResponseTypeType ewsValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
+    this.ewsValue = ewsValue;
   }
   
   private static final Map<ZParticipantStatus,ERGWParticipantStatus> zimbraLookup = new HashMap<ZParticipantStatus,ERGWParticipantStatus>();
@@ -73,6 +76,10 @@ public enum ERGWParticipantStatus implements ERGWICalendarProperty {
   
   public static ERGWParticipantStatus getByZimbraValue(ZParticipantStatus zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
+  }
+
+  public ResponseTypeType ewsValue() {
+    return ewsValue;
   }
   
 }

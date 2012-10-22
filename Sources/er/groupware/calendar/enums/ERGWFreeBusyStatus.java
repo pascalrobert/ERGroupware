@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.fortuna.ical4j.model.property.BusyType;
 
+import com.microsoft.schemas.exchange.services._2006.types.LegacyFreeBusyType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
@@ -14,19 +15,21 @@ import er.groupware.calendar.ERGWCalendarPrincipal;
 
 public enum ERGWFreeBusyStatus implements ERGWICalendarProperty {
 
-  FREE("Libre", new BusyType("FREE"), IcalXmlStrMap.FBTYPE_FREE),
-  BUSY("Occupé", BusyType.BUSY, IcalXmlStrMap.FBTYPE_BUSY),
-  BUSY_TENTATIVE("Tentatif", BusyType.BUSY_TENTATIVE, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE),
-  BUSY_UNAVAILABLE("Non disponible", BusyType.BUSY_UNAVAILABLE, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE);
+  FREE("Libre", new BusyType("FREE"), IcalXmlStrMap.FBTYPE_FREE, LegacyFreeBusyType.FREE),
+  BUSY("Occupé", BusyType.BUSY, IcalXmlStrMap.FBTYPE_BUSY, LegacyFreeBusyType.BUSY),
+  BUSY_TENTATIVE("Tentatif", BusyType.BUSY_TENTATIVE, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE, LegacyFreeBusyType.TENTATIVE),
+  BUSY_UNAVAILABLE("Non disponible", BusyType.BUSY_UNAVAILABLE, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE, LegacyFreeBusyType.OOF);
   
   private String localizedDescription;
   private BusyType rfc2445Value;
   private String zimbraValue;
+  private LegacyFreeBusyType ewsValue;
 
-  private ERGWFreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue) {
+  private ERGWFreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue, LegacyFreeBusyType ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
+    this.ewsValue = ewsValue;
   }
   
   private static final Map<String,ERGWFreeBusyStatus> zimbraLookup = new HashMap<String,ERGWFreeBusyStatus>();
@@ -49,6 +52,10 @@ public enum ERGWFreeBusyStatus implements ERGWICalendarProperty {
   
   public BusyType rfc2445Value() {
     return rfc2445Value;
+  }
+  
+  public LegacyFreeBusyType ewsValue() {
+    return ewsValue;
   }
   
   public static NSArray<ERGWFreeBusyStatus> statuses() {

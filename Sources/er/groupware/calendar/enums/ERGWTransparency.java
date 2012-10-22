@@ -60,4 +60,8 @@ public enum ERGWTransparency implements ERGWICalendarProperty {
     return zimbraLookup.get(zimbraValue); 
   }
 
+  public Object ewsValue() {
+    return null;
+  }
+
 }

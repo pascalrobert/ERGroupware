@@ -7,21 +7,24 @@ import java.util.Map;
 
 import net.fortuna.ical4j.model.property.Clazz;
 
+import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
 import com.webobjects.foundation.NSArray;
 
 import er.groupware.calendar.ERGWCalendarPrincipal;
 
 public enum ERGWClassification implements ERGWICalendarProperty {
 
-  PUBLIC("Public", Clazz.PUBLIC, "PUB"),
-  PRIVATE("Privé", Clazz.PRIVATE, "PRI"),
-  CONFIDENTIAL("Confidentiel", Clazz.CONFIDENTIAL, "CON");
+  PUBLIC("Public", Clazz.PUBLIC, "PUB", SensitivityChoicesType.NORMAL),
+  PRIVATE("Privé", Clazz.PRIVATE, "PRI", SensitivityChoicesType.PRIVATE),
+  CONFIDENTIAL("Confidentiel", Clazz.CONFIDENTIAL, "CON", SensitivityChoicesType.CONFIDENTIAL),
+  PERSONAL("Personnel", Clazz.PRIVATE, "CON", SensitivityChoicesType.PERSONAL);
 
   private String localizedDescription;
   private Clazz rfc2445Value;
   private String zimbraValue;
-
-  private ERGWClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue) {
+  private SensitivityChoicesType ewsValue;
+  
+  private ERGWClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue, SensitivityChoicesType ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
@@ -58,6 +61,10 @@ public enum ERGWClassification implements ERGWICalendarProperty {
 
   public static ERGWClassification getByZimbraValue(String zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
+  }
+
+  public SensitivityChoicesType ewsValue() {
+    return ewsValue;
   }
 
 }

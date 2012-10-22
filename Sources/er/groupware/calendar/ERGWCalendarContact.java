@@ -3,7 +3,7 @@ package er.groupware.calendar;
 import er.extensions.eof.ERXKey;
 import er.groupware.calendar.enums.ERGWAttendeeRole;
 
-public abstract class ERGWContact {
+public abstract class ERGWCalendarContact {
 
   private String emailAddress;
   private String url;

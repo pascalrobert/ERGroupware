@@ -4,6 +4,7 @@ import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.TimeZone;
+
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
@@ -16,6 +17,7 @@ import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.ProdId;
 import net.fortuna.ical4j.model.property.Version;
 import net.fortuna.ical4j.model.property.XProperty;
+
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 import com.zimbra.common.service.ServiceException;
@@ -156,8 +158,26 @@ public class ERGWCalendar {
   
   public static ERGWCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je) throws ServiceException, SocketException, URISyntaxException {
     ERGWCalendar newCalendar = new ERGWCalendar();
-    newCalendar.setProductId(defaultProdId);
-
+    
+    if (je.getProductId() != null) {
+      newCalendar.setProductId(je.getProductId());
+    } else {
+      newCalendar.setProductId(defaultProdId);
+    }
+    
+    if (je.getProperty("X-WR-CALNAME") != null) {
+      newCalendar.setCalendarName(je.getProperty("X-WR-CALNAME").getValue());
+    }
+    
+    Component vTimeZone = je.getComponent(Component.VTIMEZONE);
+    if (vTimeZone != null) {
+      newCalendar.setTimeZone(new net.fortuna.ical4j.model.TimeZone((VTimeZone)vTimeZone));
+    }
+    
+    if (je.getVersion() != null) {
+      newCalendar.setVersion(je.getVersion());      
+    }
+    
     NSMutableArray<ERGWEvent> events = new NSMutableArray<ERGWEvent>();
     NSMutableArray<ERGWTask> tasks = new NSMutableArray<ERGWTask>();
 

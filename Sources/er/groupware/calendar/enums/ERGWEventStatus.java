@@ -60,5 +60,9 @@ public enum ERGWEventStatus implements ERGWIStatus, ERGWICalendarProperty {
   public static ERGWEventStatus getByZimbraValue(ZStatus zimbraValue) { 
     return zimbraLookup.get(zimbraValue); 
   }
+
+  public Object ewsValue() {
+    return null;
+  }
   
 }
