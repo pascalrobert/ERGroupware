@@ -520,6 +520,27 @@ public interface ExchangeServicePortType {
 
     /**
      * 
+     * @param request
+     * @param serverVersion
+     * @param requestVersion
+     * @param mailboxCulture
+     * @param syncFolderHierarchyResult
+     */
+    @WebMethod(operationName = "SyncFolderHierarchy", action = "http://schemas.microsoft.com/exchange/services/2006/messages/SyncFolderHierarchy")
+    public void syncFolderHierarchy(
+        @WebParam(name = "SyncFolderHierarchy", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", partName = "request")
+        SyncFolderHierarchyType request,
+        @WebParam(name = "MailboxCulture", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "MailboxCulture")
+        MailboxCultureType mailboxCulture,
+        @WebParam(name = "RequestServerVersion", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "RequestVersion")
+        RequestServerVersion requestVersion,
+        @WebParam(name = "SyncFolderHierarchyResponse", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", mode = WebParam.Mode.OUT, partName = "SyncFolderHierarchyResult")
+        Holder<SyncFolderHierarchyResponseType> syncFolderHierarchyResult,
+        @WebParam(name = "ServerVersionInfo", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, mode = WebParam.Mode.OUT, partName = "ServerVersion")
+        Holder<ServerVersionInfo> serverVersion);
+    
+    /**
+     * 
      * @param syncFolderItemsResult
      * @param request
      * @param serverVersion
