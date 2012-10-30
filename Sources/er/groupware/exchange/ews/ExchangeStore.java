@@ -141,7 +141,8 @@ public class ExchangeStore {
   protected TimeZoneContextType tzContext;
   protected MailboxCultureType mailboxCulture;
   protected String syncState;
-
+  protected NSArray<ExchangeBaseFolder> folders;
+  
   /**
    * This constructor will connect to a Microsoft Exchange server and authenticate the user.
    * 
@@ -178,6 +179,8 @@ public class ExchangeStore {
     mailboxCulture.setValue("en-US");
     
     syncState = null;
+    
+    folders = syncFolders();
   }
 
   /**
@@ -221,9 +224,35 @@ public class ExchangeStore {
     this.syncState = syncState;
   }
 
+  /**
+   * Return the list of folder from the store. If you need to get an updated list, call the syncFolders method.
+   * @return
+   */
   public NSArray<ExchangeBaseFolder> folders() {
+    if (this.folders == null) {
+      this.folders = new NSArray<ExchangeBaseFolder>();
+    }
+    return this.folders;
+  }
+  
+  protected void setFolders(NSArray<ExchangeBaseFolder> folders) {
+    this.folders = folders;
+  }
+  
+  protected void addFolderToList(ExchangeBaseFolder folder) {
+    NSMutableArray<ExchangeBaseFolder> array = this.folders().mutableClone();
+    array.addObject(folder);
+    this.setFolders(array.immutableClone());
+  }
+    
+  /**
+   * This method will call the SyncFolderHierarchy method to get a list of folders from the server.
+   * Based on the result of this sync, the local list of folders will be updated.
+   * @return
+   */
+  public NSArray<ExchangeBaseFolder> syncFolders() {
     ObjectFactory factory = new ObjectFactory();
-    NSMutableArray<ExchangeBaseFolder> folders = new NSMutableArray<ExchangeBaseFolder>();
+    NSMutableArray<ExchangeBaseFolder> folders = this.folders().mutableClone();
     
     SyncFolderHierarchyType syncFolderRequest = new SyncFolderHierarchyType();
     
@@ -282,18 +311,27 @@ public class ExchangeStore {
         this.setSyncState(syncState);
         List<JAXBElement<?>> iterator = itemResponse.getChanges().getCreateOrUpdateOrDelete();
         for (JAXBElement<?> element: iterator) {
+          
+          String action = element.getName().getLocalPart();
+          
           SyncFolderHierarchyCreateOrUpdateType value = (SyncFolderHierarchyCreateOrUpdateType) element.getValue();
+          
           if (value.getCalendarFolder() != null) {
             ExchangeCalendarFolder calendarFolder = (ExchangeCalendarFolder) ExchangeCalendarFolder.createFromServer(value.getCalendarFolder());
-            folders.add(calendarFolder);
+            if ("Create".equals(action))
+              folders.addObject(calendarFolder);
           }
+          
           if (value.getContactsFolder() != null) {
             ExchangeContactsFolder contactsFolder = (ExchangeContactsFolder) ExchangeContactsFolder.createFromServer(value.getContactsFolder());
-            folders.add(contactsFolder);
+            if ("Create".equals(action))
+              folders.addObject(contactsFolder);
           }
+          
           if (value.getTasksFolder() != null) {
             ExchangeTasksFolder tasksFolder = (ExchangeTasksFolder) ExchangeTasksFolder.createFromServer(value.getTasksFolder());
-            folders.add(tasksFolder);
+            if ("Create".equals(action))
+              folders.addObject(tasksFolder);
           }
         }
       }
@@ -404,18 +442,17 @@ public class ExchangeStore {
     ArrayOfResponseMessagesType responses = response.getResponseMessages();
     for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
       FolderInfoResponseMessageType itemResponse = (FolderInfoResponseMessageType)responseObject.getValue();
-      NSLog.out.appendln(itemResponse.getResponseClass()); // ERROR
       if (itemResponse.getResponseClass().equals(ResponseClassType.ERROR)) {
-        NSLog.out.appendln(itemResponse.getResponseCode()); // ErrorFolderExists
         if ("ErrorFolderExists".equals(itemResponse.getResponseCode())) {
           throw new FolderAlreadyExistsException(itemResponse.getMessageText());
         } else {
           throw new Throwable(itemResponse.getMessageText());
         }
-      }
-      ArrayOfFoldersType items = itemResponse.getFolders();
-      for (BaseFolderType item: items.getFolderOrCalendarFolderOrContactsFolder()) {
-        NSLog.out.appendln(item.getFolderId());
+      } else {
+        ArrayOfFoldersType items = itemResponse.getFolders();
+        for (BaseFolderType item: items.getFolderOrCalendarFolderOrContactsFolder()) {
+          this.addFolderToList(ExchangeCalendarFolder.createFromServer(item));
+        }
       }
     }
   }
