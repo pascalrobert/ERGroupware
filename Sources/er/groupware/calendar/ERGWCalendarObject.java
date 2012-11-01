@@ -33,12 +33,14 @@ import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.Location;
+import net.fortuna.ical4j.model.property.Organizer;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.util.UidGenerator;
 
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.zimbra.common.service.ServiceException;
@@ -489,9 +491,14 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.RRule recurrenceRule = (net.fortuna.ical4j.model.property.RRule)calComponent.getProperty(Property.RRULE);
     
     if (zOrg != null) {
+      Organizer originalOrganizer = (Organizer)zOrg;
       ERGWOrganizer organizer = new ERGWOrganizer();
-      //organizer.setEmailAddress(zOrg.getParameter(Parameter.VALUE).getValue());
-      Parameter commonName = zOrg.getParameter(Parameter.CN);
+      
+      String emailAddress = originalOrganizer.getCalAddress().getSchemeSpecificPart();
+      if (emailAddress != null)
+        organizer.setEmailAddress(emailAddress);
+     
+      Parameter commonName = originalOrganizer.getParameter(Parameter.CN);
       if (commonName != null)
         organizer.setName(commonName.getValue());
       newObject.setOrganizer(organizer);
@@ -542,6 +549,19 @@ public abstract class ERGWCalendarObject {
     
     newObject.setStartTime(new NSTimestamp(startTime.getDate()));
     newObject.setEndTime(new NSTimestamp(endTime.getDate()));
+    
+    Property allDayProp = extras.getProperty("X-MICROSOFT-CDO-ALLDAYEVENT");
+    if (allDayProp != null) {
+      newObject.setIsFullDay(new Boolean(allDayProp.getValue()));
+    }
+    
+    Parameter dateValue = startTime.getParameter(Parameter.VALUE);
+    if (dateValue != null) {
+      if ("DATE".equals(dateValue.getValue())) {
+        newObject.setIsFullDay(true);
+      }
+    }
+    
     newObject.setSummary(summary.getValue());
     if (location != null) {
       newObject.setLocation(location.getValue());
