@@ -94,6 +94,7 @@ public abstract class ERGWCalendarObject {
   private NSArray<String> relatedObjects;
   private NSMutableArray<ERGWAlarm> alarms;
   private ERGWRecurrenceRule recurrenceRule;
+  protected ERGWCalendar calendar;
 
   public static final ERXKey<ERGWCalendar> CALENDAR = new ERXKey<ERGWCalendar>("calendar");
   public static final ERXKey<ERGWAttendee> ATTENDEES = new ERXKey<ERGWAttendee>("attendees");
@@ -471,7 +472,7 @@ public abstract class ERGWCalendarObject {
     return calComponent;
   }
   
-  public static ERGWCalendarObject transformFromICalObject(CalendarComponent calComponent, ERGWCalendarObject newObject) throws SocketException, URISyntaxException {
+  public static ERGWCalendarObject transformFromICalObject(CalendarComponent calComponent, ERGWCalendarObject newObject, ERGWCalendar parent) throws SocketException, URISyntaxException {
     net.fortuna.ical4j.model.property.Organizer zOrg = (net.fortuna.ical4j.model.property.Organizer)calComponent.getProperty(Property.ORGANIZER);
     net.fortuna.ical4j.model.PropertyList attendees = calComponent.getProperties(Property.ATTENDEE);
     net.fortuna.ical4j.model.property.Clazz classification = (net.fortuna.ical4j.model.property.Clazz)calComponent.getProperty(Property.CLASS);
@@ -501,6 +502,7 @@ public abstract class ERGWCalendarObject {
       Parameter commonName = originalOrganizer.getParameter(Parameter.CN);
       if (commonName != null)
         organizer.setName(commonName.getValue());
+      
       newObject.setOrganizer(organizer);
     }
     
