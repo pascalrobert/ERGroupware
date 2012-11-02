@@ -183,12 +183,12 @@ public class ERGWCalendar {
 
     for (Object component : je.getComponents(Component.VEVENT)) {
       ERGWEvent event = new ERGWEvent(newCalendar);
-      ERGWEvent.transformFromICalObject((VEvent)component, event);
+      ERGWEvent.transformFromICalObject((VEvent)component, event, newCalendar);
       events.addObject(event);
     }
     for (Object component : je.getComponents(Component.VTODO)) {
       ERGWTask task = new ERGWTask(newCalendar);
-      ERGWTask.transformFromICalObject((VToDo)component, task);
+      ERGWTask.transformFromICalObject((VToDo)component, task, newCalendar);
       tasks.addObject(task);
     }
     newCalendar.setEvents(events);
