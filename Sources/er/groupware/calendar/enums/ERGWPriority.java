@@ -24,6 +24,7 @@ public enum ERGWPriority implements ERGWICalendarProperty {
     this.description = description;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
+    this.ewsValue = ewsValue;
   }
 
   private static final Map<String,ERGWPriority> zimbraLookup = new HashMap<String,ERGWPriority>();

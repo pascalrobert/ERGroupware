@@ -66,6 +66,7 @@ import er.groupware.calendar.enums.ERGWPriority;
 import er.groupware.calendar.enums.ERGWRecurrenceFrequency;
 import er.groupware.calendar.enums.ERGWRecurrencePeriodType;
 import er.groupware.calendar.enums.ERGWRelationType;
+import er.groupware.calendar.enums.ERGWTaskStatus;
 
 public abstract class ERGWCalendarObject {
 
@@ -490,6 +491,28 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.RelatedTo relatedTo = (net.fortuna.ical4j.model.property.RelatedTo)calComponent.getProperty(Property.RELATED_TO);
     net.fortuna.ical4j.model.PropertyList extras = calComponent.getProperties(Property.EXPERIMENTAL_PREFIX);
     net.fortuna.ical4j.model.property.RRule recurrenceRule = (net.fortuna.ical4j.model.property.RRule)calComponent.getProperty(Property.RRULE);
+    net.fortuna.ical4j.model.property.Completed completedDate = (net.fortuna.ical4j.model.property.Completed)calComponent.getProperty(Property.COMPLETED);
+    net.fortuna.ical4j.model.property.Due dueDate = (net.fortuna.ical4j.model.property.Due)calComponent.getProperty(Property.DUE);
+    net.fortuna.ical4j.model.property.PercentComplete percentComplete = (net.fortuna.ical4j.model.property.PercentComplete)calComponent.getProperty(Property.PERCENT_COMPLETE);
+    net.fortuna.ical4j.model.property.Status status = (net.fortuna.ical4j.model.property.Status)calComponent.getProperty(Property.STATUS);
+    
+    if (newObject instanceof ERGWTask) {
+      if (completedDate != null) {
+        ((ERGWTask)newObject).setCompletedOn(new NSTimestamp(completedDate.getDate()));
+      }
+
+      if (dueDate != null) {
+        ((ERGWTask)newObject).setDueDate(new NSTimestamp(dueDate.getDate()));
+      }
+
+      if (percentComplete != null) {
+        ((ERGWTask)newObject).setPercentComplete(percentComplete.getPercentage());
+      }
+
+      if (status != null) {
+        ((ERGWTask)newObject).setStatus(ERGWTaskStatus.getByRFC2445Value(status));
+      }
+    }
     
     if (zOrg != null) {
       Organizer originalOrganizer = (Organizer)zOrg;
@@ -550,7 +573,9 @@ public abstract class ERGWCalendarObject {
     }
     
     newObject.setStartTime(new NSTimestamp(startTime.getDate()));
-    newObject.setEndTime(new NSTimestamp(endTime.getDate()));
+    
+    if (endTime != null)
+      newObject.setEndTime(new NSTimestamp(endTime.getDate()));
     
     Property allDayProp = extras.getProperty("X-MICROSOFT-CDO-ALLDAYEVENT");
     if (allDayProp != null) {

@@ -1,6 +1,10 @@
 package er.groupware.calendar.enums;
 
 
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+
 import net.fortuna.ical4j.model.property.Status;
 
 import com.microsoft.schemas.exchange.services._2006.types.TaskStatusType;
@@ -21,10 +25,21 @@ public enum ERGWTaskStatus implements ERGWIStatus, ERGWICalendarProperty {
   private String zimbraValue;
   private TaskStatusType ewsValue;
 
+  private static final Map<String,ERGWTaskStatus> zimbraLookup = new HashMap<String,ERGWTaskStatus>();
+  private static final Map<Status,ERGWTaskStatus> rfc2445Lookup = new HashMap<Status,ERGWTaskStatus>();
+  
+  static {
+    for(ERGWTaskStatus s : EnumSet.allOf(ERGWTaskStatus.class)) {
+      zimbraLookup.put(s.zimbraValue(), s);
+      rfc2445Lookup.put(s.rfc2445Value(), s);
+    }
+  }
+  
   private ERGWTaskStatus(String localizedDescription, Status rfc2445Value, String zimbraValue, TaskStatusType ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
+    this.ewsValue = ewsValue;
   }
     
   public String localizedDescription() {
@@ -48,6 +63,14 @@ public enum ERGWTaskStatus implements ERGWIStatus, ERGWICalendarProperty {
 
   public TaskStatusType ewsValue() {
     return ewsValue;
+  }
+  
+  public static ERGWTaskStatus getByZimbraValue(String zimbraValue) { 
+    return zimbraLookup.get(zimbraValue); 
+  }
+  
+  public static ERGWTaskStatus getByRFC2445Value(Status rfc2455Value) { 
+    return rfc2445Lookup.get(rfc2455Value); 
   }
   
 }
