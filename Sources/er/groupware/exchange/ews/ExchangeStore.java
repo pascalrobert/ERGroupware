@@ -2,6 +2,7 @@ package er.groupware.exchange.ews;
 
 import java.net.Authenticator;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -46,12 +47,14 @@ import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
 import com.microsoft.schemas.exchange.services._2006.types.DefaultShapeNamesType;
 import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdNameType;
 import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.DistinguishedPropertySetType;
 import com.microsoft.schemas.exchange.services._2006.types.EmailAddressDictionaryEntryType;
 import com.microsoft.schemas.exchange.services._2006.types.EmailAddressDictionaryType;
 import com.microsoft.schemas.exchange.services._2006.types.EmailAddressKeyType;
 import com.microsoft.schemas.exchange.services._2006.types.EmailAddressType;
 import com.microsoft.schemas.exchange.services._2006.types.EndDateRecurrenceRangeType;
 import com.microsoft.schemas.exchange.services._2006.types.ExchangeVersionType;
+import com.microsoft.schemas.exchange.services._2006.types.ExtendedPropertyType;
 import com.microsoft.schemas.exchange.services._2006.types.FileAttachmentType;
 import com.microsoft.schemas.exchange.services._2006.types.FolderIdType;
 import com.microsoft.schemas.exchange.services._2006.types.FolderResponseShapeType;
@@ -83,12 +86,14 @@ import com.microsoft.schemas.exchange.services._2006.types.RecurrenceType;
 import com.microsoft.schemas.exchange.services._2006.types.RelativeMonthlyRecurrencePatternType;
 import com.microsoft.schemas.exchange.services._2006.types.RequestServerVersion;
 import com.microsoft.schemas.exchange.services._2006.types.ResponseClassType;
+import com.microsoft.schemas.exchange.services._2006.types.ResponseTypeType;
 import com.microsoft.schemas.exchange.services._2006.types.SearchFolderType;
 import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
 import com.microsoft.schemas.exchange.services._2006.types.ServerVersionInfo;
 import com.microsoft.schemas.exchange.services._2006.types.SingleRecipientType;
 import com.microsoft.schemas.exchange.services._2006.types.SyncFolderHierarchyCreateOrUpdateType;
 import com.microsoft.schemas.exchange.services._2006.types.TargetFolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.TaskRecurrenceType;
 import com.microsoft.schemas.exchange.services._2006.types.TaskType;
 import com.microsoft.schemas.exchange.services._2006.types.TasksFolderType;
 import com.microsoft.schemas.exchange.services._2006.types.TimeZoneContextType;
@@ -105,10 +110,12 @@ import com.webobjects.foundation.NSValidation;
 import er.groupware.calendar.ERGWAlarm;
 import er.groupware.calendar.ERGWAttendee;
 import er.groupware.calendar.ERGWCalendar;
+import er.groupware.calendar.ERGWCalendarObject;
 import er.groupware.calendar.ERGWEvent;
 import er.groupware.calendar.ERGWOrganizer;
 import er.groupware.calendar.ERGWRecurrencePeriod;
 import er.groupware.calendar.ERGWRecurrenceRule;
+import er.groupware.calendar.ERGWTask;
 import er.groupware.calendar.enums.ERGWAttendeeRole;
 import er.groupware.calendar.enums.ERGWClassification;
 import er.groupware.calendar.enums.ERGWFreeBusyStatus;
@@ -142,6 +149,7 @@ public class ExchangeStore {
   protected MailboxCultureType mailboxCulture;
   protected String syncState;
   protected NSArray<ExchangeBaseFolder> folders;
+  private String username;
   
   /**
    * This constructor will connect to a Microsoft Exchange server and authenticate the user.
@@ -181,6 +189,8 @@ public class ExchangeStore {
     syncState = null;
     
     folders = syncFolders();
+    
+    this.username = username;
   }
 
   /**
@@ -464,12 +474,366 @@ public class ExchangeStore {
     }
     
   }
+  
+  protected RecurrenceType recurrenceForEvent(ERGWCalendarObject component, Calendar startDate) {
+    ERGWRecurrenceRule recurrenceRule = component.recurrenceRule();
+    
+    if (recurrenceRule != null) {
+      ERGWRecurrenceFrequency frequency = recurrenceRule.frequency();
+      // RRULE:FREQ=WEEKLY;BYDAY=FR
+      // RRULE:FREQ=WEEKLY;BYDAY=WE,FR
+      if (frequency.equals(ERGWRecurrenceFrequency.WEEKLY)) {
+        WeeklyRecurrencePatternType pattern = new WeeklyRecurrencePatternType();
+        if (recurrenceRule.interval() != null)
+          pattern.setInterval(recurrenceRule.interval());
+        else 
+          pattern.setInterval(1);
+        
+        if (recurrenceRule.periods().count() > 0) {
+          for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
+            if (period.periodType().equals(ERGWRecurrencePeriodType.BYDAY)) {
+              for (Object day: period.values()) {
+                if (day instanceof String) {
+                  pattern.getDaysOfWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
+                }
+              }
+            }
+          }
+        } else {
+          int starDayOfWeek = startDate.get(Calendar.DAY_OF_WEEK);
+          switch (starDayOfWeek) {
+            case Calendar.SUNDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.SUNDAY);
+              break;
+            case Calendar.MONDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.MONDAY);
+              break;
+            case Calendar.TUESDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.TUESDAY);
+              break;
+            case Calendar.WEDNESDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.WEDNESDAY);
+              break;
+            case Calendar.THURSDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.THURSDAY);
+              break;
+            case Calendar.FRIDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.FRIDAY);
+              break;
+            case Calendar.SATURDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.SATURDAY);
+              break;
+          }
+        }
 
-  public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) {
-    CreateItemType itemDetails = new CreateItemType();
-    CalendarItemType calendarItem = new CalendarItemType();
+        RecurrenceType recurType = new RecurrenceType();
+        recurType.setWeeklyRecurrence(pattern);
+        java.util.Date until = recurrenceRule.until();
 
+        if (until != null) {
+          // RRULE:FREQ=WEEKLY;UNTIL=20120915T150000Z;BYDAY=FR
+          EndDateRecurrenceRangeType endType = new EndDateRecurrenceRangeType();
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          endType.setStartDate(xmlStartDate);
+          Calendar gEndDate = GregorianCalendar.getInstance();
+          gEndDate.setTimeInMillis(until.getTime());
+          XMLGregorianCalendar xmlEndDate = new XMLGregorianCalendarImpl((GregorianCalendar)gEndDate);
+          endType.setEndDate(xmlEndDate);
+          recurType.setEndDateRecurrence(endType);
+
+          pattern.setInterval(1);
+        } else if (recurrenceRule.repeatCount() > 0) {
+          // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
+          NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
+          countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          countType.setStartDate(xmlStartDate);
+          recurType.setNumberedRecurrence(countType);
+        } else {
+          NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          noEndType.setStartDate(xmlStartDate);
+          recurType.setNoEndRecurrence(noEndType);
+        }
+
+        return recurType;
+
+      } else if (frequency.equals(ERGWRecurrenceFrequency.MONTHLY)) {
+        // RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYSETPOS=1 (SUMMARY:Effacer les audiences du mois précédent - rôle - synbad)
+        if (recurrenceRule.positions().count() > 0) {
+          for (Object setPost: recurrenceRule.positions()) {
+
+            RelativeMonthlyRecurrencePatternType pattern = new RelativeMonthlyRecurrencePatternType();
+            pattern.setDaysOfWeek(DayOfWeekType.DAY);
+
+            Integer position = (Integer)setPost;
+            switch (position) {
+            case 1: 
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              break;
+            case 2:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.SECOND);
+              break;
+            case 3:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.THIRD);
+              break;
+            case 4:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FOURTH);
+              break;
+            case -1:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.LAST);
+              break;
+            default:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+            }
+
+            pattern.setInterval(1);
+
+            NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
+            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+            noEndType.setStartDate(xmlStartDate);
+
+            RecurrenceType recurType = new RecurrenceType();
+            recurType.setRelativeMonthlyRecurrence(pattern);
+            recurType.setNoEndRecurrence(noEndType);
+
+            return recurType;
+          }
+        } else {
+          // RRULE:FREQ=MONTHLY;BYMONTHDAY=3 (SUMMARY:Préparer et transmettre par courriel à Me Leduc (Mme Charles) plumitif à jour et modifié selon ses exigences Et accompagné des nouvelles plaintes)
+          /*
+           * The BYMONTHDAY rule part specifies a COMMA character (ASCII decimal 44) separated list of days of the month. 
+           * Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month.
+           */
+          AbsoluteMonthlyRecurrencePatternType pattern = new AbsoluteMonthlyRecurrencePatternType();
+          for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
+            for (Object dayOfMonth: period.values()) {
+              pattern.setDayOfMonth((Integer)dayOfMonth);               
+            }
+          }
+          pattern.setInterval(recurrenceRule.interval());
+        }
+      }
+    }
+    return null;
+  }
+
+  protected TaskRecurrenceType recurrenceForTask(ERGWCalendarObject component, Calendar startDate) {
+    ERGWRecurrenceRule recurrenceRule = component.recurrenceRule();
+    
+    if (recurrenceRule != null) {
+      ERGWRecurrenceFrequency frequency = recurrenceRule.frequency();
+      // RRULE:FREQ=WEEKLY;BYDAY=FR
+      // RRULE:FREQ=WEEKLY;BYDAY=WE,FR
+      if (frequency.equals(ERGWRecurrenceFrequency.WEEKLY)) {
+        WeeklyRecurrencePatternType pattern = new WeeklyRecurrencePatternType();
+        if (recurrenceRule.interval() != null)
+          pattern.setInterval(recurrenceRule.interval());
+        else 
+          pattern.setInterval(1);
+        
+        if (recurrenceRule.periods().count() > 0) {
+          for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
+            if (period.periodType().equals(ERGWRecurrencePeriodType.BYDAY)) {
+              for (Object day: period.values()) {
+                if (day instanceof String) {
+                  pattern.getDaysOfWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
+                }
+              }
+            }
+          }
+        } else {
+          int starDayOfWeek = startDate.get(Calendar.DAY_OF_WEEK);
+          switch (starDayOfWeek) {
+            case Calendar.SUNDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.SUNDAY);
+              break;
+            case Calendar.MONDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.MONDAY);
+              break;
+            case Calendar.TUESDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.TUESDAY);
+              break;
+            case Calendar.WEDNESDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.WEDNESDAY);
+              break;
+            case Calendar.THURSDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.THURSDAY);
+              break;
+            case Calendar.FRIDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.FRIDAY);
+              break;
+            case Calendar.SATURDAY:
+              pattern.getDaysOfWeek().add(DayOfWeekType.SATURDAY);
+              break;
+          }
+        }
+
+        TaskRecurrenceType recurType = new TaskRecurrenceType();
+        recurType.setWeeklyRecurrence(pattern);
+        java.util.Date until = recurrenceRule.until();
+
+        if (until != null) {
+          // RRULE:FREQ=WEEKLY;UNTIL=20120915T150000Z;BYDAY=FR
+          EndDateRecurrenceRangeType endType = new EndDateRecurrenceRangeType();
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          endType.setStartDate(xmlStartDate);
+          Calendar gEndDate = GregorianCalendar.getInstance();
+          gEndDate.setTimeInMillis(until.getTime());
+          XMLGregorianCalendar xmlEndDate = new XMLGregorianCalendarImpl((GregorianCalendar)gEndDate);
+          endType.setEndDate(xmlEndDate);
+          recurType.setEndDateRecurrence(endType);
+
+          pattern.setInterval(1);
+        } else if (recurrenceRule.repeatCount() > 0) {
+          // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
+          NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
+          countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          countType.setStartDate(xmlStartDate);
+          recurType.setNumberedRecurrence(countType);
+        } else {
+          NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
+          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+          noEndType.setStartDate(xmlStartDate);
+          recurType.setNoEndRecurrence(noEndType);
+        }
+
+        return recurType;
+
+      } else if (frequency.equals(ERGWRecurrenceFrequency.MONTHLY)) {
+        // RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYSETPOS=1 (SUMMARY:Effacer les audiences du mois précédent - rôle - synbad)
+        if (recurrenceRule.positions().count() > 0) {
+          for (Object setPost: recurrenceRule.positions()) {
+
+            RelativeMonthlyRecurrencePatternType pattern = new RelativeMonthlyRecurrencePatternType();
+            pattern.setDaysOfWeek(DayOfWeekType.DAY);
+
+            Integer position = (Integer)setPost;
+            switch (position) {
+            case 1: 
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              break;
+            case 2:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.SECOND);
+              break;
+            case 3:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.THIRD);
+              break;
+            case 4:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FOURTH);
+              break;
+            case -1:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.LAST);
+              break;
+            default:
+              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+            }
+
+            pattern.setInterval(1);
+
+            NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
+            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
+            noEndType.setStartDate(xmlStartDate);
+
+            TaskRecurrenceType recurType = new TaskRecurrenceType();
+            recurType.setRelativeMonthlyRecurrence(pattern);
+            recurType.setNoEndRecurrence(noEndType);
+
+            return recurType;
+          }
+        } else {
+          // RRULE:FREQ=MONTHLY;BYMONTHDAY=3 (SUMMARY:Préparer et transmettre par courriel à Me Leduc (Mme Charles) plumitif à jour et modifié selon ses exigences Et accompagné des nouvelles plaintes)
+          /*
+           * The BYMONTHDAY rule part specifies a COMMA character (ASCII decimal 44) separated list of days of the month. 
+           * Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month.
+           */
+          AbsoluteMonthlyRecurrencePatternType pattern = new AbsoluteMonthlyRecurrencePatternType();
+          for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
+            for (Object dayOfMonth: period.values()) {
+              pattern.setDayOfMonth((Integer)dayOfMonth);               
+            }
+          }
+          pattern.setInterval(recurrenceRule.interval());
+        }
+      }
+    }
+    return null;
+  }
+
+  /*
+ BEGIN:VALARM
+ ACTION:DISPLAY
+ DESCRIPTION:Le sujet
+ TRIGGER;RELATED=START:-PT15M
+ END:VALARM
+   */
+  protected void setAlarms(ERGWCalendarObject event, ItemType component) {
+    for (ERGWAlarm alarm: event.alarms()) {
+      if (alarm.isAbsolute()) {
+        component.setReminderIsSet(true);
+        java.util.Calendar alarmDueDate = GregorianCalendar.getInstance();
+        alarmDueDate.setTime(alarm.alarmDate());
+        component.setReminderDueBy(alarmDueDate);
+      } else {
+        int duration = 0;
+        switch (alarm.durationType()) {
+        case MINUTES:
+          duration = alarm.duration();
+          break;
+        case DAYS:
+          duration = duration * (24 * 60);
+          break;
+        case HOURS:
+          duration = duration * 60;
+          break;
+        case SECONDS:
+          duration = duration / 60;
+          break;
+        case WEEKS:
+          duration = duration * (24 * 60 * 7);
+          break;
+        default:
+          duration = alarm.duration();
+        }
+        component.setReminderMinutesBeforeStart(new Integer(duration).toString());
+        
+        ArrayList<ExtendedPropertyType> propsArray = new ArrayList<ExtendedPropertyType>();
+
+        // dispidReminderSet
+        ExtendedPropertyType dispidReminderSet = new ExtendedPropertyType();
+        PathToExtendedFieldType unknown3Path = new PathToExtendedFieldType();
+        unknown3Path.setPropertyId(34051);
+        unknown3Path.setPropertyType(MapiPropertyTypeType.BOOLEAN);
+        unknown3Path.setDistinguishedPropertySetId(DistinguishedPropertySetType.COMMON);
+
+        dispidReminderSet.setExtendedFieldURI(unknown3Path);
+        dispidReminderSet.setValue(new Boolean(true).toString());
+
+        propsArray.add(dispidReminderSet);
+
+        // Reminder minutes before start
+        ExtendedPropertyType minutesBeforeStart = new ExtendedPropertyType();
+        PathToExtendedFieldType unknown4Path = new PathToExtendedFieldType();
+        unknown4Path.setPropertyId(34049);
+        unknown4Path.setPropertyType(MapiPropertyTypeType.INTEGER);
+        unknown4Path.setDistinguishedPropertySetId(DistinguishedPropertySetType.COMMON);
+
+        minutesBeforeStart.setExtendedFieldURI(unknown4Path);
+        minutesBeforeStart.setValue(component.getReminderMinutesBeforeStart());
+
+        propsArray.add(minutesBeforeStart);
+
+        component.getExtendedProperty().addAll(propsArray);
+         
+      }
+    }
+  }
+  
+  public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) {   
     for (ERGWEvent event: calendar.getEvents()) {
+      CreateItemType itemDetails = new CreateItemType();
+      CalendarItemType calendarItem = new CalendarItemType();
 
       /*
        * A CUA with a three-level priority scheme of "HIGH", "MEDIUM" and "LOW" is mapped 
@@ -486,9 +850,11 @@ public class ExchangeStore {
       }
 
       // UID:c35d64d0-2187-45ba-884d-ada56ada927a
+      /*
       String uid = event.uid();
       if (uid != null)
         calendarItem.setUID(uid);
+        */
 
       // CLASS:PUBLIC
       ERGWClassification classification = event.classification();
@@ -506,25 +872,6 @@ public class ExchangeStore {
       if (freeBusyStatus != null) 
         calendarItem.setLegacyFreeBusyStatus(freeBusyStatus.ewsValue());
       
-      /*
-     BEGIN:VALARM
-     ACTION:DISPLAY
-     DESCRIPTION:Le sujet
-     TRIGGER;RELATED=START:-PT15M
-     END:VALARM
-       */
-     
-      for (ERGWAlarm alarm: event.alarms()) {
-        if (alarm.alarmDate() != null) {
-          calendarItem.setReminderIsSet(true);
-          java.util.Calendar alarmDueDate = GregorianCalendar.getInstance();
-          alarmDueDate.setTime(alarm.alarmDate());
-          calendarItem.setReminderDueBy(alarmDueDate);
-        } 
-        // TODO: managing relative time
-        // calendarItem.setReminderMinutesBeforeStart(new Integer(trigger.getDuration().getMinutes()).toString());
-      }
-
       // ORGANIZER;CN="Pascal Robert":mailto:probert@macti.ca
       ERGWOrganizer organizer = event.organizer();
       if (organizer != null) {
@@ -534,8 +881,13 @@ public class ExchangeStore {
           email.setName(organizer.name());
         
         if (organizer.emailAddress() != null)
-          email.setEmailAddress(organizer.emailAddress());           
+          email.setEmailAddress(organizer.emailAddress());      
 
+        if (organizer.emailAddress().startsWith(username)) {
+          //calendarItem.setMyResponseType(ResponseTypeType.ORGANIZER);
+          //calendarItem.setMeetingRequestWasSent(true);
+        }
+        
         SingleRecipientType recipient = new SingleRecipientType();
         recipient.setMailbox(email);
         //calendarItem.setOrganizer(recipient);         
@@ -543,6 +895,10 @@ public class ExchangeStore {
 
       // ATTENDEE;RSVP=TRUE;X-SENT=TRUE;CN=probert@macti.ca;CUTYPE=INDIVIDUAL:mailto:probert@macti.ca
       if (event.attendees().count() > 0) {
+        
+        //calendarItem.setIsMeeting(true);
+        //calendarItem.setIsResponseRequested(false);
+        
         NonEmptyArrayOfAttendeesType requiredAttendes = new NonEmptyArrayOfAttendeesType();
         NonEmptyArrayOfAttendeesType optionalAttendes = new NonEmptyArrayOfAttendeesType();
         NonEmptyArrayOfAttendeesType resources = new NonEmptyArrayOfAttendeesType();
@@ -553,12 +909,12 @@ public class ExchangeStore {
 
           AttendeeType attendeeDetails = new AttendeeType();
           EmailAddressType email = new EmailAddressType();
-          //email.setEmailAddress(attendee.emailAddress());
-          // FIXME: don't put that in prod!
-          email.setEmailAddress("probert@oaciq.com");
+          email.setEmailAddress(attendee.emailAddress());
           email.setName(attendee.name());
           attendeeDetails.setMailbox(email);
 
+          attendeeDetails.setResponseType(ResponseTypeType.NO_RESPONSE_RECEIVED);
+          
           if (role.equals(ERGWAttendeeRole.REQ_PARTICIPANT)) {
             requiredAttendes.getAttendee().add(attendeeDetails);
           } else if ((role.equals(ERGWAttendeeRole.OPT_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.NON_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.CHAIR))) {
@@ -602,6 +958,11 @@ public class ExchangeStore {
       NSTimestamp eventStartDate = event.startTime();
       Calendar startDate = GregorianCalendar.getInstance();
       startDate.setTime(eventStartDate);
+
+      if (event.isFullDay()) {
+        startDate.add(Calendar.HOUR_OF_DAY, 5);
+      } 
+      
       calendarItem.setStart(startDate);
 
       // DTEND;VALUE=DATE:20120914
@@ -609,150 +970,13 @@ public class ExchangeStore {
       Calendar endDate = GregorianCalendar.getInstance();
       endDate.setTime(eventEndDate);
       calendarItem.setEnd(endDate);
-      
-      ERGWRecurrenceRule recurrenceRule = event.recurrenceRule();
-      
-      if (recurrenceRule != null) {
-        ERGWRecurrenceFrequency frequency = recurrenceRule.frequency();
-        // RRULE:FREQ=WEEKLY;BYDAY=FR
-        // RRULE:FREQ=WEEKLY;BYDAY=WE,FR
-        if (frequency.equals(ERGWRecurrenceFrequency.WEEKLY)) {
-          WeeklyRecurrencePatternType pattern = new WeeklyRecurrencePatternType();
-          if (recurrenceRule.interval() != null)
-            pattern.setInterval(recurrenceRule.interval());
-          else 
-            pattern.setInterval(1);
-          
-          if (recurrenceRule.periods().count() > 0) {
-            for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
-              if (period.periodType().equals(ERGWRecurrencePeriodType.BYDAY)) {
-                for (Object day: period.values()) {
-                  if (day instanceof String) {
-                    pattern.getDaysOfWeek().add(ERGWRecurrenceDay.getByRFC2445Value(description).ewsValue());
-                  }
-                }
-              }
-            }
-          } else {
-            int starDayOfWeek = startDate.get(Calendar.DAY_OF_WEEK);
-            switch (starDayOfWeek) {
-              case Calendar.SUNDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.SUNDAY);
-                break;
-              case Calendar.MONDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.MONDAY);
-                break;
-              case Calendar.TUESDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.TUESDAY);
-                break;
-              case Calendar.WEDNESDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.WEDNESDAY);
-                break;
-              case Calendar.THURSDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.THURSDAY);
-                break;
-              case Calendar.FRIDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.FRIDAY);
-                break;
-              case Calendar.SATURDAY:
-                pattern.getDaysOfWeek().add(DayOfWeekType.SATURDAY);
-                break;
-            }
-          }
-
-          RecurrenceType recurType = new RecurrenceType();
-          recurType.setWeeklyRecurrence(pattern);
-          java.util.Date until = recurrenceRule.until();
-
-          if (until != null) {
-            // RRULE:FREQ=WEEKLY;UNTIL=20120915T150000Z;BYDAY=FR
-            EndDateRecurrenceRangeType endType = new EndDateRecurrenceRangeType();
-            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)calendarItem.getStart());
-            endType.setStartDate(xmlStartDate);
-            Calendar gEndDate = GregorianCalendar.getInstance();
-            gEndDate.setTimeInMillis(until.getTime());
-            XMLGregorianCalendar xmlEndDate = new XMLGregorianCalendarImpl((GregorianCalendar)gEndDate);
-            endType.setEndDate(xmlEndDate);
-            recurType.setEndDateRecurrence(endType);
-
-            pattern.setInterval(1);
-          } else if (recurrenceRule.repeatCount() > 0) {
-            // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
-            NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
-            countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
-            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)calendarItem.getStart());
-            countType.setStartDate(xmlStartDate);
-            recurType.setNumberedRecurrence(countType);
-          } else {
-            NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)calendarItem.getStart());
-            noEndType.setStartDate(xmlStartDate);
-            recurType.setNoEndRecurrence(noEndType);
-          }
-
-          calendarItem.setRecurrence(recurType);      
-
-        } else if (frequency.equals(ERGWRecurrenceFrequency.MONTHLY)) {
-          // RRULE:FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR,SA,SU;BYSETPOS=1 (SUMMARY:Effacer les audiences du mois précédent - rôle - synbad)
-          if (recurrenceRule.positions().count() > 0) {
-            for (Object setPost: recurrenceRule.positions()) {
-
-              RelativeMonthlyRecurrencePatternType pattern = new RelativeMonthlyRecurrencePatternType();
-              pattern.setDaysOfWeek(DayOfWeekType.DAY);
-
-              Integer position = (Integer)setPost;
-              switch (position) {
-              case 1: 
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
-                break;
-              case 2:
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.SECOND);
-                break;
-              case 3:
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.THIRD);
-                break;
-              case 4:
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.FOURTH);
-                break;
-              case -1:
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.LAST);
-                break;
-              default:
-                pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
-              }
-
-              pattern.setInterval(1);
-
-              NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-              XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)calendarItem.getStart());
-              noEndType.setStartDate(xmlStartDate);
-
-              RecurrenceType recurType = new RecurrenceType();
-              recurType.setRelativeMonthlyRecurrence(pattern);
-              recurType.setNoEndRecurrence(noEndType);
-
-              calendarItem.setRecurrence(recurType);      
-            }
-          } else {
-            // RRULE:FREQ=MONTHLY;BYMONTHDAY=3 (SUMMARY:Préparer et transmettre par courriel à Me Leduc (Mme Charles) plumitif à jour et modifié selon ses exigences Et accompagné des nouvelles plaintes)
-            /*
-             * The BYMONTHDAY rule part specifies a COMMA character (ASCII decimal 44) separated list of days of the month. 
-             * Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month.
-             */
-            AbsoluteMonthlyRecurrencePatternType pattern = new AbsoluteMonthlyRecurrencePatternType();
-            for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
-              for (Object dayOfMonth: period.values()) {
-                pattern.setDayOfMonth((Integer)dayOfMonth);               
-              }
-            }
-            pattern.setInterval(recurrenceRule.interval());
-          }
-        }
-      }
 
       String location = event.location();
       if (location != null)
         calendarItem.setLocation(location);
+      
+      calendarItem.setRecurrence(this.recurrenceForEvent(event, startDate));
+      setAlarms(event, calendarItem);
 
       NonEmptyArrayOfAllItemsType itemsArray = new NonEmptyArrayOfAllItemsType();
       itemsArray.getItemOrMessageOrCalendarItem().add(calendarItem);
@@ -774,7 +998,7 @@ public class ExchangeStore {
     }
   }
   
-  public void createContact(ERGWContact card) {
+  public void createContact(ERGWContact card, ExchangeContactsFolder folder) {
     ContactItemType contact = new ContactItemType();
 
     contact.setSurname(card.familyName());
@@ -824,8 +1048,9 @@ public class ExchangeStore {
 
     NSTimestamp birthday = card.birthday();
     if (birthday != null) {
-      Calendar bdayAsCalendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("Etc/UTC"));
+      Calendar bdayAsCalendar = GregorianCalendar.getInstance();
       bdayAsCalendar.setTimeInMillis(birthday.getTime());
+      bdayAsCalendar.add(Calendar.HOUR_OF_DAY, 5);
       contact.setBirthday(bdayAsCalendar);
     }
 
@@ -1012,9 +1237,9 @@ public class ExchangeStore {
     contactItemDetails.setItems(contactsArray);
 
     TargetFolderIdType contactFolderId = new TargetFolderIdType();
-    DistinguishedFolderIdType contactFolderType = new DistinguishedFolderIdType();
-    contactFolderType.setId(DistinguishedFolderIdNameType.CONTACTS);
-    contactFolderId.setDistinguishedFolderId(contactFolderType);
+    FolderIdType contactFolderType = new FolderIdType();
+    contactFolderType.setId(folder.id());
+    contactFolderId.setFolderId(contactFolderType);
     contactItemDetails.setSavedItemFolderId(contactFolderId);
 
     Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
@@ -1056,35 +1281,87 @@ public class ExchangeStore {
 
   }
 
-  public void createTask(ERGWCalendar task) {
-    TaskType taskType = new TaskType();
-    taskType.setDueDate(GregorianCalendar.getInstance());
-    taskType.setSubject("Une tâche");
+  public void createTask(ERGWCalendar calendar, ExchangeTasksFolder folder) {
+    for (ERGWTask task: calendar.tasks()) {
+      TaskType taskType = new TaskType();
+      taskType.setSubject(task.summary());
 
-    CreateItemType taskDetails = new CreateItemType();
-    NonEmptyArrayOfAllItemsType tasksArray = new NonEmptyArrayOfAllItemsType();
-    tasksArray.getItemOrMessageOrCalendarItem().add(taskType);
-    taskDetails.setItems(tasksArray);
+      if (task.dueDate() != null) {
+        Calendar dueDate = GregorianCalendar.getInstance();
+        dueDate.setTime(task.dueDate());
+        if (task.isFullDay()) {
+          dueDate.add(Calendar.HOUR_OF_DAY, 5);
+        }
+        taskType.setDueDate(dueDate);
+      }
 
-    TargetFolderIdType tasksFolderId = new TargetFolderIdType();
-    DistinguishedFolderIdType tasksFolderType = new DistinguishedFolderIdType();
-    tasksFolderType.setId(DistinguishedFolderIdNameType.TASKS);
-    tasksFolderId.setDistinguishedFolderId(tasksFolderType);
-    taskDetails.setSavedItemFolderId(tasksFolderId);
+      if (task.description() != null) {
+        BodyType bodyType = new BodyType();
+        bodyType.setValue(task.description());
+      }
 
-    Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
+      NSArray<String> categories = task.categories();
+      if (categories != null) {
+        ArrayOfStringsType strings = new ArrayOfStringsType();
+        for (String category: categories) {
+          strings.getString().add(category);
+        }
+        taskType.setCategories(strings);
+      }
 
-    port.createItem(taskDetails, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
-    
-    CreateItemResponseType response = responseHolder.value;
-    ArrayOfResponseMessagesType responses = response.getResponseMessages();
-    for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
-      ItemInfoResponseMessageType itemResponse = (ItemInfoResponseMessageType)responseObject.getValue();
-      NSLog.out.appendln(itemResponse.getResponseCode());
-      ArrayOfRealItemsType items = itemResponse.getItems();
-      for (ItemType item: items.getItemOrMessageOrCalendarItem()) {
-        ((ContactItemType)item).getItemId().getId();
-        NSLog.out.appendln(((ContactItemType)item).getItemId().getChangeKey());
+      if (task.priority() != null)
+        taskType.setImportance(task.priority().ewsValue());
+
+      if (task.completedOn() != null) {
+        Calendar completedDate = GregorianCalendar.getInstance();
+        completedDate.setTime(task.completedOn());
+        taskType.setCompleteDate(completedDate);
+      }
+
+      taskType.setPercentComplete(new Double(task.percentComplete()));
+
+      if (task.classification() != null) 
+        taskType.setSensitivity(task.classification().ewsValue());
+
+      if (task.startTime() != null) {
+        Calendar startDate = GregorianCalendar.getInstance();
+        startDate.setTime(task.startTime());
+        taskType.setStartDate(startDate);
+      }
+
+      taskType.setStatus(task.status().ewsValue());
+      
+      setAlarms(task, taskType);
+      
+      TaskRecurrenceType recurrence = recurrenceForTask(task, taskType.getStartDate());
+      if (recurrence != null)
+        taskType.setRecurrence(recurrence);
+      
+      CreateItemType taskDetails = new CreateItemType();
+      NonEmptyArrayOfAllItemsType tasksArray = new NonEmptyArrayOfAllItemsType();
+      tasksArray.getItemOrMessageOrCalendarItem().add(taskType);
+      taskDetails.setItems(tasksArray);
+
+      TargetFolderIdType tasksFolderId = new TargetFolderIdType();
+      FolderIdType tasksFolderType = new FolderIdType();
+      tasksFolderType.setId(folder.id());
+      tasksFolderId.setFolderId(tasksFolderType);
+      taskDetails.setSavedItemFolderId(tasksFolderId);
+
+      Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
+
+      port.createItem(taskDetails, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
+
+      CreateItemResponseType response = responseHolder.value;
+      ArrayOfResponseMessagesType responses = response.getResponseMessages();
+      for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
+        ItemInfoResponseMessageType itemResponse = (ItemInfoResponseMessageType)responseObject.getValue();
+        NSLog.out.appendln(itemResponse.getResponseCode());
+        ArrayOfRealItemsType items = itemResponse.getItems();
+        for (ItemType item: items.getItemOrMessageOrCalendarItem()) {
+          ((TaskType)item).getItemId().getId();
+          NSLog.out.appendln(((TaskType)item).getItemId().getChangeKey());
+        }
       }
     }
   }
