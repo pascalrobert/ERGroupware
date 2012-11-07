@@ -611,7 +611,11 @@ public class ExchangeStore {
               pattern.setDayOfMonth((Integer)dayOfMonth);               
             }
           }
-          pattern.setInterval(recurrenceRule.interval());
+          if (recurrenceRule.interval() != null) { 
+            pattern.setInterval(recurrenceRule.interval());
+          } else {
+            pattern.setInterval(1);
+          }
         }
       }
     }
