@@ -477,7 +477,7 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.Organizer zOrg = (net.fortuna.ical4j.model.property.Organizer)calComponent.getProperty(Property.ORGANIZER);
     net.fortuna.ical4j.model.PropertyList attendees = calComponent.getProperties(Property.ATTENDEE);
     net.fortuna.ical4j.model.property.Clazz classification = (net.fortuna.ical4j.model.property.Clazz)calComponent.getProperty(Property.CLASS);
-    net.fortuna.ical4j.model.property.BusyType freeBusy = (net.fortuna.ical4j.model.property.BusyType)calComponent.getProperty(Property.BUSYTYPE);
+    Property freeBusy = calComponent.getProperty(Property.BUSYTYPE);
     net.fortuna.ical4j.model.property.DtStart startTime = (net.fortuna.ical4j.model.property.DtStart)calComponent.getProperty(Property.DTSTART);
     net.fortuna.ical4j.model.property.DtEnd endTime = (net.fortuna.ical4j.model.property.DtEnd)calComponent.getProperty(Property.DTEND);
     net.fortuna.ical4j.model.property.Summary summary = (net.fortuna.ical4j.model.property.Summary)calComponent.getProperty(Property.SUMMARY);
@@ -551,7 +551,10 @@ public abstract class ERGWCalendarObject {
         attendee.setRole(ERGWAttendeeRole.REQ_PARTICIPANT);        
       }
       attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
-      newObject.addAttendee(attendee);
+      attendee.setEmailAddress(null);
+      String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
+      if (emailAddress != null)
+        attendee.setEmailAddress(emailAddress); 
     }
 
     if (classification == Clazz.PUBLIC) {
@@ -589,10 +592,12 @@ public abstract class ERGWCalendarObject {
       }
     }
     
-    newObject.setSummary(summary.getValue());
-    if (location != null) {
+    if (summary != null) 
+      newObject.setSummary(summary.getValue());
+    
+    if (location != null) 
       newObject.setLocation(location.getValue());
-    }
+    
     if (categories != null) {
       Iterator<String> categoriesIterator = categories.getCategories().iterator();
       NSMutableArray<String> mutableCategories = new NSMutableArray<String>();
