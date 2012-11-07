@@ -16,7 +16,12 @@ public enum ERGWFolderType {
   EMAIL(FolderType.class),
   SEARCH(SearchFolderType.class),
   ROOT(FolderType.class),
-  PLAIN(FolderType.class);
+  PLAIN(FolderType.class),
+  CONVERSATION(null),
+  TAG(null),
+  USER_ROOT(null),
+  TRASH(null),
+  DOCUMENT(null);
   
   private Class<? extends BaseFolderType> exchangeType;
   
