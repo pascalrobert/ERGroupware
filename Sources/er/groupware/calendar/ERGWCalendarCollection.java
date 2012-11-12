@@ -22,31 +22,39 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.webobjects.foundation.NSValidation;
 
-public class ERGWCalendarCollection {
+import er.groupware.enums.ERGWFolderType;
+import er.groupware.enums.ERGWSupportedObjectType;
+import er.groupware.interfaces.IERGWBaseFolder;
+
+public class ERGWCalendarCollection implements IERGWBaseFolder {
 
   // http://192.168.3.7/calendars/__uids__/C0F07FAF-A20A-4A88-A518-D27E5D3074CA/calendar/
   
-  private String id;
-  private String displayName;  
-  private String description; // Provides a human-readable description of the calendar collection.
-  private NSArray<String> supportedComponents; // VALARM, VEVENT, VAVAILABILITY, VFREEBUSY, VJOURNAL, VTIMEZONE, VTODO, VVENUE
-  private NSArray<String> supportedDataTypes; // <C:calendar-data content-type="text/calendar" version="2.0"/>
-  private String color;
-  private TimeZone timeZone; // The CALDAV:calendar-timezone property is used to specify the time zone the server should rely on to resolve "date values and "date with local time" values (i.e., floating time) to "date with UTC time" values.
-  private int maxResourceSize; // Provides a numeric value indicating the maximum size of a resource in octets that the server is willing to accept when a calendar object resource is stored in a calendar collection.
-  private NSTimestamp minDateTime; // Provides a DATE-TIME value indicating the earliest date and time (in UTC) that the server is willing to accept for any DATE or DATE-TIME value in a calendar object resource stored in a calendar collection.
-  private NSTimestamp maxDateTime; // Provides a DATE-TIME value indicating the latest date and time (in UTC) that the server is willing to accept for any DATE or DATE-TIME value in a calendar object resource stored in a calendar collection.
-  private int maxInstances; // Provides a numeric value indicating the maximum number of recurrence instances that a calendar object resource stored in a calendar collection can generate.
-  private int maxAttendeesPerInstance; // Provides a numeric value indicating the maximum number of ATTENDEE properties in any instance of a calendar object resource stored in a calendar collection.
-  private int calendarOrder;
+  protected String id;
+  protected String displayName;  
+  protected String description; // Provides a human-readable description of the calendar collection.
+  protected NSArray<String> supportedComponents; // VALARM, VEVENT, VAVAILABILITY, VFREEBUSY, VJOURNAL, VTIMEZONE, VTODO, VVENUE
+  protected String color;
+  protected TimeZone timeZone; // The CALDAV:calendar-timezone property is used to specify the time zone the server should rely on to resolve "date values and "date with local time" values (i.e., floating time) to "date with UTC time" values.
+  protected int maxResourceSize; // Provides a numeric value indicating the maximum size of a resource in octets that the server is willing to accept when a calendar object resource is stored in a calendar collection.
+  protected NSTimestamp minDateTime; // Provides a DATE-TIME value indicating the earliest date and time (in UTC) that the server is willing to accept for any DATE or DATE-TIME value in a calendar object resource stored in a calendar collection.
+  protected NSTimestamp maxDateTime; // Provides a DATE-TIME value indicating the latest date and time (in UTC) that the server is willing to accept for any DATE or DATE-TIME value in a calendar object resource stored in a calendar collection.
+  protected int maxInstances; // Provides a numeric value indicating the maximum number of recurrence instances that a calendar object resource stored in a calendar collection can generate.
+  protected int maxAttendeesPerInstance; // Provides a numeric value indicating the maximum number of ATTENDEE properties in any instance of a calendar object resource stored in a calendar collection.
+  protected int calendarOrder;
+  protected ERGWFolderType folderType;
+  protected NSArray<ERGWSupportedObjectType> supportedObjectTypes;
   // private NSArray acls;
   // {urn:ietf:params:xml:ns:caldav}schedule-calendar-transp
   
   public ERGWCalendarCollection() {
-    
+    this.setFolderType(ERGWFolderType.CALENDAR);
+    this.supportedObjectTypes = new NSArray<ERGWSupportedObjectType>();
+    this.supportedComponents = new NSArray<String>();
   }
   
   /**
@@ -100,20 +108,6 @@ public class ERGWCalendarCollection {
     this.supportedComponents = supportedComponents;
   }
   
-  /**
-   * rfc4791
-   * Name: supported-calendar-data
-   * Purpose:  Specifies what media types are allowed for calendar object
-      resources in a calendar collection.
-   */
-  public NSArray<String> supportedDataTypes() {
-    return supportedDataTypes;
-  }
-  
-  public void setSupportedDataTypes(NSArray<String> supportedDataTypes) {
-    this.supportedDataTypes = supportedDataTypes;
-  }
-
   /**
    * iCal specific 
    * Name:  calendar-color
@@ -225,6 +219,57 @@ public class ERGWCalendarCollection {
     this.calendarOrder = calendarOrder;
   }
   
+  public ERGWFolderType folderType() {
+    return folderType;
+  }
+
+  public void setFolderType(ERGWFolderType folderType) {
+    this.folderType = folderType;
+  }
+
+  // TODO Declare as not supported
+  public <T extends IERGWBaseFolder> IERGWBaseFolder parent() {
+    return null;
+  }
+
+  // TODO Declare as not supported
+  public <T extends IERGWBaseFolder> void setParent(IERGWBaseFolder parent) {    
+  }
+
+  public NSArray<ERGWSupportedObjectType> supportedObjectTypes() {
+    return this.supportedObjectTypes;
+  }
+
+  public void setSupportedObjectTypes(NSArray<ERGWSupportedObjectType> supportedObjectTypes) {
+    this.supportedObjectTypes = supportedObjectTypes;
+  }
+
+  public void addSupportedObjectType(ERGWSupportedObjectType objectType) {
+    NSMutableArray<ERGWSupportedObjectType> array = this.supportedObjectTypes().mutableClone();
+    array.addObject(objectType);
+    this.setSupportedObjectTypes(array.immutableClone());
+  }
+
+  /**
+   * @return false, since CalDAV collections can't have children
+   */
+  public boolean canHaveChildren() {
+    return false;
+  }
+
+  // TODO return not supported exception
+  public NSArray<IERGWBaseFolder> children() {
+    return null;
+  }
+
+  // TODO return not supported exception
+  public void setChildren(NSArray<IERGWBaseFolder> children) {
+  }
+
+  // TODO return not supported exception
+  public void addChild(IERGWBaseFolder children) {
+  }
+  
   public static DavPropertySet convertPropertiesToDavPropertySet(ERGWCalendarCollection collection) throws ParserConfigurationException {
     if (collection.timeZone() == null) {
       throw new NSValidation.ValidationException("Timezone can't be null");
@@ -258,73 +303,5 @@ public class ERGWCalendarCollection {
     return properties;
   }
 
-  /* 
-     {http://calendarserver.org/ns/}allowed-sharing-modes
-     http://svn.calendarserver.org/repository/calendarserver/CalendarServer/trunk/doc/Extensions/caldav-sharing-02.txt
-     Purpose:  Used to show which modes of sharing are supported on a calendar collection.
-     Description:  This WebDAV property is present on a calendar
-      collection resource that can been shared or published.  It
-      provides a list of options indicating what sharing modes are
-      allowed as per Section 5.5.2.
-      
-      CS:can-be-shared (Section 6.3): when present indicates that the
-      calendar collection can be shared.  When not present, the calendar
-      collection cannot be shared. 
-      
-      CS:can-be-published (Section 6.4): when present indicates that the
-      calendar collection can be published.  When not present, the calendar 
-      collection cannot be published.
-   */
-  /*
-    {http://calendarserver.org/ns/}getctag
-    https://trac.calendarserver.org/browser/CalendarServer/trunk/doc/Extensions/caldav-ctag.txt
-    Purpose:  Specifies a "synchronization" token used to indicate when
-       the contents of a calendar or scheduling Inbox or Outbox
-       collection have changed. 
-    Description:  The CS:getctag property allows clients to quickly
-       determine if the contents of a calendar or scheduling Inbox or
-       Outbox collection have changed since the last time a
-       "synchronization" operation was done.  The CS:getctag property
-       value MUST change each time the contents of the calendar or
-       scheduling Inbox or Outbox collection change, and each change MUST
-       result in a value that is different from any other used with that
-       collection URI.
-   */
-  /* 
-     {http://calendarserver.org/ns/}invite
-     http://svn.calendarserver.org/repository/calendarserver/CalendarServer/trunk/doc/Extensions/caldav-sharing-02.txt
-     Purpose:  Used to show to whom a calendar has been shared.
-     Description:  This WebDAV property is present on a calendar
-      collection resource that has been shared by the owner.  It MUST
-      NOT appear on the calendar collection resources of the sharees of
-      the calendar.  It provides a list of users to whom the calendar
-      has been shared, along with the "status" of the sharing invites
-      sent to each user.
-   */
-  // {http://calendarserver.org/ns/}max-resources
-  // {http://calendarserver.org/ns/}pushkey
-  /* 
-     {http://calendarserver.org/ns/}shared-url
-     http://svn.calendarserver.org/repository/calendarserver/CalendarServer/trunk/doc/Extensions/caldav-sharing-02.txt
-     Purpose:  Indicates the URL of the owner's copy of a shared calendar.
-     Description:  This WebDAV property is present on a shared calendar
-      collection resource that appears in a sharee's calendar home
-      collection.  Its content is a single DAV:href element whose value
-      is the URL of the sharer's calendar being shared.
-   */
-  // {http://me.com/_namespace/}bulk-requests
-  /*
-<?xml version='1.0' encoding='UTF-8'?>
-<bulk-requests xmlns='http://me.com/_namespace/'>
-  <simple>
-    <max-resources>100</max-resources>
-    <max-bytes>10485760</max-bytes>
-  </simple>
-  <crud>
-    <max-resources>100</max-resources>
-    <max-bytes>10485760</max-bytes>
-  </crud>
-</bulk-requests>
-   */
-  // 
+
 }

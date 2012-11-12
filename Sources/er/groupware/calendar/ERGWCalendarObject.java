@@ -360,6 +360,10 @@ public abstract class ERGWCalendarObject {
   public ERGWRecurrenceRule recurrenceRule() {
     return this.recurrenceRule;
   }
+  
+  public long calculatedDuration() {
+    return (startTime().getTime() - endTime().getTime()) / 60000;
+  }
 
   public static net.fortuna.ical4j.model.property.Attendee convertAttendee(ERGWAttendee attendee) {
     net.fortuna.ical4j.model.property.Attendee icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
@@ -473,7 +477,7 @@ public abstract class ERGWCalendarObject {
     return calComponent;
   }
   
-  public static ERGWCalendarObject transformFromICalObject(CalendarComponent calComponent, ERGWCalendarObject newObject, ERGWCalendar parent) throws SocketException, URISyntaxException {
+  public static ERGWCalendarObject transformFromICalObject(CalendarComponent calComponent, ERGWCalendarObject newObject, ERGWCalendar parent)  {
     net.fortuna.ical4j.model.property.Organizer zOrg = (net.fortuna.ical4j.model.property.Organizer)calComponent.getProperty(Property.ORGANIZER);
     net.fortuna.ical4j.model.PropertyList attendees = calComponent.getProperties(Property.ATTENDEE);
     net.fortuna.ical4j.model.property.Clazz classification = (net.fortuna.ical4j.model.property.Clazz)calComponent.getProperty(Property.CLASS);

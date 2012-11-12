@@ -156,7 +156,7 @@ public class ERGWCalendar {
     return icalCalendar;
   }
   
-  public static ERGWCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je) throws ServiceException, SocketException, URISyntaxException {
+  public static ERGWCalendar transformFromICalResponse(net.fortuna.ical4j.model.Calendar je)  {
     ERGWCalendar newCalendar = new ERGWCalendar();
     
     if (je.getProductId() != null) {

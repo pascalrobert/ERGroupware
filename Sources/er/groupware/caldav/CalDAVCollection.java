@@ -1,21 +1,87 @@
 package er.groupware.caldav;
 
+import java.io.IOException;
 import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.connector.dav.CalDavCalendarCollection;
+import net.fortuna.ical4j.data.ParserException;
+import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ConstraintViolationException;
-import er.groupware.calendar.ERGWCalendar;
+import net.fortuna.ical4j.model.DateTime;
 
-public class CalDAVCollection {
+import org.apache.jackrabbit.webdav.DavException;
+
+import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSMutableArray;
+import com.webobjects.foundation.NSTimestamp;
+
+import er.groupware.calendar.ERGWCalendar;
+import er.groupware.calendar.ERGWCalendarCollection;
+
+public class CalDAVCollection extends ERGWCalendarCollection {
+
+  protected NSArray<ERGWCalendar> events;
+  protected NSArray<ERGWCalendar> tasks;
+  protected CalDavCalendarCollection originalCollection;
+  
+  public CalDAVCollection() {
+    super();
+  }
+  
+  public CalDAVCollection(CalDavCalendarCollection caldavcollection) {
+    super();
+    this.originalCollection = caldavcollection;
+  }
 
   // Move to CalDAVCollection?
   public void addCalendarObject(ERGWCalendar calendar, CalDavCalendarCollection collection) throws ConstraintViolationException, ObjectNotFoundException, ObjectStoreException, SocketException, ParseException, URISyntaxException {
     net.fortuna.ical4j.model.Calendar icalCalendar = ERGWCalendar.transformToICalObject(calendar);
     collection.addCalendar(icalCalendar);
+  }
+
+  public void setEvents(NSArray<ERGWCalendar> events) {
+    this.events = events;
+  }
+  
+  public NSArray<ERGWCalendar> events() {
+    return events;
+  }
+  
+  public void setTasks(NSArray<ERGWCalendar> tasks) {
+    this.tasks = tasks;
+  }
+  
+  public NSArray<ERGWCalendar> tasks() {
+    return tasks;
+  }
+  
+  public NSArray<ERGWCalendar> eventsForTimePeriod(java.util.Date startTime, java.util.Date endTime) {
+    NSMutableArray<ERGWCalendar> events = new NSMutableArray<ERGWCalendar>();
+    try {
+      Calendar[] calendarObjects = originalCollection.getEventsForTimePeriod(originalCollection, new DateTime(startTime), new DateTime(endTime));
+      for (Calendar calendarObject: calendarObjects) {
+        events.addObject(ERGWCalendar.transformFromICalResponse(calendarObject));
+      }
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+    catch (DavException e) {
+      e.printStackTrace();
+    }
+    catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    catch (ParserException e) {
+      e.printStackTrace();
+    }
+    return events;
   }
   
   // proppatch to change collection proprietes
