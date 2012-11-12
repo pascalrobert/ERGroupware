@@ -25,7 +25,7 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbrastore.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/json.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/CGProCLI.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-connector-0.9.4-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-connector-0.9.4-SNAPSHOT.jar" sourcepath="Libraries/ical4j-connector-0.9.4-SNAPSHOT-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-core-2.4.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-webdav-2.4.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-vcard-0.9.6-SNAPSHOT.jar"/>
