@@ -558,7 +558,9 @@ public abstract class ERGWCalendarObject {
       attendee.setEmailAddress(null);
       String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
       if (emailAddress != null)
-        attendee.setEmailAddress(emailAddress); 
+        attendee.setEmailAddress(emailAddress);
+      
+      newObject.addAttendee(attendee);
     }
 
     if (classification == Clazz.PUBLIC) {
