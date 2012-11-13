@@ -487,7 +487,7 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.Summary summary = (net.fortuna.ical4j.model.property.Summary)calComponent.getProperty(Property.SUMMARY);
     net.fortuna.ical4j.model.property.Location location = (net.fortuna.ical4j.model.property.Location)calComponent.getProperty(Property.LOCATION);
     net.fortuna.ical4j.model.property.Categories categories = (net.fortuna.ical4j.model.property.Categories)calComponent.getProperty(Property.CATEGORIES);
-    net.fortuna.ical4j.model.property.Comment description = (net.fortuna.ical4j.model.property.Comment)calComponent.getProperty(Property.COMMENT);
+    net.fortuna.ical4j.model.property.Description description = (net.fortuna.ical4j.model.property.Description)calComponent.getProperty(Property.DESCRIPTION);
     net.fortuna.ical4j.model.PropertyList contacts = calComponent.getProperties(Property.CONTACT);
     net.fortuna.ical4j.model.property.Geo geo = (net.fortuna.ical4j.model.property.Geo)calComponent.getProperty(Property.GEO);
     net.fortuna.ical4j.model.property.Url url = (net.fortuna.ical4j.model.property.Url)calComponent.getProperty(Property.URL);
