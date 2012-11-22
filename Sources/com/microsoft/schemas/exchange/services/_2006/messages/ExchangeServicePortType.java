@@ -128,6 +128,31 @@ public interface ExchangeServicePortType {
 
     /**
      * 
+     * @param timeZoneContext
+     * @param request
+     * @param serverVersion
+     * @param findFolderResult
+     * @param requestVersion
+     * @param mailboxCulture
+     */
+    @WebMethod(operationName = "FindFolder", action = "http://schemas.microsoft.com/exchange/services/2006/messages/FindFolder")
+    public void findFolder(
+        @WebParam(name = "FindFolder", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", partName = "request")
+        FindFolderType request,
+        @WebParam(name = "MailboxCulture", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "MailboxCulture")
+        MailboxCultureType mailboxCulture,
+        @WebParam(name = "RequestServerVersion", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "RequestVersion")
+        RequestServerVersion requestVersion,
+        @WebParam(name = "TimeZoneContext", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, partName = "TimeZoneContext")
+        TimeZoneContextType timeZoneContext,
+        @WebParam(name = "FindFolderResponse", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/messages", mode = WebParam.Mode.OUT, partName = "FindFolderResult")
+        Holder<FindFolderResponseType> findFolderResult,
+        @WebParam(name = "ServerVersionInfo", targetNamespace = "http://schemas.microsoft.com/exchange/services/2006/types", header = true, mode = WebParam.Mode.OUT, partName = "ServerVersion")
+        Holder<ServerVersionInfo> serverVersion);
+
+    
+    /**
+     * 
      * @param findItemResult
      * @param timeZoneContext
      * @param dateTimePrecision
