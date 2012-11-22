@@ -499,7 +499,8 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.Due dueDate = (net.fortuna.ical4j.model.property.Due)calComponent.getProperty(Property.DUE);
     net.fortuna.ical4j.model.property.PercentComplete percentComplete = (net.fortuna.ical4j.model.property.PercentComplete)calComponent.getProperty(Property.PERCENT_COMPLETE);
     net.fortuna.ical4j.model.property.Status status = (net.fortuna.ical4j.model.property.Status)calComponent.getProperty(Property.STATUS);
-    
+    net.fortuna.ical4j.model.property.Uid uid = (net.fortuna.ical4j.model.property.Uid)calComponent.getProperty(Property.UID);
+
     if (newObject instanceof ERGWTask) {
       if (completedDate != null) {
         ((ERGWTask)newObject).setCompletedOn(new NSTimestamp(completedDate.getDate()));
@@ -517,6 +518,9 @@ public abstract class ERGWCalendarObject {
         ((ERGWTask)newObject).setStatus(ERGWTaskStatus.getByRFC2445Value(status));
       }
     }
+    
+    if (uid != null) 
+      newObject.setUid(uid.getValue());
     
     if (zOrg != null) {
       Organizer originalOrganizer = (Organizer)zOrg;
@@ -559,7 +563,7 @@ public abstract class ERGWCalendarObject {
       String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
       if (emailAddress != null)
         attendee.setEmailAddress(emailAddress);
-      
+            
       newObject.addAttendee(attendee);
     }
 
