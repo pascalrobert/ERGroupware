@@ -15,6 +15,8 @@ import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Holder;
 
+import jec.OREventSearchCriteria;
+
 import com.microsoft.schemas.exchange.services._2006.messages.ArrayOfResponseMessagesType;
 import com.microsoft.schemas.exchange.services._2006.messages.CreateAttachmentResponseType;
 import com.microsoft.schemas.exchange.services._2006.messages.CreateAttachmentType;
@@ -24,6 +26,8 @@ import com.microsoft.schemas.exchange.services._2006.messages.CreateItemResponse
 import com.microsoft.schemas.exchange.services._2006.messages.CreateItemType;
 import com.microsoft.schemas.exchange.services._2006.messages.ExchangeServicePortType;
 import com.microsoft.schemas.exchange.services._2006.messages.ExchangeWebService;
+import com.microsoft.schemas.exchange.services._2006.messages.FindFolderResponseType;
+import com.microsoft.schemas.exchange.services._2006.messages.FindFolderType;
 import com.microsoft.schemas.exchange.services._2006.messages.FolderInfoResponseMessageType;
 import com.microsoft.schemas.exchange.services._2006.messages.ItemInfoResponseMessageType;
 import com.microsoft.schemas.exchange.services._2006.messages.SyncFolderHierarchyResponseMessageType;
@@ -40,8 +44,12 @@ import com.microsoft.schemas.exchange.services._2006.types.BodyTypeType;
 import com.microsoft.schemas.exchange.services._2006.types.CalendarFolderType;
 import com.microsoft.schemas.exchange.services._2006.types.CalendarItemCreateOrDeleteOperationType;
 import com.microsoft.schemas.exchange.services._2006.types.CalendarItemType;
+import com.microsoft.schemas.exchange.services._2006.types.ConstantValueType;
 import com.microsoft.schemas.exchange.services._2006.types.ContactItemType;
 import com.microsoft.schemas.exchange.services._2006.types.ContactsFolderType;
+import com.microsoft.schemas.exchange.services._2006.types.ContainmentComparisonType;
+import com.microsoft.schemas.exchange.services._2006.types.ContainmentModeType;
+import com.microsoft.schemas.exchange.services._2006.types.ContainsExpressionType;
 import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekIndexType;
 import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
 import com.microsoft.schemas.exchange.services._2006.types.DefaultShapeNamesType;
@@ -57,6 +65,7 @@ import com.microsoft.schemas.exchange.services._2006.types.ExchangeVersionType;
 import com.microsoft.schemas.exchange.services._2006.types.ExtendedPropertyType;
 import com.microsoft.schemas.exchange.services._2006.types.FileAttachmentType;
 import com.microsoft.schemas.exchange.services._2006.types.FolderIdType;
+import com.microsoft.schemas.exchange.services._2006.types.FolderQueryTraversalType;
 import com.microsoft.schemas.exchange.services._2006.types.FolderResponseShapeType;
 import com.microsoft.schemas.exchange.services._2006.types.ImAddressDictionaryEntryType;
 import com.microsoft.schemas.exchange.services._2006.types.ImAddressDictionaryType;
@@ -70,10 +79,12 @@ import com.microsoft.schemas.exchange.services._2006.types.NoEndRecurrenceRangeT
 import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAllItemsType;
 import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAttachmentsType;
 import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAttendeesType;
+import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfBaseFolderIdsType;
 import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfFoldersType;
 import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfPathsToElementType;
 import com.microsoft.schemas.exchange.services._2006.types.NumberedRecurrenceRangeType;
 import com.microsoft.schemas.exchange.services._2006.types.ObjectFactory;
+import com.microsoft.schemas.exchange.services._2006.types.OrType;
 import com.microsoft.schemas.exchange.services._2006.types.PathToExtendedFieldType;
 import com.microsoft.schemas.exchange.services._2006.types.PathToUnindexedFieldType;
 import com.microsoft.schemas.exchange.services._2006.types.PhoneNumberDictionaryEntryType;
@@ -87,6 +98,8 @@ import com.microsoft.schemas.exchange.services._2006.types.RelativeMonthlyRecurr
 import com.microsoft.schemas.exchange.services._2006.types.RequestServerVersion;
 import com.microsoft.schemas.exchange.services._2006.types.ResponseClassType;
 import com.microsoft.schemas.exchange.services._2006.types.ResponseTypeType;
+import com.microsoft.schemas.exchange.services._2006.types.RestrictionType;
+import com.microsoft.schemas.exchange.services._2006.types.SearchExpressionType;
 import com.microsoft.schemas.exchange.services._2006.types.SearchFolderType;
 import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
 import com.microsoft.schemas.exchange.services._2006.types.ServerVersionInfo;
@@ -854,11 +867,9 @@ public class ExchangeStore {
       }
 
       // UID:c35d64d0-2187-45ba-884d-ada56ada927a
-      /*
       String uid = event.uid();
       if (uid != null)
         calendarItem.setUID(uid);
-        */
 
       // CLASS:PUBLIC
       ERGWClassification classification = event.classification();
@@ -908,23 +919,24 @@ public class ExchangeStore {
         NonEmptyArrayOfAttendeesType resources = new NonEmptyArrayOfAttendeesType();
 
         for (ERGWAttendee attendee: event.attendees()) {
+          if (!(attendee.emailAddress().equals(organizer.emailAddress()))) {
+            ERGWAttendeeRole role = attendee.role();
 
-          ERGWAttendeeRole role = attendee.role();
+            AttendeeType attendeeDetails = new AttendeeType();
+            EmailAddressType email = new EmailAddressType();
+            email.setEmailAddress(attendee.emailAddress());
+            email.setName(attendee.name());
+            attendeeDetails.setMailbox(email);
 
-          AttendeeType attendeeDetails = new AttendeeType();
-          EmailAddressType email = new EmailAddressType();
-          email.setEmailAddress(attendee.emailAddress());
-          email.setName(attendee.name());
-          attendeeDetails.setMailbox(email);
+            attendeeDetails.setResponseType(ResponseTypeType.ACCEPT);
 
-          attendeeDetails.setResponseType(ResponseTypeType.NO_RESPONSE_RECEIVED);
-          
-          if (role.equals(ERGWAttendeeRole.REQ_PARTICIPANT)) {
-            requiredAttendes.getAttendee().add(attendeeDetails);
-          } else if ((role.equals(ERGWAttendeeRole.OPT_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.NON_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.CHAIR))) {
-            optionalAttendes.getAttendee().add(attendeeDetails);
-          } else {
-            resources.getAttendee().add(attendeeDetails);
+            if (role.equals(ERGWAttendeeRole.REQ_PARTICIPANT)) {
+              requiredAttendes.getAttendee().add(attendeeDetails);
+            } else if ((role.equals(ERGWAttendeeRole.OPT_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.NON_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.CHAIR))) {
+              optionalAttendes.getAttendee().add(attendeeDetails);
+            } else {
+              resources.getAttendee().add(attendeeDetails);
+            }
           }
         }
         
@@ -991,7 +1003,7 @@ public class ExchangeStore {
       folderType.setId(calendarFolder.id());
       calendarFolderId.setFolderId(folderType);
       itemDetails.setSavedItemFolderId(calendarFolderId);
-      itemDetails.setSendMeetingInvitations(CalendarItemCreateOrDeleteOperationType.SEND_TO_NONE);
+      itemDetails.setSendMeetingInvitations(CalendarItemCreateOrDeleteOperationType.SEND_TO_ALL_AND_SAVE_COPY);
 
       Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
 
@@ -1333,7 +1345,8 @@ public class ExchangeStore {
         taskType.setStartDate(startDate);
       }
 
-      taskType.setStatus(task.status().ewsValue());
+      if (task.status() != null)
+        taskType.setStatus(task.status().ewsValue());
       
       setAlarms(task, taskType);
       
@@ -1368,6 +1381,146 @@ public class ExchangeStore {
         }
       }
     }
+  }
+  
+  public void fetchInvitations() {
+    ObjectFactory factory = new ObjectFactory();
+
+//  <m:FindFolder Traversal="Deep" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
+
+    FindFolderType findFolderRequest = new FindFolderType();
+    findFolderRequest.setTraversal(FolderQueryTraversalType.DEEP);
+    
+/*
+ * TODO Implement color
+   <m:FolderShape>
+      <t:BaseShape>Default</t:BaseShape>
+      <t:AdditionalProperties>
+        <t:FieldURI FieldURI="folder:ParentFolderId" />
+        <t:ExtendedFieldURI PropertyTag="0x3004" PropertyType="String" />
+        <t:ExtendedFieldURI PropertyName="FolderColor" PropertySetId="A7B529B5-4B75-47A7-A24F-20743D6C55CD" PropertyType="String" />
+        <t:ExtendedFieldURI PropertyName="FolderOrder" PropertySetId="A7B529B5-4B75-47A7-A24F-20743D6C55CD" PropertyType="Integer" />
+      </t:AdditionalProperties>
+    </m:FolderShape>
+ */
+    FolderResponseShapeType folderShape = new FolderResponseShapeType();
+    folderShape.setBaseShape(DefaultShapeNamesType.DEFAULT);
+    
+    NonEmptyArrayOfPathsToElementType properties = new NonEmptyArrayOfPathsToElementType();
+    
+    PathToUnindexedFieldType parentFieldType = new PathToUnindexedFieldType();
+    parentFieldType.setFieldURI(UnindexedFieldURIType.FOLDER_PARENT_FOLDER_ID);
+    JAXBElement<PathToUnindexedFieldType> parentFolderId = factory.createFieldURI(parentFieldType);
+    properties.getPath().add(parentFolderId);
+
+    /*
+     * (PR_COMMENT)
+     * Comment
+     * ASCII string or Unicode string
+     * Contains a comment about the purpose or content of an object.
+     */
+    PathToExtendedFieldType prCommentField = new PathToExtendedFieldType();
+    prCommentField.setPropertyTag("0x3004");
+    prCommentField.setPropertyType(MapiPropertyTypeType.STRING);
+    JAXBElement<PathToExtendedFieldType> prComment = factory.createExtendedFieldURI(prCommentField);
+    properties.getPath().add(prComment);
+
+    folderShape.setAdditionalProperties(properties);
+    
+    findFolderRequest.setFolderShape(folderShape);
+    
+    /*
+    <m:Restriction>
+      <t:Or>
+        <t:Contains ContainmentMode="FullString" ContainmentComparison="Exact">
+          <t:FieldURI FieldURI="folder:FolderClass" />
+          <t:Constant Value="IPF.Appointment" />
+        </t:Contains>
+        <t:Contains ContainmentMode="Prefixed" ContainmentComparison="Exact">
+          <t:FieldURI FieldURI="folder:FolderClass" />
+          <t:Constant Value="IPF.Appointment." />
+        </t:Contains>
+        <t:Contains ContainmentMode="FullString" ContainmentComparison="Exact">
+          <t:FieldURI FieldURI="folder:FolderClass" />
+          <t:Constant Value="IPF.Task" />
+        </t:Contains>
+        <t:Contains ContainmentMode="Prefixed" ContainmentComparison="Exact">
+          <t:FieldURI FieldURI="folder:FolderClass" />
+          <t:Constant Value="IPF.Task." />
+        </t:Contains>
+      </t:Or>
+    </m:Restriction>
+     */
+    ConstantValueType apptConstant = new ConstantValueType();
+    apptConstant.setValue("IPF.Appointment");
+
+    ConstantValueType apptConstantPrefix = new ConstantValueType();
+    apptConstantPrefix.setValue("IPF.Appointment.");
+    
+    ConstantValueType taskConstant = new ConstantValueType();
+    taskConstant.setValue("IPF.Task");
+    
+    ConstantValueType taskConstantPrefix = new ConstantValueType();
+    taskConstantPrefix.setValue("IPF.Task.");
+    
+    PathToUnindexedFieldType folderClass = new PathToUnindexedFieldType();
+    folderClass.setFieldURI(UnindexedFieldURIType.FOLDER_CHILD_FOLDER_COUNT);
+    JAXBElement<PathToUnindexedFieldType> folderClassElement = factory.createFieldURI(parentFieldType);
+
+    RestrictionType restriction = new RestrictionType();
+    
+    OrType searchExprType = new OrType();
+
+    ContainsExpressionType apptFullString = new ContainsExpressionType();
+    apptFullString.setContainmentComparison(ContainmentComparisonType.EXACT);
+    apptFullString.setContainmentMode(ContainmentModeType.FULL_STRING);
+    apptFullString.setConstant(apptConstant);
+    apptFullString.setPath(folderClassElement);
+    JAXBElement<ContainsExpressionType> apptFullStringExpression = factory.createContains(apptFullString);
+    searchExprType.getSearchExpression().add(apptFullStringExpression);
+
+    ContainsExpressionType apptPrefixed = new ContainsExpressionType();
+    apptPrefixed.setContainmentComparison(ContainmentComparisonType.EXACT);
+    apptPrefixed.setContainmentMode(ContainmentModeType.PREFIXED);
+    apptPrefixed.setConstant(apptConstantPrefix);
+    apptPrefixed.setPath(folderClassElement);
+    JAXBElement<ContainsExpressionType> apptPrefixedExpression = factory.createContains(apptPrefixed);
+    searchExprType.getSearchExpression().add(apptPrefixedExpression);
+
+    ContainsExpressionType taskFullString = new ContainsExpressionType();
+    taskFullString.setContainmentComparison(ContainmentComparisonType.EXACT);
+    taskFullString.setContainmentMode(ContainmentModeType.FULL_STRING);
+    taskFullString.setConstant(taskConstant);
+    taskFullString.setPath(folderClassElement);
+    JAXBElement<ContainsExpressionType> taskFullStringExpression = factory.createContains(taskFullString);
+    searchExprType.getSearchExpression().add(taskFullStringExpression);
+
+    ContainsExpressionType taskPrefixed = new ContainsExpressionType();
+    taskPrefixed.setContainmentComparison(ContainmentComparisonType.EXACT);
+    taskPrefixed.setContainmentMode(ContainmentModeType.PREFIXED);
+    taskPrefixed.setConstant(apptConstantPrefix);
+    taskPrefixed.setPath(folderClassElement);
+    JAXBElement<ContainsExpressionType> taskPrefixedExpression = factory.createContains(taskPrefixed);
+    searchExprType.getSearchExpression().add(taskPrefixedExpression);
+    
+    JAXBElement<SearchExpressionType> restrictionExpression = factory.createSearchExpression(searchExprType);
+    restriction.setSearchExpression(restrictionExpression);
+    findFolderRequest.setRestriction(restriction);
+    
+    /*
+    <m:ParentFolderIds>
+      <t:DistinguishedFolderId Id="msgfolderroot" />
+    </m:ParentFolderIds>
+     */
+    NonEmptyArrayOfBaseFolderIdsType parentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
+    DistinguishedFolderIdType distinguishedFolderId = new DistinguishedFolderIdType();
+    distinguishedFolderId.setId(DistinguishedFolderIdNameType.MSGFOLDERROOT);
+    parentFolderIds.getFolderIdOrDistinguishedFolderId().add(distinguishedFolderId);
+    findFolderRequest.setParentFolderIds(parentFolderIds);
+    
+    Holder<FindFolderResponseType> responseHolder = new Holder<FindFolderResponseType>(new FindFolderResponseType());
+
+    port.findFolder(findFolderRequest, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
   }
   
 }
