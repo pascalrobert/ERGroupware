@@ -589,7 +589,16 @@ public abstract class ERGWCalendarObject {
       newObject.setFreeBusyStatus(ERGWFreeBusyStatus.BUSY_UNAVAILABLE);
     }
     
-    newObject.setStartTime(new NSTimestamp(startTime.getDate()));
+    // Can be empty if VTODO
+    if (startTime != null) {
+      newObject.setStartTime(new NSTimestamp(startTime.getDate()));
+      Parameter dateValue = startTime.getParameter(Parameter.VALUE);
+      if (dateValue != null) {
+        if ("DATE".equals(dateValue.getValue())) {
+          newObject.setIsFullDay(true);
+        }
+      }
+    }
     
     if (endTime != null)
       newObject.setEndTime(new NSTimestamp(endTime.getDate()));
@@ -597,13 +606,6 @@ public abstract class ERGWCalendarObject {
     Property allDayProp = extras.getProperty("X-MICROSOFT-CDO-ALLDAYEVENT");
     if (allDayProp != null) {
       newObject.setIsFullDay(new Boolean(allDayProp.getValue()));
-    }
-    
-    Parameter dateValue = startTime.getParameter(Parameter.VALUE);
-    if (dateValue != null) {
-      if ("DATE".equals(dateValue.getValue())) {
-        newObject.setIsFullDay(true);
-      }
     }
     
     if (summary != null) 
