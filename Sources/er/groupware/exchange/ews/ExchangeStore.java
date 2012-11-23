@@ -555,7 +555,7 @@ public class ExchangeStore {
           recurType.setEndDateRecurrence(endType);
 
           pattern.setInterval(1);
-        } else if (recurrenceRule.repeatCount() > 0) {
+        } else if ((recurrenceRule != null) && (recurrenceRule.repeatCount() != null) && (recurrenceRule.repeatCount() > 0)) {
           // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
           NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
           countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
@@ -905,7 +905,7 @@ public class ExchangeStore {
         
         SingleRecipientType recipient = new SingleRecipientType();
         recipient.setMailbox(email);
-        //calendarItem.setOrganizer(recipient);         
+        calendarItem.setOrganizer(recipient);         
       }
 
       // ATTENDEE;RSVP=TRUE;X-SENT=TRUE;CN=probert@macti.ca;CUTYPE=INDIVIDUAL:mailto:probert@macti.ca
@@ -919,7 +919,7 @@ public class ExchangeStore {
         NonEmptyArrayOfAttendeesType resources = new NonEmptyArrayOfAttendeesType();
 
         for (ERGWAttendee attendee: event.attendees()) {
-          if (!(attendee.emailAddress().equals(organizer.emailAddress()))) {
+          if ((organizer == null) || (!(attendee.emailAddress().equals(organizer.emailAddress())))) {
             ERGWAttendeeRole role = attendee.role();
 
             AttendeeType attendeeDetails = new AttendeeType();
