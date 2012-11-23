@@ -422,7 +422,11 @@ public abstract class ERGWCalendarObject {
     }
     
     if (calendarObject.categories != null) {
-      Categories rfcCategories = new Categories(new TextList((String[])calendarObject.categories.toArray()));
+      TextList list = new TextList();
+      for (String category: calendarObject.categories) {
+        list.add(category);
+      }
+      Categories rfcCategories = new Categories(list);
       calComponent.getProperties().add(rfcCategories);
     }
     
