@@ -20,14 +20,17 @@ public enum ERGWContactTelephoneType implements ERGWICalendarProperty {
   VOICE_MSG("Voice mailbox","MSG",ContactConstants.A_callbackPhone), // "msg" to indicate the telephone number has voice messaging support
   WORK("Work phone","WORK",ContactConstants.A_workPhone),
   MOBILE("Mobile phone","CELL",ContactConstants.A_mobilePhone),
+  FAX("Fax","FAX",ContactConstants.A_workFax),
   PAGER("Pager","PAGER",ContactConstants.A_pager),
   VIDEO_CONF("Video conference","VIDEO",ContactConstants.A_otherPhone), // "video" to indicate a video conferencing telephone number
   BBS("Bulletin-board system","BBS",ContactConstants.A_otherPhone),
   MODEM("Modem","MODEM",ContactConstants.A_otherPhone), 
   ISDN("ISDN","ISDN",ContactConstants.A_otherPhone), // "isdn" to indicate an ISDN service telephone number
   CAR("Car","CAR",ContactConstants.A_carPhone), // "car" to indicate a car-phone telephone number
-  PCS("Personal Communication Services (PCS)","PCS",ContactConstants.A_otherPhone); // "pcs" to indicate a personal communication services telephone number
-
+  PCS("Personal Communication Services (PCS)","PCS",ContactConstants.A_otherPhone), // "pcs" to indicate a personal communication services telephone number
+  OTHER_TELEPHONE("Other telephone number","VOICE",ContactConstants.A_otherPhone),
+  OTHER_FAX("Other fax number","FAX",ContactConstants.A_otherFax);
+  
   private String localizedDescription;
   private String rfc2445Value;
   private String zimbraValue;

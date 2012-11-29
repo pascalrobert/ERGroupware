@@ -1122,6 +1122,12 @@ public class ExchangeStore {
           case VOICE_MSG:
             entry.setKey(PhoneNumberKeyType.CALLBACK);  
             break;
+          case OTHER_TELEPHONE:
+            entry.setKey(PhoneNumberKeyType.OTHER_TELEPHONE);
+            break;
+          case OTHER_FAX:
+            entry.setKey(PhoneNumberKeyType.OTHER_FAX);
+            break;
           }
         }
 

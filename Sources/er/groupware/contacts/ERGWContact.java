@@ -403,6 +403,13 @@ public class ERGWContact {
             ERGWContactTelephoneType type = ERGWContactTelephoneType.getByRFC2445Value(paramValues[paramIterator]);            
             if (type != null) {
               phoneTypes.addObject(type);
+            } else {
+              if (paramValues.length == 1 && "VOICE".equals(typeFromVCard)) {
+                phoneTypes.addObject(ERGWContactTelephoneType.OTHER_TELEPHONE);
+              }
+              if (paramValues.length == 1 && "FAX".equals(typeFromVCard)) {
+                phoneTypes.addObject(ERGWContactTelephoneType.OTHER_FAX);
+              }
             }
           }
         } else {
