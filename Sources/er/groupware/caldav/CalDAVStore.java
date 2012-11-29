@@ -1,8 +1,10 @@
 package er.groupware.caldav;
 
+import java.io.IOException;
 import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -14,10 +16,14 @@ import net.fortuna.ical4j.connector.dav.PathResolver;
 import net.fortuna.ical4j.connector.dav.enums.MediaType;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
+import net.fortuna.ical4j.model.property.Attendee;
+
+import org.apache.jackrabbit.webdav.DavException;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 
+import er.groupware.calendar.ERGWAttendee;
 import er.groupware.calendar.ERGWCalendar;
 import er.groupware.calendar.ERGWCalendarCollection;
 import er.groupware.enums.ERGWSupportedObjectType;
@@ -98,6 +104,34 @@ public class CalDAVStore {
   
   public void createCollection(String id, CalDAVCollection collection) throws ObjectStoreException, ParserConfigurationException {
     store.addCollection(id, ERGWCalendarCollection.convertPropertiesToDavPropertySet(collection));
+  }
+  
+  /**
+   * Get the list of rooms (locations) from the store.
+   * @return the list of all rooms, as attendees.
+   */
+  public NSArray<ERGWAttendee> rooms() {
+    NSMutableArray<ERGWAttendee> rooms = new NSMutableArray<ERGWAttendee>();
+    try {
+      List<Attendee> roomsFromStore = originalStore().getAllRooms();
+      for (Attendee attendee: roomsFromStore) {
+        ERGWAttendee room = ERGWAttendee.transformFromICalObject(attendee);
+        rooms.addObject(room);
+      }
+    }
+    catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+    catch (DavException e) {
+      e.printStackTrace();
+    }
+    catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+    return rooms;
   }
 
   // delete collection

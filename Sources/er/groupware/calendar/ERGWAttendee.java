@@ -1,5 +1,9 @@
 package er.groupware.calendar;
 
+import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.parameter.CuType;
+import net.fortuna.ical4j.model.parameter.Role;
+import net.fortuna.ical4j.model.property.Attendee;
 import er.extensions.eof.ERXKey;
 import er.groupware.calendar.enums.ERGWAttendeeRole;
 import er.groupware.calendar.enums.ERGWCUType;
@@ -80,6 +84,35 @@ public class ERGWAttendee extends ERGWCalendarContact {
 
   public void setRsvpSent(boolean _rsvpSent) {
 	  this.rsvpSent = _rsvpSent;
+  }
+  
+  public static ERGWAttendee transformFromICalObject(Attendee oldAttendee) {
+    ERGWAttendee attendee = new ERGWAttendee();
+    CuType type = (CuType)oldAttendee.getParameter(Parameter.CUTYPE);
+    if (type == CuType.GROUP) {
+      attendee.setCutype(ERGWCUType.GROUP);
+    } else if (type == CuType.INDIVIDUAL) {
+      attendee.setCutype(ERGWCUType.INDIVIDUAL);
+    } else if (type == CuType.RESOURCE) {
+      attendee.setCutype(ERGWCUType.RESOURCE);
+    } else if (type == CuType.ROOM) {
+      attendee.setCutype(ERGWCUType.ROOM);
+    } else if (type == CuType.UNKNOWN) {
+      attendee.setCutype(ERGWCUType.UNKNOWN);
+    }
+    Parameter role = oldAttendee.getParameter(Parameter.ROLE);
+    if (role != null) {
+      attendee.setRole(ERGWAttendeeRole.getByRFC2445ValueValue((Role)role));
+    } else {
+      attendee.setRole(ERGWAttendeeRole.REQ_PARTICIPANT);        
+    }
+    attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
+    attendee.setEmailAddress(null);
+    String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
+    if (emailAddress != null)
+      attendee.setEmailAddress(emailAddress);
+          
+    return attendee;
   }
     
 }

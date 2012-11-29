@@ -40,7 +40,6 @@ import net.fortuna.ical4j.model.property.Url;
 import net.fortuna.ical4j.util.UidGenerator;
 
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.zimbra.common.service.ServiceException;
@@ -366,7 +365,18 @@ public abstract class ERGWCalendarObject {
   }
 
   public static net.fortuna.ical4j.model.property.Attendee convertAttendee(ERGWAttendee attendee) {
-    net.fortuna.ical4j.model.property.Attendee icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
+    net.fortuna.ical4j.model.property.Attendee icAttendee;
+    if (attendee.emailAddress().startsWith("urn:uuid")) {
+      icAttendee = new net.fortuna.ical4j.model.property.Attendee();
+      try {
+        icAttendee.setCalAddress(new java.net.URI(attendee.emailAddress()));
+      }
+      catch (URISyntaxException e) {
+        e.printStackTrace();
+      }
+    } else {
+      icAttendee = new net.fortuna.ical4j.model.property.Attendee(URI.create("mailto:"  + attendee.emailAddress()));
+    }
     
     if (attendee.role() != null) {
       icAttendee.getParameters().add(attendee.role().rfc2445Value());
@@ -543,31 +553,7 @@ public abstract class ERGWCalendarObject {
     
     for (Object zAttendee: attendees) {
       net.fortuna.ical4j.model.property.Attendee oldAttendee = (net.fortuna.ical4j.model.property.Attendee)zAttendee;
-      ERGWAttendee attendee = new ERGWAttendee();
-      CuType type = (CuType)oldAttendee.getParameter(Parameter.CUTYPE);
-      if (type == CuType.GROUP) {
-        attendee.setCutype(ERGWCUType.GROUP);
-      } else if (type == CuType.INDIVIDUAL) {
-        attendee.setCutype(ERGWCUType.INDIVIDUAL);
-      } else if (type == CuType.RESOURCE) {
-        attendee.setCutype(ERGWCUType.RESOURCE);
-      } else if (type == CuType.ROOM) {
-        attendee.setCutype(ERGWCUType.ROOM);
-      } else if (type == CuType.UNKNOWN) {
-        attendee.setCutype(ERGWCUType.UNKNOWN);
-      }
-      Parameter role = oldAttendee.getParameter(Parameter.ROLE);
-      if (role != null) {
-        attendee.setRole(ERGWAttendeeRole.getByRFC2445ValueValue((Role)role));
-      } else {
-        attendee.setRole(ERGWAttendeeRole.REQ_PARTICIPANT);        
-      }
-      attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
-      attendee.setEmailAddress(null);
-      String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
-      if (emailAddress != null)
-        attendee.setEmailAddress(emailAddress);
-            
+      ERGWAttendee attendee = ERGWAttendee.transformFromICalObject(oldAttendee);
       newObject.addAttendee(attendee);
     }
 
