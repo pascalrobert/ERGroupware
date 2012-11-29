@@ -410,6 +410,9 @@ public class ERGWContact {
               if (paramValues.length == 1 && "FAX".equals(typeFromVCard)) {
                 phoneTypes.addObject(ERGWContactTelephoneType.OTHER_FAX);
               }
+              if (paramValues.length == 1 && "PREFERED".equals(typeFromVCard)) {
+                phoneTypes.addObject(ERGWContactTelephoneType.PRIMARY_PHONE);
+              }
             }
           }
         } else {

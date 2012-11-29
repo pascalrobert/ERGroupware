@@ -29,8 +29,10 @@ public enum ERGWContactTelephoneType implements ERGWICalendarProperty {
   CAR("Car","CAR",ContactConstants.A_carPhone), // "car" to indicate a car-phone telephone number
   PCS("Personal Communication Services (PCS)","PCS",ContactConstants.A_otherPhone), // "pcs" to indicate a personal communication services telephone number
   OTHER_TELEPHONE("Other telephone number","VOICE",ContactConstants.A_otherPhone),
-  OTHER_FAX("Other fax number","FAX",ContactConstants.A_otherFax);
-  
+  OTHER_FAX("Other fax number","FAX",ContactConstants.A_otherFax),
+  COMPANY("Company phone","X-COMPANY",ContactConstants.A_companyPhone),
+  PRIMARY_PHONE("Primary phone","PREF",ContactConstants.A_otherPhone);
+
   private String localizedDescription;
   private String rfc2445Value;
   private String zimbraValue;

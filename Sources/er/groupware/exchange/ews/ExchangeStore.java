@@ -1088,7 +1088,6 @@ public class ExchangeStore {
       PhoneNumberDictionaryType phoneEntries = new PhoneNumberDictionaryType();
       for (ERGWContactTelephone telephone: card.telephones()) {
         PhoneNumberDictionaryEntryType entry = new PhoneNumberDictionaryEntryType();
-
         entry.setValue(telephone.value());
         
         for (ERGWContactTelephoneType type: telephone.types()) {
@@ -1128,6 +1127,11 @@ public class ExchangeStore {
           case OTHER_FAX:
             entry.setKey(PhoneNumberKeyType.OTHER_FAX);
             break;
+          case COMPANY:
+            entry.setKey(PhoneNumberKeyType.COMPANY_MAIN_PHONE);
+            break;
+          case PRIMARY_PHONE:
+            entry.setKey(PhoneNumberKeyType.PRIMARY_PHONE);
           }
         }
 
