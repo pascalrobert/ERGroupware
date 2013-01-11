@@ -19,7 +19,6 @@ import org.apache.jackrabbit.webdav.DavException;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSTimestamp;
 
 import er.groupware.calendar.ERGWCalendar;
 import er.groupware.calendar.ERGWCalendarCollection;
@@ -64,7 +63,7 @@ public class CalDAVCollection extends ERGWCalendarCollection {
   public NSArray<ERGWCalendar> eventsForTimePeriod(java.util.Date startTime, java.util.Date endTime) {
     NSMutableArray<ERGWCalendar> events = new NSMutableArray<ERGWCalendar>();
     try {
-      Calendar[] calendarObjects = originalCollection.getEventsForTimePeriod(originalCollection, new DateTime(startTime), new DateTime(endTime));
+      Calendar[] calendarObjects = originalCollection.getEventsForTimePeriod(new DateTime(startTime), new DateTime(endTime));
       for (Calendar calendarObject: calendarObjects) {
         events.addObject(ERGWCalendar.transformFromICalResponse(calendarObject));
       }
