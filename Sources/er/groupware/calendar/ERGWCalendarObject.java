@@ -34,6 +34,7 @@ import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.Sequence;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
@@ -95,6 +96,7 @@ public abstract class ERGWCalendarObject {
   private NSMutableArray<ERGWAlarm> alarms;
   private ERGWRecurrenceRule recurrenceRule;
   protected ERGWCalendar calendar;
+  protected Integer sequence;
 
   public static final ERXKey<ERGWCalendar> CALENDAR = new ERXKey<ERGWCalendar>("calendar");
   public static final ERXKey<ERGWAttendee> ATTENDEES = new ERXKey<ERGWAttendee>("attendees");
@@ -360,6 +362,14 @@ public abstract class ERGWCalendarObject {
     return this.recurrenceRule;
   }
   
+  public Integer sequence() {
+    return sequence;
+  }
+
+  public void setSequence(Integer sequence) {
+    this.sequence = sequence;
+  }
+
   public long calculatedDuration() {
     return (startTime().getTime() - endTime().getTime()) / 60000;
   }
@@ -384,28 +394,55 @@ public abstract class ERGWCalendarObject {
       icAttendee.getParameters().add(Role.REQ_PARTICIPANT);
     }
     
-    icAttendee.getParameters().add(new Cn(attendee.name()));
+    if (attendee.name() != null) {
+      icAttendee.getParameters().add(new Cn(attendee.name()));
+    }
+    
     icAttendee.getParameters().add(new Rsvp(attendee.isRsvp()));        
-    icAttendee.getParameters().add(new XParameter("X-SENT", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
-    icAttendee.getParameters().add(new XParameter("SCHEDULE-STATUS", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
-    icAttendee.getParameters().add(attendee.partStat().rfc2445Value());
+    //icAttendee.getParameters().add(new XParameter("X-SENT", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
+    //icAttendee.getParameters().add(new XParameter("SCHEDULE-STATUS", Boolean.toString(attendee.isRsvpSent()).toUpperCase()));   
+    if (attendee.partStat() != null) {
+      icAttendee.getParameters().add(attendee.partStat().rfc2445Value());
+    }
     
     if (attendee.cutype() != null) {
       icAttendee.getParameters().add(attendee.cutype().rfc2445Value());
-    } else {
-      icAttendee.getParameters().add(ERGWCUType.UNKNOWN.rfc2445Value());        
-    }
+    } 
     
     return icAttendee;
   }
   
   public static net.fortuna.ical4j.model.property.Organizer convertOrganizer(ERGWOrganizer organizer) {
-	  net.fortuna.ical4j.model.property.Organizer icOrganizer = new net.fortuna.ical4j.model.property.Organizer(URI.create("mailto:"  + organizer.emailAddress()));
-	  icOrganizer.getParameters().add(new Cn(organizer.name()));
+	  net.fortuna.ical4j.model.property.Organizer icOrganizer;
+	  
+    if (organizer.emailAddress().startsWith("urn:uuid")) {
+      icOrganizer = new net.fortuna.ical4j.model.property.Organizer();
+      try {
+        icOrganizer.setCalAddress(new java.net.URI(organizer.emailAddress()));
+      }
+      catch (URISyntaxException e) {
+        e.printStackTrace();
+      }
+    } else {
+      icOrganizer = new net.fortuna.ical4j.model.property.Organizer(URI.create("mailto:"  + organizer.emailAddress()));
+    }
+	  
+	  if (organizer.name() != null) {
+	    icOrganizer.getParameters().add(new Cn(organizer.name()));	    
+	  }
+	  
+	  if (organizer.partStat() != null) {
+	    icOrganizer.getParameters().add(organizer.partStat().rfc2445Value());
+	  }
+	  
+    if (organizer.cutype() != null) {
+      icOrganizer.getParameters().add(organizer.cutype().rfc2445Value());
+    } 
+	  
 	  return icOrganizer;
   }
   
-  public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent) throws SocketException, URISyntaxException {
+  public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent, boolean useUtc) throws SocketException, URISyntaxException {
     if (calendarObject.uid() == null) {
   	  UidGenerator ug = new UidGenerator("1");
       calendarObject.setUid(ug.generateUid().getValue());
@@ -447,19 +484,25 @@ public abstract class ERGWCalendarObject {
     calComponent.getProperties().add(new Description(calendarObject.description));
     
     if (calendarObject.endTime != null) {
+      DtEnd endTime = null;
       if (calendarObject.isFullDay) {
-        calComponent.getProperties().add(new DtEnd(new Date(calendarObject.endTime.getTime())));
+        endTime = new DtEnd(new Date(calendarObject.endTime.getTime()));
       } else {        
-        calComponent.getProperties().add(new DtEnd(new DateTime(calendarObject.endTime.getTime())));
+        endTime = new DtEnd(new DateTime(calendarObject.endTime.getTime()));
       }
+      endTime.setUtc(useUtc);
+      calComponent.getProperties().add(endTime);
     }
     
     if (calendarObject.startTime != null) {
+      DtStart startDate = null;
       if (calendarObject.isFullDay) {
-        calComponent.getProperties().add(new DtStart(new Date(calendarObject.startTime.getTime())));
+        startDate = new DtStart(new Date(calendarObject.startTime.getTime()));
       } else {        
-        calComponent.getProperties().add(new DtStart(new DateTime(calendarObject.startTime.getTime())));
+        startDate = new DtStart(new DateTime(calendarObject.startTime.getTime()));
       }
+      startDate.setUtc(useUtc);
+      calComponent.getProperties().add(startDate);
     }
     
     if (calendarObject.duration != null) {
@@ -488,6 +531,12 @@ public abstract class ERGWCalendarObject {
       calComponent.getProperties().add(new Url(new URI(calendarObject.url)));
     }
     
+    if (calendarObject.sequence() != null) {
+      calComponent.getProperties().add(new Sequence(calendarObject.sequence()));
+    } else {
+      calComponent.getProperties().add(new Sequence(1)); 
+    }
+    
     return calComponent;
   }
   
@@ -514,6 +563,7 @@ public abstract class ERGWCalendarObject {
     net.fortuna.ical4j.model.property.PercentComplete percentComplete = (net.fortuna.ical4j.model.property.PercentComplete)calComponent.getProperty(Property.PERCENT_COMPLETE);
     net.fortuna.ical4j.model.property.Status status = (net.fortuna.ical4j.model.property.Status)calComponent.getProperty(Property.STATUS);
     net.fortuna.ical4j.model.property.Uid uid = (net.fortuna.ical4j.model.property.Uid)calComponent.getProperty(Property.UID);
+    net.fortuna.ical4j.model.property.Sequence sequence = (net.fortuna.ical4j.model.property.Sequence)calComponent.getProperty(Property.SEQUENCE);
 
     if (newObject instanceof ERGWTask) {
       if (completedDate != null) {
@@ -674,6 +724,10 @@ public abstract class ERGWCalendarObject {
       }
       
       newObject.setRecurrenceRule(rrule);
+      
+      if (sequence != null) {
+        newObject.setSequence(sequence.getSequenceNo());
+      }
     }
 
     return newObject;

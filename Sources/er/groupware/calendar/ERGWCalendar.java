@@ -11,6 +11,7 @@ import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VAlarm;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VFreeBusy;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.property.CalScale;
@@ -37,6 +38,7 @@ public class ERGWCalendar {
   protected CalScale scale;
   private TimeZone timeZone;
   private String calendarName;
+  protected ERGWFreeBusy freeBusy;
   
   public static ProdId defaultProdId = new ProdId("-//Project Wonder//ERCalendar2//EN"); // TODO: that should go in a property
 
@@ -85,6 +87,14 @@ public class ERGWCalendar {
     this.tasks.addObject(task);
   }
   
+  public ERGWFreeBusy freeBusy() {
+    return freeBusy;
+  }
+
+  public void setFreeBusy(ERGWFreeBusy _freeBusy) {
+    this.freeBusy = _freeBusy;
+  }
+
   public NSArray<ERGWAlarm> alarms() {
     return alarms.immutableClone();
   }
@@ -137,9 +147,11 @@ public class ERGWCalendar {
     icalCalendar.getProperties().add(calendar.scale);
     icalCalendar.getProperties().add(new XProperty("X-WR-CALNAME", calendar.calendarName()));
     
-    TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
-    VTimeZone tz = registry.getTimeZone(calendar.timeZone().getID()).getVTimeZone();
-    icalCalendar.getComponents().add(tz);
+    if (calendar.timeZone() != null) {
+      TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+      VTimeZone tz = registry.getTimeZone(calendar.timeZone().getID()).getVTimeZone();
+      icalCalendar.getComponents().add(tz);
+    }
     
     for (ERGWEvent event: calendar.events()) {
       VEvent vEvent = (VEvent)ERGWEvent.transformToICalObject(event);
@@ -152,6 +164,10 @@ public class ERGWCalendar {
     for (ERGWAlarm alarm: calendar.alarms()) {
       VAlarm vAlarm = (VAlarm)ERGWAlarm.transformToICalObject(alarm);
       icalCalendar.getComponents().add(vAlarm);
+    }
+    if (calendar.freeBusy() != null) {
+      VFreeBusy vFreeBusy = (VFreeBusy)ERGWFreeBusy.transformToICalObject(calendar.freeBusy());
+      icalCalendar.getComponents().add(vFreeBusy);
     }
     return icalCalendar;
   }

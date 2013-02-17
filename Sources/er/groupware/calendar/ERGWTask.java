@@ -70,7 +70,8 @@ public class ERGWTask extends ERGWCalendarObject {
   }
   
   public static CalendarComponent transformToICalObject(ERGWTask task) throws SocketException, ParseException, URISyntaxException {
-    VToDo vTodo = (VToDo)ERGWCalendarObject.transformToICalObject(task, new VToDo());
+    // TODO The useUtc parameter should be stored somewhere
+    VToDo vTodo = (VToDo)ERGWCalendarObject.transformToICalObject(task, new VToDo(), false);
     vTodo.getProperties().add(new Due(new Date(task.dueDate())));
     if (task.status != null) {
     	vTodo.getProperties().add(task.status.rfc2445Value());

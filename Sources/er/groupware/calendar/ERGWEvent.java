@@ -44,7 +44,8 @@ public class ERGWEvent extends ERGWCalendarObject {
   }
 
   public static CalendarComponent transformToICalObject(ERGWEvent event) throws SocketException, ParseException, URISyntaxException {
-    VEvent vEvent = (VEvent)ERGWCalendarObject.transformToICalObject(event, new VEvent());
+    // TODO The useUtc parameter should be stored somewhere
+    VEvent vEvent = (VEvent)ERGWCalendarObject.transformToICalObject(event, new VEvent(), false);
     if (event.transparency != null) {
       vEvent.getProperties().add(event.transparency.rfc2445Value());
     }
