@@ -1,6 +1,7 @@
 package er.groupware.calendar;
 
 import net.fortuna.ical4j.model.Parameter;
+import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.property.Attendee;
@@ -88,6 +89,7 @@ public class ERGWAttendee extends ERGWCalendarContact {
   
   public static ERGWAttendee transformFromICalObject(Attendee oldAttendee) {
     ERGWAttendee attendee = new ERGWAttendee();
+    
     CuType type = (CuType)oldAttendee.getParameter(Parameter.CUTYPE);
     if (type == CuType.GROUP) {
       attendee.setCutype(ERGWCUType.GROUP);
@@ -100,13 +102,18 @@ public class ERGWAttendee extends ERGWCalendarContact {
     } else if (type == CuType.UNKNOWN) {
       attendee.setCutype(ERGWCUType.UNKNOWN);
     }
+    
     Parameter role = oldAttendee.getParameter(Parameter.ROLE);
     if (role != null) {
       attendee.setRole(ERGWAttendeeRole.getByRFC2445ValueValue((Role)role));
     } else {
       attendee.setRole(ERGWAttendeeRole.REQ_PARTICIPANT);        
     }
-    attendee.setName(oldAttendee.getParameter(Parameter.CN).getValue());
+    
+    Cn name = (Cn)oldAttendee.getParameter(Parameter.CN);
+    if (name != null)
+      attendee.setName(name.getValue());
+    
     attendee.setEmailAddress(null);
     String emailAddress = oldAttendee.getCalAddress().getSchemeSpecificPart();
     if (emailAddress != null)
