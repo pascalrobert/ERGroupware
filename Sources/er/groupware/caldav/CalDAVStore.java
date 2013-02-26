@@ -107,9 +107,11 @@ public class CalDAVStore {
   }
   
   /**
+   * TODO should be collections, not attendees
    * Get the list of rooms (locations) from the store.
    * @return the list of all rooms, as attendees.
    */
+  /*
   public NSArray<ERGWAttendee> rooms() {
     NSMutableArray<ERGWAttendee> rooms = new NSMutableArray<ERGWAttendee>();
     try {
@@ -133,6 +135,7 @@ public class CalDAVStore {
     }
     return rooms;
   }
+  */
 
   // delete collection
   // report (find events/tasks, find journal) per collection + per store
