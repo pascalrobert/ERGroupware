@@ -19,11 +19,9 @@ import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.Cn;
-import net.fortuna.ical4j.model.parameter.CuType;
 import net.fortuna.ical4j.model.parameter.RelType;
 import net.fortuna.ical4j.model.parameter.Role;
 import net.fortuna.ical4j.model.parameter.Rsvp;
-import net.fortuna.ical4j.model.parameter.XParameter;
 import net.fortuna.ical4j.model.property.BusyType;
 import net.fortuna.ical4j.model.property.Categories;
 import net.fortuna.ical4j.model.property.Clazz;
@@ -38,6 +36,7 @@ import net.fortuna.ical4j.model.property.Sequence;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import net.fortuna.ical4j.model.property.Url;
+import net.fortuna.ical4j.util.SimpleHostInfo;
 import net.fortuna.ical4j.util.UidGenerator;
 
 import com.webobjects.foundation.NSArray;
@@ -159,6 +158,10 @@ public abstract class ERGWCalendarObject {
 
   public void addAttendee(ERGWAttendee attendee) {
     this.attendees.addObject(attendee);
+  }
+  
+  public void removeAttendee(ERGWAttendee attendee) {
+    this.attendees.removeObject(attendee);
   }
 
   public NSArray<ERGWAttendee> resources() {
@@ -444,7 +447,8 @@ public abstract class ERGWCalendarObject {
   
   public static CalendarComponent transformToICalObject(ERGWCalendarObject calendarObject, CalendarComponent calComponent, boolean useUtc) throws SocketException, URISyntaxException {
     if (calendarObject.uid() == null) {
-  	  UidGenerator ug = new UidGenerator("1");
+      SimpleHostInfo hostInfo = new SimpleHostInfo("ERGroupware");
+  	  UidGenerator ug = new UidGenerator(hostInfo,"1");
       calendarObject.setUid(ug.generateUid().getValue());
     }
     calComponent.getProperties().add(new Uid(calendarObject.uid()));
