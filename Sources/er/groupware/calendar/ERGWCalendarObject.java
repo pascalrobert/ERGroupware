@@ -15,8 +15,11 @@ import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.TextList;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.component.VToDo;
 import net.fortuna.ical4j.model.parameter.Cn;
 import net.fortuna.ical4j.model.parameter.RelType;
@@ -487,6 +490,9 @@ public abstract class ERGWCalendarObject {
     
     calComponent.getProperties().add(new Description(calendarObject.description));
     
+    TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
+    VTimeZone tz = registry.getTimeZone(calendarObject.timezone().getID()).getVTimeZone();
+    
     if (calendarObject.endTime != null) {
       DtEnd endTime = null;
       if (calendarObject.isFullDay) {
@@ -495,6 +501,9 @@ public abstract class ERGWCalendarObject {
         endTime = new DtEnd(new DateTime(calendarObject.endTime.getTime()));
       }
       endTime.setUtc(useUtc);
+      if (!useUtc) {
+        endTime.setTimeZone(new net.fortuna.ical4j.model.TimeZone(tz));
+      }
       calComponent.getProperties().add(endTime);
     }
     
@@ -506,6 +515,9 @@ public abstract class ERGWCalendarObject {
         startDate = new DtStart(new DateTime(calendarObject.startTime.getTime()));
       }
       startDate.setUtc(useUtc);
+      if (!useUtc) {
+        startDate.setTimeZone(new net.fortuna.ical4j.model.TimeZone(tz));
+      }
       calComponent.getProperties().add(startDate);
     }
     
