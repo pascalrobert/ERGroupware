@@ -39,9 +39,9 @@ public class CalDAVCollection extends ERGWCalendarCollection {
   }
 
   // Move to CalDAVCollection?
-  public void addCalendarObject(ERGWCalendar calendar, CalDavCalendarCollection collection) throws ConstraintViolationException, ObjectNotFoundException, ObjectStoreException, SocketException, ParseException, URISyntaxException {
+  public void addCalendarObject(ERGWCalendar calendar) throws ConstraintViolationException, ObjectNotFoundException, ObjectStoreException, SocketException, ParseException, URISyntaxException {
     net.fortuna.ical4j.model.Calendar icalCalendar = ERGWCalendar.transformToICalObject(calendar);
-    collection.addCalendar(icalCalendar);
+    this.originalCollection.addCalendar(icalCalendar);
   }
 
   public void setEvents(NSArray<ERGWCalendar> events) {
