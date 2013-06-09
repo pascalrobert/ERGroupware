@@ -7,6 +7,7 @@ import java.text.ParseException;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import net.fortuna.ical4j.connector.FailedOperationException;
 import net.fortuna.ical4j.connector.ObjectNotFoundException;
 import net.fortuna.ical4j.connector.ObjectStoreException;
 import net.fortuna.ical4j.connector.dav.CalDavCalendarCollection;
@@ -14,6 +15,8 @@ import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.ConstraintViolationException;
 import net.fortuna.ical4j.model.DateTime;
+import net.fortuna.ical4j.model.component.CalendarComponent;
+import net.fortuna.ical4j.model.component.VEvent;
 
 import org.apache.jackrabbit.webdav.DavException;
 
@@ -22,6 +25,7 @@ import com.webobjects.foundation.NSMutableArray;
 
 import er.groupware.calendar.ERGWCalendar;
 import er.groupware.calendar.ERGWCalendarCollection;
+import er.groupware.calendar.ERGWCalendarObject;
 
 public class CalDAVCollection extends ERGWCalendarCollection {
 
@@ -38,10 +42,9 @@ public class CalDAVCollection extends ERGWCalendarCollection {
     this.originalCollection = caldavcollection;
   }
 
-  // Move to CalDAVCollection?
-  public void addCalendarObject(ERGWCalendar calendar, CalDavCalendarCollection collection) throws ConstraintViolationException, ObjectNotFoundException, ObjectStoreException, SocketException, ParseException, URISyntaxException {
+  public void addCalendarObject(ERGWCalendar calendar) throws ConstraintViolationException, ObjectNotFoundException, ObjectStoreException, SocketException, ParseException, URISyntaxException {
     net.fortuna.ical4j.model.Calendar icalCalendar = ERGWCalendar.transformToICalObject(calendar);
-    collection.addCalendar(icalCalendar);
+    this.originalCollection.addCalendar(icalCalendar);
   }
 
   public void setEvents(NSArray<ERGWCalendar> events) {
@@ -81,6 +84,15 @@ public class CalDAVCollection extends ERGWCalendarCollection {
       e.printStackTrace();
     }
     return events;
+  }
+  
+  public void updateCalendarObject(ERGWCalendar calendarObject) throws SocketException, ParseException, URISyntaxException, ObjectStoreException, ConstraintViolationException {
+    net.fortuna.ical4j.model.Calendar icalCalendar = ERGWCalendar.transformToICalObject(calendarObject);
+    this.originalCollection.addCalendar(icalCalendar);
+  }
+  
+  public void removeCalendarObject(ERGWCalendarObject calendarObject) throws FailedOperationException, ObjectStoreException {
+    this.originalCollection.removeCalendar(calendarObject.uid());
   }
   
   // proppatch to change collection proprietes
