@@ -74,5 +74,10 @@
         	<artifactId>jackrabbit-webdav</artifactId>
         	<version>2.4.2</version>
         </dependency>
+        <dependency>
+        	<groupId>org.mnode.ical4j</groupId>
+        	<artifactId>ical4j-vcard</artifactId>
+        	<version>0.9.6-SNAPSHOT</version>
+        </dependency>        
     </dependencies>
 </project>
