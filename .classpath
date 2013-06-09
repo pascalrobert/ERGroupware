@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="Sources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="con" path="org.maven.ide.eclipse.MAVEN2_CLASSPATH_CONTAINER"/>
 	<classpathentry kind="con" path="WOFramework/ERExtensions"/>
 	<classpathentry kind="con" path="WOFramework/ERJars"/>
 	<classpathentry kind="con" path="WOFramework/ERPrototypes"/>
@@ -12,26 +14,19 @@
 	<classpathentry kind="con" path="WOFramework/JavaJDBCAdaptor"/>
 	<classpathentry kind="con" path="WOFramework/JavaWebObjects"/>
 	<classpathentry kind="con" path="WOFramework/JavaXML"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/commons-collections-3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/backport-util-concurrent-3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/commons-httpclient-3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/dom4j-1.5.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/guava-r08.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/jec.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/vcard4j-1_1_3.jar"/>
+	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/CGProCLI.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbracommon.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbrasoap.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/zimbrastore.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/json.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/CGProCLI.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/dom4j-1.5.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/jec.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-core-2.4.2.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/jackrabbit-webdav-2.4.2.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-vcard-0.9.6-SNAPSHOT.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/groovy-all-1.8.6.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-extensions-0.9.3-SNAPSHOT.jar" sourcepath="Libraries/ical4j-extensions-0.9.3-SNAPSHOT-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.5-SNAPSHOT.jar" sourcepath="Libraries/ical4j-1.0.5-SNAPSHOT-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.5-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-connector-0.9.4-SNAPSHOT.jar"/>
-	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-extensions-0.9.3-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/commons-collections-3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/commons-httpclient-3.1.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
