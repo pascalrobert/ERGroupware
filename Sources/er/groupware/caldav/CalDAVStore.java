@@ -106,20 +106,20 @@ public class CalDAVStore {
     store.addCollection(id, ERGWCalendarCollection.convertPropertiesToDavPropertySet(collection));
   }
   
-  /**
-   * TODO should be collections, not attendees
-   * Get the list of rooms (locations) from the store.
-   * @return the list of all rooms, as attendees.
-   */
-  /*
-  public NSArray<ERGWAttendee> rooms() {
-    NSMutableArray<ERGWAttendee> rooms = new NSMutableArray<ERGWAttendee>();
-    try {
-      List<Attendee> roomsFromStore = originalStore().getAllRooms();
-      for (Attendee attendee: roomsFromStore) {
-        ERGWAttendee room = ERGWAttendee.transformFromICalObject(attendee);
-        rooms.addObject(room);
+  protected NSArray<ERGWAttendee> convertAttendeeToERGWAttendee(List<Attendee> list) {
+    NSMutableArray<ERGWAttendee> array = new NSMutableArray<ERGWAttendee>();
+    if (list != null) {
+      for (Attendee room: list) {
+        array.addObject(ERGWAttendee.transformFromICalObject(room));
       }
+    }
+    return array.immutableClone();
+  }
+  
+  public NSArray<ERGWAttendee> findAllRooms() {
+    NSArray<ERGWAttendee> array = new NSArray<ERGWAttendee>();
+    try {
+      array = convertAttendeeToERGWAttendee(store.getAllRooms());
     }
     catch (ParserConfigurationException e) {
       e.printStackTrace();
@@ -133,9 +133,48 @@ public class CalDAVStore {
     catch (URISyntaxException e) {
       e.printStackTrace();
     }
-    return rooms;
+    return array;
   }
-  */
+  
+  public NSArray<ERGWAttendee> findAllResources() {
+    NSArray<ERGWAttendee> array = new NSArray<ERGWAttendee>();
+    try {
+      array = convertAttendeeToERGWAttendee(store.getAllResources());
+    }
+    catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+    catch (DavException e) {
+      e.printStackTrace();
+    }
+    catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+    return array;  
+  }
+
+  public NSArray<ERGWAttendee> findIndividuals(String name) {
+    NSArray<ERGWAttendee> array = new NSArray<ERGWAttendee>();
+    try {
+      array = convertAttendeeToERGWAttendee(store.getIndividuals(name));
+    }
+    catch (ParserConfigurationException e) {
+      e.printStackTrace();
+    }
+    catch (IOException e) {
+      e.printStackTrace();
+    }
+    catch (DavException e) {
+      e.printStackTrace();
+    }
+    catch (URISyntaxException e) {
+      e.printStackTrace();
+    }
+    return array;  
+  }
 
   // delete collection
   // report (find events/tasks, find journal) per collection + per store
