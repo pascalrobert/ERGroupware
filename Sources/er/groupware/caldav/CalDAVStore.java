@@ -45,13 +45,18 @@ public class CalDAVStore {
     return store;
   }
 
+  public NSArray<CalDAVCollection> getCollections() {
+    return getCollections(false);
+  }
+
+  
   /**
    * @return An array of CalDAV collections found in to the store. Delegated collections are not returned by this.
    * If no collections are found, the array will be empty.
    * @throws URISyntaxException 
    * @throws SocketException 
    */
-  public NSArray<CalDAVCollection> getCollections() {
+  public NSArray<CalDAVCollection> getCollections(boolean fetchObjects) {
     NSMutableArray<CalDAVCollection> collections = new NSMutableArray<CalDAVCollection>();
     try {
       for (CalDavCalendarCollection caldavcollection: store.getCollections()) {
@@ -74,17 +79,19 @@ public class CalDAVStore {
         NSMutableArray<ERGWCalendar> events = new NSMutableArray<ERGWCalendar>();
         NSMutableArray<ERGWCalendar> tasks = new NSMutableArray<ERGWCalendar>();
         
-        for (String componentType: caldavcollection.getSupportedComponentTypes()) {
-          if (Component.VEVENT.equals(componentType)) {
-            Calendar[] calendars = caldavcollection.getEvents();
-            for (Calendar calendar: calendars) {
-              events.addObject(ERGWCalendar.transformFromICalResponse(calendar));
+        if (fetchObjects) {
+          for (String componentType: caldavcollection.getSupportedComponentTypes()) {
+            if (Component.VEVENT.equals(componentType)) {
+              Calendar[] calendars = caldavcollection.getEvents();
+              for (Calendar calendar: calendars) {
+                events.addObject(ERGWCalendar.transformFromICalResponse(calendar));
+              }
             }
-          }
-          if (Component.VTODO.equals(componentType)) {
-            Calendar[] calendars = caldavcollection.getTasks();
-            for (Calendar calendar: calendars) {
-              tasks.addObject(ERGWCalendar.transformFromICalResponse(calendar));
+            if (Component.VTODO.equals(componentType)) {
+              Calendar[] calendars = caldavcollection.getTasks();
+              for (Calendar calendar: calendars) {
+                tasks.addObject(ERGWCalendar.transformFromICalResponse(calendar));
+              }
             }
           }
         }
