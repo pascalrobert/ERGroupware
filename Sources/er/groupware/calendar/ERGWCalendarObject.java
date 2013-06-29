@@ -14,6 +14,7 @@ import net.fortuna.ical4j.model.DateTime;
 import net.fortuna.ical4j.model.Dur;
 import net.fortuna.ical4j.model.Parameter;
 import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.Recur;
 import net.fortuna.ical4j.model.TextList;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
@@ -35,6 +36,7 @@ import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.Geo;
 import net.fortuna.ical4j.model.property.Location;
 import net.fortuna.ical4j.model.property.Organizer;
+import net.fortuna.ical4j.model.property.RRule;
 import net.fortuna.ical4j.model.property.Sequence;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
@@ -488,10 +490,15 @@ public abstract class ERGWCalendarObject {
       calComponent.getProperties().add(calendarObject.classification.rfc2445Value());
     }
     
-    calComponent.getProperties().add(new Description(calendarObject.description));
+    if (calendarObject.description != null) {
+      calComponent.getProperties().add(new Description(calendarObject.description));
+    }
     
     TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
-    VTimeZone tz = registry.getTimeZone(calendarObject.timezone().getID()).getVTimeZone();
+    VTimeZone tz = registry.getTimeZone("America/Montreal").getVTimeZone();
+    if (calendarObject.timezone() != null) {
+      tz = registry.getTimeZone(calendarObject.timezone().getID()).getVTimeZone();
+    } 
     
     if (calendarObject.endTime != null) {
       DtEnd endTime = null;
@@ -551,6 +558,24 @@ public abstract class ERGWCalendarObject {
       calComponent.getProperties().add(new Sequence(calendarObject.sequence()));
     } else {
       calComponent.getProperties().add(new Sequence(1)); 
+    }
+    
+    if (calendarObject.recurrenceRule != null) {
+      Recur recur = new Recur();
+      if (calendarObject.recurrenceRule.until() != null) {
+        DateTime untilDate = new DateTime(calendarObject.recurrenceRule.until().getTime());
+        untilDate.setUtc(true);
+        recur.setUntil(untilDate);
+      }
+      if (calendarObject.recurrenceRule.interval() != null || calendarObject.recurrenceRule.interval() > 0) {
+        recur.setInterval(calendarObject.recurrenceRule.interval());
+      }
+      if (calendarObject.recurrenceRule.frequency() != null) {
+        recur.setFrequency(calendarObject.recurrenceRule.frequency().rfc2445Value());
+      }
+      
+      RRule recurrenceRule = new RRule(recur);
+      calComponent.getProperties().add(recurrenceRule);
     }
     
     return calComponent;

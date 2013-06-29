@@ -145,7 +145,9 @@ public class ERGWCalendar {
     icalCalendar.getProperties().add(calendar.productId());
     icalCalendar.getProperties().add(calendar.version);
     icalCalendar.getProperties().add(calendar.scale);
-    icalCalendar.getProperties().add(new XProperty("X-WR-CALNAME", calendar.calendarName()));
+    if (calendar.calendarName() != null) {
+      icalCalendar.getProperties().add(new XProperty("X-WR-CALNAME", calendar.calendarName()));
+    }
     
     if (calendar.timeZone() != null) {
       TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
