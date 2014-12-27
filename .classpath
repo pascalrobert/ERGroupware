@@ -29,7 +29,7 @@
 	<classpathentry exported="true" kind="lib" path="Libraries/groovy-all-1.8.6.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-extensions-0.9.3-SNAPSHOT.jar" sourcepath="Libraries/ical4j-extensions-0.9.3-SNAPSHOT-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="Libraries/ical4j-1.0.5-SNAPSHOT.jar" sourcepath="Libraries/ical4j-1.0.5-SNAPSHOT-sources.jar"/>
-	<classpathentry kind="lib" path="Libraries/ews-java-api-1.3-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="Libraries/ews-java-api-1.3-SNAPSHOT.jar"/>
 	<classpathentry kind="con" path="WOFramework/ERJavaMail"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/cdav-connector"/>
 	<classpathentry kind="output" path="bin"/>
