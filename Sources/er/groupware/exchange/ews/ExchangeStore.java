@@ -1,23 +1,17 @@
 package er.groupware.exchange.ews;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import javax.xml.bind.JAXBElement;
-import javax.xml.ws.Holder;
-
-import org.apache.commons.lang.NotImplementedException;
 
 import microsoft.exchange.webservices.data.Appointment;
 import microsoft.exchange.webservices.data.ArgumentException;
 import microsoft.exchange.webservices.data.ArgumentOutOfRangeException;
 import microsoft.exchange.webservices.data.Attendee;
+import microsoft.exchange.webservices.data.AutodiscoverLocalException;
 import microsoft.exchange.webservices.data.BodyType;
 import microsoft.exchange.webservices.data.CalendarFolder;
 import microsoft.exchange.webservices.data.ChangeCollection;
@@ -35,10 +29,10 @@ import microsoft.exchange.webservices.data.Folder;
 import microsoft.exchange.webservices.data.FolderChange;
 import microsoft.exchange.webservices.data.FolderId;
 import microsoft.exchange.webservices.data.IAsyncResult;
+import microsoft.exchange.webservices.data.IAutodiscoverRedirectionUrl;
 import microsoft.exchange.webservices.data.ImAddressKey;
 import microsoft.exchange.webservices.data.Importance;
 import microsoft.exchange.webservices.data.Item;
-import microsoft.exchange.webservices.data.MapiPropertyType;
 import microsoft.exchange.webservices.data.MessageBody;
 import microsoft.exchange.webservices.data.PhoneNumberKey;
 import microsoft.exchange.webservices.data.PhysicalAddressEntry;
@@ -49,17 +43,16 @@ import microsoft.exchange.webservices.data.Recurrence.MonthlyPattern;
 import microsoft.exchange.webservices.data.Recurrence.RelativeMonthlyPattern;
 import microsoft.exchange.webservices.data.Recurrence.WeeklyPattern;
 import microsoft.exchange.webservices.data.SearchFolder;
-import microsoft.exchange.webservices.data.SearchFolderTraversal;
 import microsoft.exchange.webservices.data.SendInvitationsMode;
 import microsoft.exchange.webservices.data.Sensitivity;
-import microsoft.exchange.webservices.data.ServiceLocalException;
 import microsoft.exchange.webservices.data.StringList;
 import microsoft.exchange.webservices.data.Task;
 import microsoft.exchange.webservices.data.TasksFolder;
 import microsoft.exchange.webservices.data.WebCredentials;
 import microsoft.exchange.webservices.data.WellKnownFolderName;
 
-import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
+import org.apache.commons.lang.NotImplementedException;
+
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
@@ -106,10 +99,21 @@ public class ExchangeStore {
   private String username;
   protected ExchangeService service;
 
+  static {
+    Locale.setDefault(Locale.US);
+  }
+  
+  public class AutoDiscover implements IAutodiscoverRedirectionUrl {
+
+    public boolean autodiscoverRedirectionUrlValidationCallback(String arg0) throws AutodiscoverLocalException {
+      return true;
+    }
+    
+  }
+  
   /**
    * This constructor will connect to a Microsoft Exchange server and authenticate the user.
    * 
-   * @param urlToWSDL URL to the WSDL of your Exchange WSDL files. You can use the one in this framework by using ERXApplication.application().resourceManager().pathURLForResourceNamed("Services.wsdl", "ERGroupware", null);
    * @param pathToWS Path to exchange.asmx on your Exchange host (should look like https://mydomain.com/EWS/exchange.asmx)
    * @param username User to connect to the Exchange service
    * @param password Password to connect to the Exchange service
@@ -117,18 +121,20 @@ public class ExchangeStore {
    * @throws Exception 
    * 
    */
-  public ExchangeStore(URL urlToWSDL, String pathToWS, String username, String password, String ntmlDomain, ExchangeVersion serverVersionInResponse, TimeZone timezone) throws Exception {
+  public ExchangeStore(String pathToWS, String username, String password, String ntmlDomain, ExchangeVersion serverVersionInResponse, TimeZone timezone) throws Exception {
 
     if (serverVersionInResponse == null) {
       serverVersionInResponse = ExchangeVersion.Exchange2007_SP1;
     }
 
     service = new ExchangeService(serverVersionInResponse,timezone);
-    ExchangeCredentials credentials = new WebCredentials("emailAddress", "password");
+    ExchangeCredentials credentials = new WebCredentials(username, password);
     service.setCredentials(credentials);
 
     if (pathToWS != null) {
       service.setUrl(new URI(pathToWS));
+    } else {
+      service.autodiscoverUrl("probert@macti.onmicrosoft.com", new AutoDiscover());
     }
 
     //    if (ntmlDomain != null) {
@@ -136,22 +142,11 @@ public class ExchangeStore {
     //      Authenticator.setDefault(authenticator);
     //    }
 
-    service.setPreferredCulture(Locale.US);
-
     syncState = null;
 
     folders = syncFolders();
 
     this.username = username;
-  }
-
-  /**
-   * Optional. Set the mailbox culture for the creation of items. If none is specified, en-US will be used.
-   * 
-   * @param countryLanguage 5 chars identifier (en-US, fr-CA, etc.)
-   */
-  public void setMailboxCulture(String countryLanguage) {
-    service.setPreferredCulture(new Locale(countryLanguage));
   }
 
   /**
