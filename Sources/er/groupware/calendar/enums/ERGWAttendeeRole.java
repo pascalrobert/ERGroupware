@@ -4,9 +4,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import microsoft.exchange.webservices.data.MeetingAttendeeType;
 import net.fortuna.ical4j.model.parameter.Role;
 
-import com.microsoft.schemas.exchange.services._2006.types.MeetingAttendeeType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.zclient.ZInvite.ZRole;
 
@@ -14,10 +14,10 @@ import er.extensions.eof.ERXKey;
 
 public enum ERGWAttendeeRole implements ERGWICalendarProperty {
 
-  CHAIR("Meeting Leader", Role.CHAIR, ZRole.CHA, MeetingAttendeeType.ORGANIZER),
-  REQ_PARTICIPANT("Requis", Role.REQ_PARTICIPANT, ZRole.REQ, MeetingAttendeeType.REQUIRED),
-  OPT_PARTICIPANT("Optionnel", Role.OPT_PARTICIPANT, ZRole.OPT, MeetingAttendeeType.OPTIONAL),
-  NON_PARTICIPANT("Non participant", Role.NON_PARTICIPANT, ZRole.NON, MeetingAttendeeType.OPTIONAL);
+  CHAIR("Meeting Leader", Role.CHAIR, ZRole.CHA, MeetingAttendeeType.Organizer),
+  REQ_PARTICIPANT("Requis", Role.REQ_PARTICIPANT, ZRole.REQ, MeetingAttendeeType.Required),
+  OPT_PARTICIPANT("Optionnel", Role.OPT_PARTICIPANT, ZRole.OPT, MeetingAttendeeType.Optional),
+  NON_PARTICIPANT("Non participant", Role.NON_PARTICIPANT, ZRole.NON, MeetingAttendeeType.Optional);
 
   private String description;
   private ZRole zimbraValue;

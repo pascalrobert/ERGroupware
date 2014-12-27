@@ -1,8 +1,8 @@
 package er.groupware.exchange.ews;
 
-import java.net.Authenticator;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -10,112 +10,57 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.namespace.QName;
-import javax.xml.ws.BindingProvider;
 import javax.xml.ws.Holder;
 
-import jec.OREventSearchCriteria;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.microsoft.schemas.exchange.services._2006.messages.ArrayOfResponseMessagesType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateAttachmentResponseType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateAttachmentType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateFolderResponseType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateFolderType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateItemResponseType;
-import com.microsoft.schemas.exchange.services._2006.messages.CreateItemType;
-import com.microsoft.schemas.exchange.services._2006.messages.ExchangeServicePortType;
-import com.microsoft.schemas.exchange.services._2006.messages.ExchangeWebService;
-import com.microsoft.schemas.exchange.services._2006.messages.FindFolderResponseType;
-import com.microsoft.schemas.exchange.services._2006.messages.FindFolderType;
-import com.microsoft.schemas.exchange.services._2006.messages.FolderInfoResponseMessageType;
-import com.microsoft.schemas.exchange.services._2006.messages.ItemInfoResponseMessageType;
-import com.microsoft.schemas.exchange.services._2006.messages.SyncFolderHierarchyResponseMessageType;
-import com.microsoft.schemas.exchange.services._2006.messages.SyncFolderHierarchyResponseType;
-import com.microsoft.schemas.exchange.services._2006.messages.SyncFolderHierarchyType;
-import com.microsoft.schemas.exchange.services._2006.types.AbsoluteMonthlyRecurrencePatternType;
-import com.microsoft.schemas.exchange.services._2006.types.ArrayOfFoldersType;
-import com.microsoft.schemas.exchange.services._2006.types.ArrayOfRealItemsType;
-import com.microsoft.schemas.exchange.services._2006.types.ArrayOfStringsType;
-import com.microsoft.schemas.exchange.services._2006.types.AttendeeType;
-import com.microsoft.schemas.exchange.services._2006.types.BaseFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.BodyType;
-import com.microsoft.schemas.exchange.services._2006.types.BodyTypeType;
-import com.microsoft.schemas.exchange.services._2006.types.CalendarFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.CalendarItemCreateOrDeleteOperationType;
-import com.microsoft.schemas.exchange.services._2006.types.CalendarItemType;
-import com.microsoft.schemas.exchange.services._2006.types.ConstantValueType;
-import com.microsoft.schemas.exchange.services._2006.types.ContactItemType;
-import com.microsoft.schemas.exchange.services._2006.types.ContactsFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.ContainmentComparisonType;
-import com.microsoft.schemas.exchange.services._2006.types.ContainmentModeType;
-import com.microsoft.schemas.exchange.services._2006.types.ContainsExpressionType;
-import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekIndexType;
-import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
-import com.microsoft.schemas.exchange.services._2006.types.DefaultShapeNamesType;
-import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdNameType;
-import com.microsoft.schemas.exchange.services._2006.types.DistinguishedFolderIdType;
-import com.microsoft.schemas.exchange.services._2006.types.DistinguishedPropertySetType;
-import com.microsoft.schemas.exchange.services._2006.types.EmailAddressDictionaryEntryType;
-import com.microsoft.schemas.exchange.services._2006.types.EmailAddressDictionaryType;
-import com.microsoft.schemas.exchange.services._2006.types.EmailAddressKeyType;
-import com.microsoft.schemas.exchange.services._2006.types.EmailAddressType;
-import com.microsoft.schemas.exchange.services._2006.types.EndDateRecurrenceRangeType;
-import com.microsoft.schemas.exchange.services._2006.types.ExchangeVersionType;
-import com.microsoft.schemas.exchange.services._2006.types.ExtendedPropertyType;
-import com.microsoft.schemas.exchange.services._2006.types.FileAttachmentType;
-import com.microsoft.schemas.exchange.services._2006.types.FolderIdType;
-import com.microsoft.schemas.exchange.services._2006.types.FolderQueryTraversalType;
-import com.microsoft.schemas.exchange.services._2006.types.FolderResponseShapeType;
-import com.microsoft.schemas.exchange.services._2006.types.ImAddressDictionaryEntryType;
-import com.microsoft.schemas.exchange.services._2006.types.ImAddressDictionaryType;
-import com.microsoft.schemas.exchange.services._2006.types.ImAddressKeyType;
-import com.microsoft.schemas.exchange.services._2006.types.ImportanceChoicesType;
-import com.microsoft.schemas.exchange.services._2006.types.ItemIdType;
-import com.microsoft.schemas.exchange.services._2006.types.ItemType;
-import com.microsoft.schemas.exchange.services._2006.types.MailboxCultureType;
-import com.microsoft.schemas.exchange.services._2006.types.MapiPropertyTypeType;
-import com.microsoft.schemas.exchange.services._2006.types.NoEndRecurrenceRangeType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAllItemsType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAttachmentsType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfAttendeesType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfBaseFolderIdsType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfFoldersType;
-import com.microsoft.schemas.exchange.services._2006.types.NonEmptyArrayOfPathsToElementType;
-import com.microsoft.schemas.exchange.services._2006.types.NumberedRecurrenceRangeType;
-import com.microsoft.schemas.exchange.services._2006.types.ObjectFactory;
-import com.microsoft.schemas.exchange.services._2006.types.OrType;
-import com.microsoft.schemas.exchange.services._2006.types.PathToExtendedFieldType;
-import com.microsoft.schemas.exchange.services._2006.types.PathToUnindexedFieldType;
-import com.microsoft.schemas.exchange.services._2006.types.PhoneNumberDictionaryEntryType;
-import com.microsoft.schemas.exchange.services._2006.types.PhoneNumberDictionaryType;
-import com.microsoft.schemas.exchange.services._2006.types.PhoneNumberKeyType;
-import com.microsoft.schemas.exchange.services._2006.types.PhysicalAddressDictionaryEntryType;
-import com.microsoft.schemas.exchange.services._2006.types.PhysicalAddressDictionaryType;
-import com.microsoft.schemas.exchange.services._2006.types.PhysicalAddressKeyType;
-import com.microsoft.schemas.exchange.services._2006.types.RecurrenceType;
-import com.microsoft.schemas.exchange.services._2006.types.RelativeMonthlyRecurrencePatternType;
-import com.microsoft.schemas.exchange.services._2006.types.RequestServerVersion;
-import com.microsoft.schemas.exchange.services._2006.types.ResponseClassType;
-import com.microsoft.schemas.exchange.services._2006.types.ResponseTypeType;
-import com.microsoft.schemas.exchange.services._2006.types.RestrictionType;
-import com.microsoft.schemas.exchange.services._2006.types.SearchExpressionType;
-import com.microsoft.schemas.exchange.services._2006.types.SearchFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
-import com.microsoft.schemas.exchange.services._2006.types.ServerVersionInfo;
-import com.microsoft.schemas.exchange.services._2006.types.SingleRecipientType;
-import com.microsoft.schemas.exchange.services._2006.types.SyncFolderHierarchyCreateOrUpdateType;
-import com.microsoft.schemas.exchange.services._2006.types.TargetFolderIdType;
-import com.microsoft.schemas.exchange.services._2006.types.TaskRecurrenceType;
-import com.microsoft.schemas.exchange.services._2006.types.TaskType;
-import com.microsoft.schemas.exchange.services._2006.types.TasksFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.TimeZoneContextType;
-import com.microsoft.schemas.exchange.services._2006.types.TimeZoneDefinitionType;
-import com.microsoft.schemas.exchange.services._2006.types.UnindexedFieldURIType;
-import com.microsoft.schemas.exchange.services._2006.types.WeeklyRecurrencePatternType;
-import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl;
+import microsoft.exchange.webservices.data.Appointment;
+import microsoft.exchange.webservices.data.ArgumentException;
+import microsoft.exchange.webservices.data.ArgumentOutOfRangeException;
+import microsoft.exchange.webservices.data.Attendee;
+import microsoft.exchange.webservices.data.BodyType;
+import microsoft.exchange.webservices.data.CalendarFolder;
+import microsoft.exchange.webservices.data.ChangeCollection;
+import microsoft.exchange.webservices.data.ChangeType;
+import microsoft.exchange.webservices.data.Contact;
+import microsoft.exchange.webservices.data.ContactsFolder;
+import microsoft.exchange.webservices.data.DayOfTheWeek;
+import microsoft.exchange.webservices.data.DayOfTheWeekIndex;
+import microsoft.exchange.webservices.data.EmailAddress;
+import microsoft.exchange.webservices.data.EmailAddressKey;
+import microsoft.exchange.webservices.data.ExchangeCredentials;
+import microsoft.exchange.webservices.data.ExchangeService;
+import microsoft.exchange.webservices.data.ExchangeVersion;
+import microsoft.exchange.webservices.data.Folder;
+import microsoft.exchange.webservices.data.FolderChange;
+import microsoft.exchange.webservices.data.FolderId;
+import microsoft.exchange.webservices.data.IAsyncResult;
+import microsoft.exchange.webservices.data.ImAddressKey;
+import microsoft.exchange.webservices.data.Importance;
+import microsoft.exchange.webservices.data.Item;
+import microsoft.exchange.webservices.data.MapiPropertyType;
+import microsoft.exchange.webservices.data.MessageBody;
+import microsoft.exchange.webservices.data.PhoneNumberKey;
+import microsoft.exchange.webservices.data.PhysicalAddressEntry;
+import microsoft.exchange.webservices.data.PhysicalAddressKey;
+import microsoft.exchange.webservices.data.PropertySet;
+import microsoft.exchange.webservices.data.Recurrence;
+import microsoft.exchange.webservices.data.Recurrence.MonthlyPattern;
+import microsoft.exchange.webservices.data.Recurrence.RelativeMonthlyPattern;
+import microsoft.exchange.webservices.data.Recurrence.WeeklyPattern;
+import microsoft.exchange.webservices.data.SearchFolder;
+import microsoft.exchange.webservices.data.SearchFolderTraversal;
+import microsoft.exchange.webservices.data.SendInvitationsMode;
+import microsoft.exchange.webservices.data.Sensitivity;
+import microsoft.exchange.webservices.data.ServiceLocalException;
+import microsoft.exchange.webservices.data.StringList;
+import microsoft.exchange.webservices.data.Task;
+import microsoft.exchange.webservices.data.TasksFolder;
+import microsoft.exchange.webservices.data.WebCredentials;
+import microsoft.exchange.webservices.data.WellKnownFolderName;
+
+import com.sun.org.apache.xalan.internal.utils.ObjectFactory;
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.webobjects.foundation.NSValidation;
@@ -155,15 +100,12 @@ import er.groupware.enums.ERGWFolderType;
  */
 public class ExchangeStore {
 
-  protected ExchangeServicePortType port;
-  protected RequestServerVersion serverVersionForRequest;
-  protected ServerVersionInfo serverVersionInResponse;
-  protected TimeZoneContextType tzContext;
-  protected MailboxCultureType mailboxCulture;
+  protected ExchangeVersion serverVersionForRequest;
   protected String syncState;
   protected NSArray<ExchangeBaseFolder> folders;
   private String username;
-  
+  protected ExchangeService service;
+
   /**
    * This constructor will connect to a Microsoft Exchange server and authenticate the user.
    * 
@@ -172,58 +114,35 @@ public class ExchangeStore {
    * @param username User to connect to the Exchange service
    * @param password Password to connect to the Exchange service
    * @param ntmlDomain If your Exchange host is only accepting NTML auth, this parameter is to specify in which domain your user is
+   * @throws Exception 
    * 
    */
-  public ExchangeStore(URL urlToWSDL, String pathToWS, String username, String password, String ntmlDomain) {
+  public ExchangeStore(URL urlToWSDL, String pathToWS, String username, String password, String ntmlDomain, ExchangeVersion serverVersionInResponse, TimeZone timezone) throws Exception {
 
-    if (ntmlDomain != null) {
-      ExchangeAuthenticator authenticator = new ExchangeAuthenticator(ntmlDomain + "\\" + username, password.toCharArray());
-      Authenticator.setDefault(authenticator);
+    if (serverVersionInResponse == null) {
+      serverVersionInResponse = ExchangeVersion.Exchange2007_SP1;
     }
 
-    ExchangeWebService service = new ExchangeWebService(urlToWSDL, new QName("http://schemas.microsoft.com/exchange/services/2006/messages", "ExchangeWebService"));
-    port = service.getExchangeWebPort();
+    service = new ExchangeService(serverVersionInResponse,timezone);
+    ExchangeCredentials credentials = new WebCredentials("emailAddress", "password");
+    service.setCredentials(credentials);
 
-    ((BindingProvider)port).getRequestContext().put(BindingProvider.USERNAME_PROPERTY, username);
-    ((BindingProvider)port).getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
-    ((BindingProvider)port).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, pathToWS);
+    if (pathToWS != null) {
+      service.setUrl(new URI(pathToWS));
+    }
 
-    serverVersionForRequest = new RequestServerVersion();
-    serverVersionForRequest.setVersion(ExchangeVersionType.EXCHANGE_2007_SP_1);
+    //    if (ntmlDomain != null) {
+    //      ExchangeAuthenticator authenticator = new ExchangeAuthenticator(ntmlDomain + "\\" + username, password.toCharArray());
+    //      Authenticator.setDefault(authenticator);
+    //    }
 
-    TimeZoneDefinitionType tzType = new TimeZoneDefinitionType();
-    tzType.setId("UTC");
-    tzContext = new TimeZoneContextType();
-    tzContext.setTimeZoneDefinition(tzType);
+    service.setPreferredCulture(Locale.US);
 
-    mailboxCulture = new MailboxCultureType();
-    mailboxCulture.setValue("en-US");
-    
     syncState = null;
-    
+
     folders = syncFolders();
-    
+
     this.username = username;
-  }
-
-  /**
-   * Optional. Specify the version of the EWS schema that we want. If none if specified, defaults to Exchange 2007 SP 1
-   * 
-   * @param versionForRequest Constant from com.microsoft.schemas.exchange.services._2006.types.ExchangeVersionType 
-   */
-  public void setServerVersionForRequest(ExchangeVersionType versionForRequest) {
-    this.serverVersionForRequest.setVersion(versionForRequest);
-  }
-
-  /**
-   * Optional. Set the timezone context for the mailboxes. If none is specified, UTC will be used.
-   * 
-   * @param timezone A java.util.TimeZone object (TimeZone.getTimeZone("Etc/GMT"), etc.)
-   */
-  public void setTimeZone(TimeZone timezone) {
-    TimeZoneDefinitionType tzType = new TimeZoneDefinitionType();
-    tzType.setId(timezone.getDisplayName(Locale.US));
-    tzContext.setTimeZoneDefinition(tzType);
   }
 
   /**
@@ -232,9 +151,9 @@ public class ExchangeStore {
    * @param countryLanguage 5 chars identifier (en-US, fr-CA, etc.)
    */
   public void setMailboxCulture(String countryLanguage) {
-    mailboxCulture.setValue("en-US");
+    service.setPreferredCulture(new Locale(countryLanguage));
   }
-  
+
   /**
    * Return the state of a synchronisation (from a SyncFolderHierarchy operation). Read-only property, you shouldn't set that value.
    * @return
@@ -242,7 +161,7 @@ public class ExchangeStore {
   public String syncState() {
     return this.syncState;
   }
-  
+
   protected void setSyncState(String syncState) {
     this.syncState = syncState;
   }
@@ -257,109 +176,52 @@ public class ExchangeStore {
     }
     return this.folders;
   }
-  
+
   protected void setFolders(NSArray<ExchangeBaseFolder> folders) {
     this.folders = folders;
   }
-  
+
   protected void addFolderToList(ExchangeBaseFolder folder) {
     NSMutableArray<ExchangeBaseFolder> array = this.folders().mutableClone();
     array.addObject(folder);
     this.setFolders(array.immutableClone());
   }
-    
+
   /**
    * This method will call the SyncFolderHierarchy method to get a list of folders from the server.
    * Based on the result of this sync, the local list of folders will be updated.
    * @return
+   * @throws Exception 
    */
-  public NSArray<ExchangeBaseFolder> syncFolders() {
-    ObjectFactory factory = new ObjectFactory();
+  public NSArray<ExchangeBaseFolder> syncFolders() throws Exception {
     NSMutableArray<ExchangeBaseFolder> folders = this.folders().mutableClone();
-    
-    SyncFolderHierarchyType syncFolderRequest = new SyncFolderHierarchyType();
-    
-    FolderResponseShapeType shape = new FolderResponseShapeType();
-    shape.setBaseShape(DefaultShapeNamesType.ID_ONLY);
-    
-    NonEmptyArrayOfPathsToElementType propsArray = new NonEmptyArrayOfPathsToElementType();
-    
-    PathToUnindexedFieldType parentFieldType = new PathToUnindexedFieldType();
-    parentFieldType.setFieldURI(UnindexedFieldURIType.FOLDER_PARENT_FOLDER_ID);
-    JAXBElement<PathToUnindexedFieldType> parentFolderId = factory.createFieldURI(parentFieldType);
-    propsArray.getPath().add(parentFolderId);
-    
-    PathToUnindexedFieldType displayNameFieldType = new PathToUnindexedFieldType();
-    displayNameFieldType.setFieldURI(UnindexedFieldURIType.FOLDER_DISPLAY_NAME);
-    JAXBElement<PathToUnindexedFieldType> displayName = factory.createFieldURI(displayNameFieldType);
-    propsArray.getPath().add(displayName);
-    
-    PathToUnindexedFieldType folderClassType = new PathToUnindexedFieldType();
-    folderClassType.setFieldURI(UnindexedFieldURIType.FOLDER_FOLDER_CLASS);
-    JAXBElement<PathToUnindexedFieldType> folderClass = factory.createFieldURI(folderClassType);
-    propsArray.getPath().add(folderClass);
-    
-    PathToUnindexedFieldType managedFolderInfoType = new PathToUnindexedFieldType();
-    managedFolderInfoType.setFieldURI(UnindexedFieldURIType.FOLDER_MANAGED_FOLDER_INFORMATION);
-    JAXBElement<PathToUnindexedFieldType> managedFolderInfo = factory.createFieldURI(managedFolderInfoType);
-    propsArray.getPath().add(managedFolderInfo);
-    
-    PathToExtendedFieldType hiddenType = new PathToExtendedFieldType();
-    hiddenType.setPropertyTag("0x10F4");
-    hiddenType.setPropertyType(MapiPropertyTypeType.BOOLEAN);
-    JAXBElement<PathToExtendedFieldType> hidden = factory.createExtendedFieldURI(hiddenType);
-    propsArray.getPath().add(hidden);
-    
-    shape.setAdditionalProperties(propsArray);
-    
-    syncFolderRequest.setFolderShape(shape);
-    
-    if (this.syncState() != null) {
-      syncFolderRequest.setSyncState(this.syncState());
-    }
-    
-    TargetFolderIdType idType = new TargetFolderIdType();
-    idType.setDistinguishedFolderId(null);
-    syncFolderRequest.setSyncFolderId(null);
-    
-    Holder<SyncFolderHierarchyResponseType> syncFolderHolder = new Holder<SyncFolderHierarchyResponseType>();
 
-    port.syncFolderHierarchy(syncFolderRequest, mailboxCulture, serverVersionForRequest, syncFolderHolder, null);
-    
-    SyncFolderHierarchyResponseType response = syncFolderHolder.value;
-    ArrayOfResponseMessagesType responses = response.getResponseMessages();
-    for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
-      SyncFolderHierarchyResponseMessageType itemResponse = (SyncFolderHierarchyResponseMessageType)responseObject.getValue();
-      if ("NoError".equals(itemResponse.getResponseCode())) {
-        this.setSyncState(syncState);
-        List<JAXBElement<?>> iterator = itemResponse.getChanges().getCreateOrUpdateOrDelete();
-        for (JAXBElement<?> element: iterator) {
-          
-          String action = element.getName().getLocalPart();
-          
-          SyncFolderHierarchyCreateOrUpdateType value = (SyncFolderHierarchyCreateOrUpdateType) element.getValue();
-          
-          if (value.getCalendarFolder() != null) {
-            ExchangeCalendarFolder calendarFolder = (ExchangeCalendarFolder) ExchangeCalendarFolder.createFromServer(value.getCalendarFolder());
-            if ("Create".equals(action))
-              folders.addObject(calendarFolder);
-          }
-          
-          if (value.getContactsFolder() != null) {
-            ExchangeContactsFolder contactsFolder = (ExchangeContactsFolder) ExchangeContactsFolder.createFromServer(value.getContactsFolder());
-            if ("Create".equals(action))
-              folders.addObject(contactsFolder);
-          }
-          
-          if (value.getTasksFolder() != null) {
-            ExchangeTasksFolder tasksFolder = (ExchangeTasksFolder) ExchangeTasksFolder.createFromServer(value.getTasksFolder());
-            if ("Create".equals(action))
-              folders.addObject(tasksFolder);
-          }
-        }
+    WellKnownFolderName wkFolder = WellKnownFolderName.Inbox;
+    FolderId folderId = new FolderId(wkFolder);
+    IAsyncResult asyncResult = service.beginSyncFolderHierarchy(null, null, folderId, PropertySet.FirstClassProperties, null);
+    ChangeCollection<FolderChange> change = service.endSyncFolderHierarchy(asyncResult);
+
+    this.setSyncState(change.getSyncState());
+
+    for (FolderChange aChange: change) {
+      if (aChange.getFolder().getFolderClass().equals(CalendarFolder.class.getName())) {
+        ExchangeCalendarFolder calendarFolder = (ExchangeCalendarFolder) ExchangeCalendarFolder.createFromServer(aChange.getFolder());
+        if (aChange.getChangeType() == ChangeType.Create)
+          folders.addObject(calendarFolder);
+      }
+
+      if (aChange.getFolder().getFolderClass().equals(ContactsFolder.class.getName())) {
+        ExchangeContactsFolder contactsFolder = (ExchangeContactsFolder) ExchangeContactsFolder.createFromServer(aChange.getFolder());
+        if (aChange.getChangeType() == ChangeType.Create)
+          folders.addObject(contactsFolder);
+      }
+
+      if (aChange.getFolder().getFolderClass().equals(TasksFolder.class.getName())) {
+        ExchangeTasksFolder tasksFolder = (ExchangeTasksFolder) ExchangeTasksFolder.createFromServer(aChange.getFolder());
+        if (aChange.getChangeType() == ChangeType.Create)
+          folders.addObject(tasksFolder);
       }
     }
-    
     return folders.immutableClone();
   }
 
@@ -410,7 +272,7 @@ public class ExchangeStore {
   public void createCalendarFolder(String displayName) throws FolderAlreadyExistsException, Throwable {
     createFolder(displayName, ERGWFolderType.CALENDAR);
   }
-  
+
   /**
    * 
    * @param displayName The name of the contacts folder
@@ -420,7 +282,7 @@ public class ExchangeStore {
   public void createContactsFolder(String displayName) throws FolderAlreadyExistsException, Throwable {
     createFolder(displayName, ERGWFolderType.CALENDAR);
   }
-  
+
   /**
    * 
    * @param folderDisplayName The name of the calendar
@@ -429,85 +291,53 @@ public class ExchangeStore {
    */
   public void createFolder(String folderDisplayName, ERGWFolderType typeOfFolder) throws Throwable, FolderAlreadyExistsException {
 
-    TargetFolderIdType rootFolderId = new TargetFolderIdType();
-    DistinguishedFolderIdType rootFolderType = new DistinguishedFolderIdType();
-    rootFolderType.setId(DistinguishedFolderIdNameType.MSGFOLDERROOT);
-    rootFolderId.setDistinguishedFolderId(rootFolderType);
-
-    Holder<CreateFolderResponseType> folderHolder = new Holder<CreateFolderResponseType>(new CreateFolderResponseType());
-    
-    BaseFolderType newFolder = null;
+    Folder newFolder = null;
     if (typeOfFolder.equals(ERGWFolderType.CALENDAR)) {
-      newFolder = new CalendarFolderType();
+      newFolder = new CalendarFolder(service);
     } else if (typeOfFolder.equals(ERGWFolderType.CONTACTS)) {
-      newFolder = new ContactsFolderType();
+      newFolder = new ContactsFolder(service);
     } else if (typeOfFolder.equals(ERGWFolderType.TASKS)) {
-      newFolder = new TasksFolderType();
+      newFolder = new TasksFolder(service);
     } else if (typeOfFolder.equals(ERGWFolderType.SEARCH)) {
-      newFolder = new SearchFolderType();
+      newFolder = new SearchFolder(service);
     } else {
-      newFolder = new CalendarFolderType();
+      newFolder = new Folder(service);
     }
-    
+
     newFolder.setDisplayName(folderDisplayName);
 
-    CreateFolderType folderType = new CreateFolderType();
-    NonEmptyArrayOfFoldersType folders = new NonEmptyArrayOfFoldersType();
-    folders.getFolderOrCalendarFolderOrContactsFolder().add(newFolder);
-    folderType.setParentFolderId(rootFolderId);
-    folderType.setFolders(folders);
+    newFolder.save(WellKnownFolderName.Inbox); 
 
-    Holder<ServerVersionInfo> holderForServerVersion = new Holder<ServerVersionInfo>(new ServerVersionInfo());
-
-    port.createFolder(folderType, serverVersionForRequest, tzContext, folderHolder, holderForServerVersion);
-
-    CreateFolderResponseType response = folderHolder.value;
-    ArrayOfResponseMessagesType responses = response.getResponseMessages();
-    for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
-      FolderInfoResponseMessageType itemResponse = (FolderInfoResponseMessageType)responseObject.getValue();
-      if (itemResponse.getResponseClass().equals(ResponseClassType.ERROR)) {
-        if ("ErrorFolderExists".equals(itemResponse.getResponseCode())) {
-          throw new FolderAlreadyExistsException(itemResponse.getMessageText());
-        } else {
-          throw new Throwable(itemResponse.getMessageText());
-        }
-      } else {
-        ArrayOfFoldersType items = itemResponse.getFolders();
-        for (BaseFolderType item: items.getFolderOrCalendarFolderOrContactsFolder()) {
-          this.addFolderToList(ExchangeCalendarFolder.createFromServer(item));
-        }
-      }
-    }
   }
-  
+
   public class FolderAlreadyExistsException extends NSValidation.ValidationException {
 
     public FolderAlreadyExistsException(String arg0) {
       super(arg0);
     }
-    
+
   }
-  
-  protected RecurrenceType recurrenceForEvent(ERGWCalendarObject component, Calendar startDate) {
+
+  protected Recurrence recurrenceForEvent(ERGWCalendarObject component, Calendar startDate) throws ArgumentOutOfRangeException, ArgumentException {
     ERGWRecurrenceRule recurrenceRule = component.recurrenceRule();
-    
+
     if (recurrenceRule != null) {
       ERGWRecurrenceFrequency frequency = recurrenceRule.frequency();
       // RRULE:FREQ=WEEKLY;BYDAY=FR
       // RRULE:FREQ=WEEKLY;BYDAY=WE,FR
       if (frequency.equals(ERGWRecurrenceFrequency.WEEKLY)) {
-        WeeklyRecurrencePatternType pattern = new WeeklyRecurrencePatternType();
+        WeeklyPattern recurType = new WeeklyPattern();
         if (recurrenceRule.interval() != null)
-          pattern.setInterval(recurrenceRule.interval());
+          recurType.setInterval(recurrenceRule.interval());
         else 
-          pattern.setInterval(1);
-        
+          recurType.setInterval(1);
+
         if (recurrenceRule.periods().count() > 0) {
           for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
             if (period.periodType().equals(ERGWRecurrencePeriodType.BYDAY)) {
               for (Object day: period.values()) {
                 if (day instanceof String) {
-                  pattern.getDaysOfWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
+                  recurType.getDaysOfTheWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
                 }
               }
             }
@@ -515,58 +345,43 @@ public class ExchangeStore {
         } else {
           int starDayOfWeek = startDate.get(Calendar.DAY_OF_WEEK);
           switch (starDayOfWeek) {
-            case Calendar.SUNDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.SUNDAY);
-              break;
-            case Calendar.MONDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.MONDAY);
-              break;
-            case Calendar.TUESDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.TUESDAY);
-              break;
-            case Calendar.WEDNESDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.WEDNESDAY);
-              break;
-            case Calendar.THURSDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.THURSDAY);
-              break;
-            case Calendar.FRIDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.FRIDAY);
-              break;
-            case Calendar.SATURDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.SATURDAY);
-              break;
+          case Calendar.SUNDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Sunday);
+            break;
+          case Calendar.MONDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Monday);
+            break;
+          case Calendar.TUESDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Tuesday);
+            break;
+          case Calendar.WEDNESDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Wednesday);
+            break;
+          case Calendar.THURSDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Thursday);
+            break;
+          case Calendar.FRIDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Friday);
+            break;
+          case Calendar.SATURDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Saturday);
+            break;
           }
         }
 
-        RecurrenceType recurType = new RecurrenceType();
-        recurType.setWeeklyRecurrence(pattern);
         java.util.Date until = recurrenceRule.until();
 
         if (until != null) {
           // RRULE:FREQ=WEEKLY;UNTIL=20120915T150000Z;BYDAY=FR
-          EndDateRecurrenceRangeType endType = new EndDateRecurrenceRangeType();
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          endType.setStartDate(xmlStartDate);
-          Calendar gEndDate = GregorianCalendar.getInstance();
-          gEndDate.setTimeInMillis(until.getTime());
-          XMLGregorianCalendar xmlEndDate = new XMLGregorianCalendarImpl((GregorianCalendar)gEndDate);
-          endType.setEndDate(xmlEndDate);
-          recurType.setEndDateRecurrence(endType);
-
-          pattern.setInterval(1);
+          recurType.setStartDate(startDate.getTime());
+          recurType.setEndDate(until);
+          recurType.setInterval(1);
         } else if ((recurrenceRule != null) && (recurrenceRule.repeatCount() != null) && (recurrenceRule.repeatCount() > 0)) {
           // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
-          NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
-          countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          countType.setStartDate(xmlStartDate);
-          recurType.setNumberedRecurrence(countType);
+          recurType.setStartDate(startDate.getTime());
+          recurType.setNumberOfOccurrences(recurrenceRule.repeatCount());
         } else {
-          NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          noEndType.setStartDate(xmlStartDate);
-          recurType.setNoEndRecurrence(noEndType);
+          recurType.setStartDate(startDate.getTime());
         }
 
         return recurType;
@@ -576,39 +391,32 @@ public class ExchangeStore {
         if (recurrenceRule.positions().count() > 0) {
           for (Object setPost: recurrenceRule.positions()) {
 
-            RelativeMonthlyRecurrencePatternType pattern = new RelativeMonthlyRecurrencePatternType();
-            pattern.setDaysOfWeek(DayOfWeekType.DAY);
+            RelativeMonthlyPattern recurType = new RelativeMonthlyPattern();
+            recurType.setDayOfTheWeek(DayOfTheWeek.Day);
 
             Integer position = (Integer)setPost;
             switch (position) {
             case 1: 
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.First);
               break;
             case 2:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.SECOND);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Second);
               break;
             case 3:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.THIRD);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Third);
               break;
             case 4:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FOURTH);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Fourth);
               break;
             case -1:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.LAST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Last);
               break;
             default:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.First);
             }
 
-            pattern.setInterval(1);
-
-            NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-            noEndType.setStartDate(xmlStartDate);
-
-            RecurrenceType recurType = new RecurrenceType();
-            recurType.setRelativeMonthlyRecurrence(pattern);
-            recurType.setNoEndRecurrence(noEndType);
+            recurType.setInterval(1);
+            recurType.setStartDate(startDate.getTime());
 
             return recurType;
           }
@@ -618,16 +426,16 @@ public class ExchangeStore {
            * The BYMONTHDAY rule part specifies a COMMA character (ASCII decimal 44) separated list of days of the month. 
            * Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month.
            */
-          AbsoluteMonthlyRecurrencePatternType pattern = new AbsoluteMonthlyRecurrencePatternType();
+          MonthlyPattern recurType = new MonthlyPattern();
           for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
             for (Object dayOfMonth: period.values()) {
-              pattern.setDayOfMonth((Integer)dayOfMonth);               
+              recurType.setDayOfMonth((Integer)dayOfMonth);               
             }
           }
           if (recurrenceRule.interval() != null) { 
-            pattern.setInterval(recurrenceRule.interval());
+            recurType.setInterval(recurrenceRule.interval());
           } else {
-            pattern.setInterval(1);
+            recurType.setInterval(1);
           }
         }
       }
@@ -635,85 +443,71 @@ public class ExchangeStore {
     return null;
   }
 
-  protected TaskRecurrenceType recurrenceForTask(ERGWCalendarObject component, Calendar startDate) {
+  protected Recurrence recurrenceForTask(ERGWCalendarObject component, java.util.Date startDate) throws ArgumentOutOfRangeException, ArgumentException {
     ERGWRecurrenceRule recurrenceRule = component.recurrenceRule();
-    
+
     if (recurrenceRule != null) {
       ERGWRecurrenceFrequency frequency = recurrenceRule.frequency();
       // RRULE:FREQ=WEEKLY;BYDAY=FR
       // RRULE:FREQ=WEEKLY;BYDAY=WE,FR
       if (frequency.equals(ERGWRecurrenceFrequency.WEEKLY)) {
-        WeeklyRecurrencePatternType pattern = new WeeklyRecurrencePatternType();
+        WeeklyPattern recurType = new WeeklyPattern();
         if (recurrenceRule.interval() != null)
-          pattern.setInterval(recurrenceRule.interval());
+          recurType.setInterval(recurrenceRule.interval());
         else 
-          pattern.setInterval(1);
-        
+          recurType.setInterval(1);
+
         if (recurrenceRule.periods().count() > 0) {
           for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
             if (period.periodType().equals(ERGWRecurrencePeriodType.BYDAY)) {
               for (Object day: period.values()) {
                 if (day instanceof String) {
-                  pattern.getDaysOfWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
+                  recurType.getDaysOfTheWeek().add(ERGWRecurrenceDay.getByRFC2445Value((String)day).ewsValue());
                 }
               }
             }
           }
         } else {
-          int starDayOfWeek = startDate.get(Calendar.DAY_OF_WEEK);
+          Calendar cStDate = GregorianCalendar.getInstance();
+          cStDate.setTime(startDate);
+          int starDayOfWeek = cStDate.get(Calendar.DAY_OF_WEEK);
           switch (starDayOfWeek) {
-            case Calendar.SUNDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.SUNDAY);
-              break;
-            case Calendar.MONDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.MONDAY);
-              break;
-            case Calendar.TUESDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.TUESDAY);
-              break;
-            case Calendar.WEDNESDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.WEDNESDAY);
-              break;
-            case Calendar.THURSDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.THURSDAY);
-              break;
-            case Calendar.FRIDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.FRIDAY);
-              break;
-            case Calendar.SATURDAY:
-              pattern.getDaysOfWeek().add(DayOfWeekType.SATURDAY);
-              break;
+          case Calendar.SUNDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Sunday);
+            break;
+          case Calendar.MONDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Monday);
+            break;
+          case Calendar.TUESDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Tuesday);
+            break;
+          case Calendar.WEDNESDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Wednesday);
+            break;
+          case Calendar.THURSDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Thursday);
+            break;
+          case Calendar.FRIDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Friday);
+            break;
+          case Calendar.SATURDAY:
+            recurType.getDaysOfTheWeek().add(DayOfTheWeek.Saturday);
+            break;
           }
         }
 
-        TaskRecurrenceType recurType = new TaskRecurrenceType();
-        recurType.setWeeklyRecurrence(pattern);
         java.util.Date until = recurrenceRule.until();
 
         if (until != null) {
           // RRULE:FREQ=WEEKLY;UNTIL=20120915T150000Z;BYDAY=FR
-          EndDateRecurrenceRangeType endType = new EndDateRecurrenceRangeType();
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          endType.setStartDate(xmlStartDate);
-          Calendar gEndDate = GregorianCalendar.getInstance();
-          gEndDate.setTimeInMillis(until.getTime());
-          XMLGregorianCalendar xmlEndDate = new XMLGregorianCalendarImpl((GregorianCalendar)gEndDate);
-          endType.setEndDate(xmlEndDate);
-          recurType.setEndDateRecurrence(endType);
-
-          pattern.setInterval(1);
+          recurType.setStartDate(startDate);
+          recurType.setEndDate(until);
+          recurType.setInterval(1);
         } else if (recurrenceRule.repeatCount() > 0) {
-          // RRULE:FREQ=WEEKLY;WKST=MO;COUNT=3;INTERVAL=2;BYDAY=FR (SUMMARY:Formation plan de retraite et éducation financière)
-          NumberedRecurrenceRangeType countType = new NumberedRecurrenceRangeType();
-          countType.setNumberOfOccurrences(recurrenceRule.repeatCount());
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          countType.setStartDate(xmlStartDate);
-          recurType.setNumberedRecurrence(countType);
+          recurType.setStartDate(startDate);
+          recurType.setNumberOfOccurrences(recurrenceRule.repeatCount());
         } else {
-          NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-          XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-          noEndType.setStartDate(xmlStartDate);
-          recurType.setNoEndRecurrence(noEndType);
+          recurType.setStartDate(startDate);
         }
 
         return recurType;
@@ -723,39 +517,32 @@ public class ExchangeStore {
         if (recurrenceRule.positions().count() > 0) {
           for (Object setPost: recurrenceRule.positions()) {
 
-            RelativeMonthlyRecurrencePatternType pattern = new RelativeMonthlyRecurrencePatternType();
-            pattern.setDaysOfWeek(DayOfWeekType.DAY);
+            RelativeMonthlyPattern recurType = new RelativeMonthlyPattern();
+            recurType.setDayOfTheWeek(DayOfTheWeek.Day);
 
             Integer position = (Integer)setPost;
             switch (position) {
             case 1: 
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.First);
               break;
             case 2:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.SECOND);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Second);
               break;
             case 3:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.THIRD);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Third);
               break;
             case 4:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FOURTH);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Fourth);
               break;
             case -1:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.LAST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.Last);
               break;
             default:
-              pattern.setDayOfWeekIndex(DayOfWeekIndexType.FIRST);
+              recurType.setDayOfTheWeekIndex(DayOfTheWeekIndex.First);
             }
 
-            pattern.setInterval(1);
-
-            NoEndRecurrenceRangeType noEndType = new NoEndRecurrenceRangeType();
-            XMLGregorianCalendar xmlStartDate = new XMLGregorianCalendarImpl((GregorianCalendar)startDate);
-            noEndType.setStartDate(xmlStartDate);
-
-            TaskRecurrenceType recurType = new TaskRecurrenceType();
-            recurType.setRelativeMonthlyRecurrence(pattern);
-            recurType.setNoEndRecurrence(noEndType);
+            recurType.setInterval(1);
+            recurType.setStartDate(startDate);
 
             return recurType;
           }
@@ -765,13 +552,13 @@ public class ExchangeStore {
            * The BYMONTHDAY rule part specifies a COMMA character (ASCII decimal 44) separated list of days of the month. 
            * Valid values are 1 to 31 or -31 to -1. For example, -10 represents the tenth to the last day of the month.
            */
-          AbsoluteMonthlyRecurrencePatternType pattern = new AbsoluteMonthlyRecurrencePatternType();
+          MonthlyPattern recurType = new MonthlyPattern();
           for (ERGWRecurrencePeriod period: recurrenceRule.periods()) {
             for (Object dayOfMonth: period.values()) {
-              pattern.setDayOfMonth((Integer)dayOfMonth);               
+              recurType.setDayOfMonth((Integer)dayOfMonth);
             }
           }
-          pattern.setInterval(recurrenceRule.interval());
+          recurType.setInterval(recurrenceRule.interval());
         }
       }
     }
@@ -785,13 +572,12 @@ public class ExchangeStore {
  TRIGGER;RELATED=START:-PT15M
  END:VALARM
    */
-  protected void setAlarms(ERGWCalendarObject event, ItemType component) {
+  protected void setAlarms(ERGWCalendarObject event, Item component) throws Exception {
     for (ERGWAlarm alarm: event.alarms()) {
       if (alarm.isAbsolute()) {
-        component.setReminderIsSet(true);
         java.util.Calendar alarmDueDate = GregorianCalendar.getInstance();
         alarmDueDate.setTime(alarm.alarmDate());
-        component.setReminderDueBy(alarmDueDate);
+        component.setReminderDueBy(alarmDueDate.getTime());
       } else {
         int duration = 0;
         switch (alarm.durationType()) {
@@ -813,44 +599,14 @@ public class ExchangeStore {
         default:
           duration = alarm.duration();
         }
-        component.setReminderMinutesBeforeStart(new Integer(duration).toString());
-        
-        ArrayList<ExtendedPropertyType> propsArray = new ArrayList<ExtendedPropertyType>();
-
-        // dispidReminderSet
-        ExtendedPropertyType dispidReminderSet = new ExtendedPropertyType();
-        PathToExtendedFieldType unknown3Path = new PathToExtendedFieldType();
-        unknown3Path.setPropertyId(34051);
-        unknown3Path.setPropertyType(MapiPropertyTypeType.BOOLEAN);
-        unknown3Path.setDistinguishedPropertySetId(DistinguishedPropertySetType.COMMON);
-
-        dispidReminderSet.setExtendedFieldURI(unknown3Path);
-        dispidReminderSet.setValue(new Boolean(true).toString());
-
-        propsArray.add(dispidReminderSet);
-
-        // Reminder minutes before start
-        ExtendedPropertyType minutesBeforeStart = new ExtendedPropertyType();
-        PathToExtendedFieldType unknown4Path = new PathToExtendedFieldType();
-        unknown4Path.setPropertyId(34049);
-        unknown4Path.setPropertyType(MapiPropertyTypeType.INTEGER);
-        unknown4Path.setDistinguishedPropertySetId(DistinguishedPropertySetType.COMMON);
-
-        minutesBeforeStart.setExtendedFieldURI(unknown4Path);
-        minutesBeforeStart.setValue(component.getReminderMinutesBeforeStart());
-
-        propsArray.add(minutesBeforeStart);
-
-        component.getExtendedProperty().addAll(propsArray);
-         
+        component.setReminderMinutesBeforeStart(duration);
       }
     }
   }
-  
-  public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) {   
+
+  public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) throws Exception {   
     for (ERGWEvent event: calendar.getEvents()) {
-      CreateItemType itemDetails = new CreateItemType();
-      CalendarItemType calendarItem = new CalendarItemType();
+      Appointment calendarItem = new Appointment(service);
 
       /*
        * A CUA with a three-level priority scheme of "HIGH", "MEDIUM" and "LOW" is mapped 
@@ -863,20 +619,20 @@ public class ExchangeStore {
       if (priority != null) {
         calendarItem.setImportance(priority.ewsValue());
       } else {
-        calendarItem.setImportance(ImportanceChoicesType.NORMAL);
+        calendarItem.setImportance(Importance.Normal);
       }
 
       // UID:c35d64d0-2187-45ba-884d-ada56ada927a
       String uid = event.uid();
       if (uid != null)
-        calendarItem.setUID(uid);
+        calendarItem.setICalUid(uid);
 
       // CLASS:PUBLIC
       ERGWClassification classification = event.classification();
       if (classification != null) {
         calendarItem.setSensitivity(classification.ewsValue());
       } else {
-        calendarItem.setSensitivity(SensitivityChoicesType.NORMAL);
+        calendarItem.setSensitivity(Sensitivity.Normal);
       }
 
       // X-MICROSOFT-CDO-ALLDAYEVENT:TRUE
@@ -886,74 +642,56 @@ public class ExchangeStore {
       ERGWFreeBusyStatus freeBusyStatus = event.freeBusyStatus();
       if (freeBusyStatus != null) 
         calendarItem.setLegacyFreeBusyStatus(freeBusyStatus.ewsValue());
-      
+
       // ORGANIZER;CN="Pascal Robert":mailto:probert@macti.ca
       ERGWOrganizer organizer = event.organizer();
       if (organizer != null) {
-        EmailAddressType email = new EmailAddressType();
-        
+        EmailAddress email = new EmailAddress();
+
         if (organizer.name() != null)
           email.setName(organizer.name());
-        
+
         if (organizer.emailAddress() != null)
-          email.setEmailAddress(organizer.emailAddress());      
+          email.setAddress(organizer.emailAddress());      
 
         if (organizer.emailAddress().startsWith(username)) {
           //calendarItem.setMyResponseType(ResponseTypeType.ORGANIZER);
           //calendarItem.setMeetingRequestWasSent(true);
         }
-        
-        SingleRecipientType recipient = new SingleRecipientType();
-        recipient.setMailbox(email);
-        calendarItem.setOrganizer(recipient);         
+
+        calendarItem.getOrganizer().setAddress(email.getAddress());
       }
 
       // ATTENDEE;RSVP=TRUE;X-SENT=TRUE;CN=probert@macti.ca;CUTYPE=INDIVIDUAL:mailto:probert@macti.ca
       if (event.attendees().count() > 0) {
-        
+
         //calendarItem.setIsMeeting(true);
         //calendarItem.setIsResponseRequested(false);
-        
-        NonEmptyArrayOfAttendeesType requiredAttendes = new NonEmptyArrayOfAttendeesType();
-        NonEmptyArrayOfAttendeesType optionalAttendes = new NonEmptyArrayOfAttendeesType();
-        NonEmptyArrayOfAttendeesType resources = new NonEmptyArrayOfAttendeesType();
 
         for (ERGWAttendee attendee: event.attendees()) {
           if ((organizer == null) || (!(attendee.emailAddress().equals(organizer.emailAddress())))) {
             ERGWAttendeeRole role = attendee.role();
 
-            AttendeeType attendeeDetails = new AttendeeType();
-            EmailAddressType email = new EmailAddressType();
-            email.setEmailAddress(attendee.emailAddress());
-            email.setName(attendee.name());
-            attendeeDetails.setMailbox(email);
-
-            attendeeDetails.setResponseType(ResponseTypeType.ACCEPT);
+            Attendee attendeeDetails = new Attendee();
+            attendeeDetails.setAddress(attendee.emailAddress());
 
             if (role.equals(ERGWAttendeeRole.REQ_PARTICIPANT)) {
-              requiredAttendes.getAttendee().add(attendeeDetails);
+              calendarItem.getRequiredAttendees().add(attendeeDetails);
             } else if ((role.equals(ERGWAttendeeRole.OPT_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.NON_PARTICIPANT)) || (role.equals(ERGWAttendeeRole.CHAIR))) {
-              optionalAttendes.getAttendee().add(attendeeDetails);
+              calendarItem.getOptionalAttendees().add(attendeeDetails);
             } else {
-              resources.getAttendee().add(attendeeDetails);
+              calendarItem.getResources().add(attendeeDetails);
             }
           }
         }
-        
-        if (resources.getAttendee().size() > 0) 
-          calendarItem.setResources(resources);
-        if (requiredAttendes.getAttendee().size() > 0)
-          calendarItem.setRequiredAttendees(requiredAttendes);
-        if (optionalAttendes.getAttendee().size() > 0)
-          calendarItem.setOptionalAttendees(optionalAttendes);
       }
-      
+
       //  CATEGORIES:Appels téléphoniques,Buts/Objectifs
       NSArray<String> categories = event.categories();
       if (categories != null) {
-        ArrayOfStringsType strings = new ArrayOfStringsType();
+        StringList strings = new StringList();
         for (String category: categories) {
-          strings.getString().add(category);
+          strings.add(category);
         }
         calendarItem.setCategories(strings);
       }
@@ -964,9 +702,7 @@ public class ExchangeStore {
       // DESCRIPTION:La description
       String description = event.description();
       if (description != null) {
-        BodyType body = new BodyType();
-        body.setBodyType(BodyTypeType.TEXT);
-        body.setValue(description);
+        MessageBody body = new MessageBody(BodyType.Text, description);
         calendarItem.setBody(body);
       }
 
@@ -978,44 +714,28 @@ public class ExchangeStore {
       if (event.isFullDay()) {
         startDate.add(Calendar.HOUR_OF_DAY, 5);
       } 
-      
-      calendarItem.setStart(startDate);
+
+      calendarItem.setStart(startDate.getTime());
 
       // DTEND;VALUE=DATE:20120914
       NSTimestamp eventEndDate = event.endTime();
       Calendar endDate = GregorianCalendar.getInstance();
       endDate.setTime(eventEndDate);
-      calendarItem.setEnd(endDate);
+      calendarItem.setEnd(endDate.getTime());
 
       String location = event.location();
       if (location != null)
         calendarItem.setLocation(location);
-      
+
       calendarItem.setRecurrence(this.recurrenceForEvent(event, startDate));
       setAlarms(event, calendarItem);
 
-      NonEmptyArrayOfAllItemsType itemsArray = new NonEmptyArrayOfAllItemsType();
-      itemsArray.getItemOrMessageOrCalendarItem().add(calendarItem);
-      itemDetails.setItems(itemsArray);
-
-      TargetFolderIdType calendarFolderId = new TargetFolderIdType();
-      FolderIdType folderType = new FolderIdType();
-      folderType.setId(calendarFolder.id());
-      calendarFolderId.setFolderId(folderType);
-      itemDetails.setSavedItemFolderId(calendarFolderId);
-      itemDetails.setSendMeetingInvitations(CalendarItemCreateOrDeleteOperationType.SEND_TO_ALL_AND_SAVE_COPY);
-
-      Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
-
-      port.createItem(itemDetails, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
-
-      CreateItemResponseType response = responseHolder.value;
-      ArrayOfResponseMessagesType responses = response.getResponseMessages();
+      calendarItem.save(SendInvitationsMode.SendOnlyToAll);
     }
   }
-  
-  public void createContact(ERGWContact card, ExchangeContactsFolder folder) {
-    ContactItemType contact = new ContactItemType();
+
+  public void createContact(ERGWContact card, ExchangeContactsFolder folder) throws Exception {
+    Contact contact = new Contact(service);
 
     contact.setSurname(card.familyName());
     contact.setGivenName(card.givenName());
@@ -1031,33 +751,27 @@ public class ExchangeStore {
       contact.setJobTitle(card.jobTitle());
 
     if (card.emails().count() > 0) {
-      EmailAddressDictionaryType types = new EmailAddressDictionaryType();
       for (ERGWContactEmail email: card.emails()) {
-        EmailAddressDictionaryEntryType exEmail = new EmailAddressDictionaryEntryType();
-        exEmail.setValue(email.email());
-
         if (email.types().count() > 0) {
           for (ERGWContactEmailType type: email.types()) {
             switch (type) {
             case WORK:
-              exEmail.setKey(EmailAddressKeyType.EMAIL_ADDRESS_1);
+              contact.getEmailAddresses().setEmailAddress(EmailAddressKey.EmailAddress1, new EmailAddress(email.email()));
               break;
             case HOME:
-              exEmail.setKey(EmailAddressKeyType.EMAIL_ADDRESS_2);
+              contact.getEmailAddresses().setEmailAddress(EmailAddressKey.EmailAddress2, new EmailAddress(email.email()));
               break;
             case OTHER:
-              exEmail.setKey(EmailAddressKeyType.EMAIL_ADDRESS_3);
+              contact.getEmailAddresses().setEmailAddress(EmailAddressKey.EmailAddress3, new EmailAddress(email.email()));
               break;
             }
           }
         } else {
-          exEmail.setKey(EmailAddressKeyType.EMAIL_ADDRESS_1);
+          contact.getEmailAddresses().setEmailAddress(EmailAddressKey.EmailAddress1, new EmailAddress(email.email()));
         }          
-        types.getEntry().add(exEmail);
       }
-      contact.setEmailAddresses(types); 
     }
-    
+
     String assistant = card.assistantName();
     if (assistant != null)
       contact.setAssistantName(assistant);
@@ -1067,83 +781,71 @@ public class ExchangeStore {
       Calendar bdayAsCalendar = GregorianCalendar.getInstance();
       bdayAsCalendar.setTimeInMillis(birthday.getTime());
       bdayAsCalendar.add(Calendar.HOUR_OF_DAY, 5);
-      contact.setBirthday(bdayAsCalendar);
+      contact.setBirthday(bdayAsCalendar.getTime());
     }
 
     String businessName = card.businessName();
     if (businessName != null) {
       contact.setCompanyName(businessName);
     }
-    
+
     String departmentName = card.departmentName();
     if (departmentName != null) {
       contact.setDepartment(departmentName);
     }
 
-    String notes = card.notes();
-    if (notes != null)
-      contact.setNotes(notes);
-
     if (card.telephones().count() > 0) {
-      PhoneNumberDictionaryType phoneEntries = new PhoneNumberDictionaryType();
       for (ERGWContactTelephone telephone: card.telephones()) {
-        PhoneNumberDictionaryEntryType entry = new PhoneNumberDictionaryEntryType();
-        entry.setValue(telephone.value());
-        
         for (ERGWContactTelephoneType type: telephone.types()) {
           switch (type) {
           case HOME:
             if (telephone.isFaxNumber()) {
-              entry.setKey(PhoneNumberKeyType.HOME_FAX); 
+              contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.HomeFax, telephone.value());
             } else {
-              entry.setKey(PhoneNumberKeyType.HOME_PHONE);              
+              contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.HomePhone, telephone.value());
             }
             break;
           case WORK:
             if (telephone.isFaxNumber()) {
-              entry.setKey(PhoneNumberKeyType.BUSINESS_FAX); 
+              contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.BusinessFax, telephone.value());
             } else {
-              entry.setKey(PhoneNumberKeyType.BUSINESS_PHONE);              
+              contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.BusinessPhone, telephone.value());
             }
             break;
           case ASSISTANT:
-            entry.setKey(PhoneNumberKeyType.ASSISTANT_PHONE);  
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.AssistantPhone, telephone.value());
             break;
           case CAR:
-            entry.setKey(PhoneNumberKeyType.CAR_PHONE);  
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.CarPhone, telephone.value());
             break;
           case MOBILE:
-            entry.setKey(PhoneNumberKeyType.MOBILE_PHONE);  
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.MobilePhone, telephone.value());
             break;
           case PAGER:
-            entry.setKey(PhoneNumberKeyType.PAGER);  
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.Pager, telephone.value());
             break;
           case VOICE_MSG:
-            entry.setKey(PhoneNumberKeyType.CALLBACK);  
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.Callback, telephone.value());
             break;
           case OTHER_TELEPHONE:
-            entry.setKey(PhoneNumberKeyType.OTHER_TELEPHONE);
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.OtherTelephone, telephone.value());
             break;
           case OTHER_FAX:
-            entry.setKey(PhoneNumberKeyType.OTHER_FAX);
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.OtherFax, telephone.value());
             break;
           case COMPANY:
-            entry.setKey(PhoneNumberKeyType.COMPANY_MAIN_PHONE);
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.CompanyMainPhone, telephone.value());
             break;
           case PRIMARY_PHONE:
-            entry.setKey(PhoneNumberKeyType.PRIMARY_PHONE);
+            contact.getPhoneNumbers().setPhoneNumber(PhoneNumberKey.PrimaryPhone, telephone.value());
           }
         }
-
-        phoneEntries.getEntry().add(entry);
       }
-      contact.setPhoneNumbers(phoneEntries);
     }    
 
     if (card.physicalAddresses().count() > 0) {
-      PhysicalAddressDictionaryType addressEntries = new PhysicalAddressDictionaryType();
       for (ERGWContactPhysicalAddress address: card.physicalAddresses()) {
-        PhysicalAddressDictionaryEntryType entry = new PhysicalAddressDictionaryEntryType();
+        PhysicalAddressEntry entry = new PhysicalAddressEntry();
         entry.setCity(address.city());
         entry.setCountryOrRegion(address.country());
         entry.setPostalCode(address.postalCode());
@@ -1154,31 +856,27 @@ public class ExchangeStore {
           for (ERGWContactPhysicalAddressType type: address.types()) {
             switch (type) {
             case HOME:
-              entry.setKey(PhysicalAddressKeyType.HOME);  
+              contact.getPhysicalAddresses().setPhysicalAddress(PhysicalAddressKey.Home, entry);
               break;
             case WORK:
-              entry.setKey(PhysicalAddressKeyType.BUSINESS);  
+              contact.getPhysicalAddresses().setPhysicalAddress(PhysicalAddressKey.Business, entry);
               break;
             case OTHER:
-              entry.setKey(PhysicalAddressKeyType.OTHER);  
+              contact.getPhysicalAddresses().setPhysicalAddress(PhysicalAddressKey.Other, entry);
               break;
             }
           }
         } else {
-          entry.setKey(PhysicalAddressKeyType.BUSINESS);            
+          contact.getPhysicalAddresses().setPhysicalAddress(PhysicalAddressKey.Business, entry);
         }
-        
-        addressEntries.getEntry().add(entry);
-
       }
-      contact.setPhysicalAddresses(addressEntries);
     }       
 
     NSArray<String> categories = card.categories();
     if (categories.count() > 0) {
-      ArrayOfStringsType strings = new ArrayOfStringsType();
+      StringList strings = new StringList();
       for (String category: categories) {
-        strings.getString().add(category);
+        strings.add(category);
       }
       contact.setCategories(strings);
     }
@@ -1190,126 +888,61 @@ public class ExchangeStore {
           case WORK:
             contact.setBusinessHomePage(url.value());
             break;
-         }
+          }
         } else {
           contact.setBusinessHomePage(url.value());
         }
       }      
     }
-    
+
     String nickname = card.nickname();
     if (nickname != null)
-      contact.setNickname(nickname);
-    
+      contact.setNickName(nickname);
+
     if (card.children().count() > 0) {
-      ArrayOfStringsType strings = new ArrayOfStringsType();
+      StringList strings = new StringList();
       for (String child: card.children()) {
-        strings.getString().add(child);
+        strings.add(child);
       }      
       contact.setChildren(strings);      
     }
-    
+
     //if (card.photo() != null)
-      //contact.setPhoto(card.photo().bytes());
-    
+    //contact.setPhoto(card.photo().bytes());
+
     String manager = card.manager();
     if (manager != null)
       contact.setManager(manager);
-    
+
     String spouseName = card.spouseName();
     if (spouseName != null)
       contact.setSpouseName(spouseName);
 
 
     if (card.imAddresses().count() > 0) {
-      ImAddressDictionaryType array = new ImAddressDictionaryType();
       if (card.imAddresses().count() > 2) {
-        ImAddressDictionaryEntryType entry1 = new ImAddressDictionaryEntryType();
-        entry1.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry1.setValue(card.imAddresses().objectAtIndex(0));
-        array.getEntry().add(entry1);
-
-        ImAddressDictionaryEntryType entry2 = new ImAddressDictionaryEntryType();
-        entry2.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry2.setValue(card.imAddresses().objectAtIndex(1));
-        array.getEntry().add(entry2);
-        
-        ImAddressDictionaryEntryType entry3 = new ImAddressDictionaryEntryType();
-        entry3.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry3.setValue(card.imAddresses().objectAtIndex(2));
-        array.getEntry().add(entry3);
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress1, card.imAddresses().objectAtIndex(0));
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress2, card.imAddresses().objectAtIndex(1));
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress3, card.imAddresses().objectAtIndex(2));
       } else if (card.imAddresses().count() == 2) {
-        ImAddressDictionaryEntryType entry1 = new ImAddressDictionaryEntryType();
-        entry1.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry1.setValue(card.imAddresses().objectAtIndex(0));
-        array.getEntry().add(entry1);
-
-        ImAddressDictionaryEntryType entry2 = new ImAddressDictionaryEntryType();
-        entry2.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry2.setValue(card.imAddresses().objectAtIndex(1));
-        array.getEntry().add(entry2);        
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress1, card.imAddresses().objectAtIndex(0));
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress2, card.imAddresses().objectAtIndex(1));
       } else {
-        ImAddressDictionaryEntryType entry1 = new ImAddressDictionaryEntryType();
-        entry1.setKey(ImAddressKeyType.IM_ADDRESS_1);
-        entry1.setValue(card.imAddresses().objectAtIndex(0));
-        array.getEntry().add(entry1);        
-      }
-      contact.setImAddresses(array);
-    }
-    
-    CreateItemType contactItemDetails = new CreateItemType();
-    NonEmptyArrayOfAllItemsType contactsArray = new NonEmptyArrayOfAllItemsType();
-    contactsArray.getItemOrMessageOrCalendarItem().add(contact);
-    contactItemDetails.setItems(contactsArray);
-
-    TargetFolderIdType contactFolderId = new TargetFolderIdType();
-    FolderIdType contactFolderType = new FolderIdType();
-    contactFolderType.setId(folder.id());
-    contactFolderId.setFolderId(contactFolderType);
-    contactItemDetails.setSavedItemFolderId(contactFolderId);
-
-    Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
-
-    port.createItem(contactItemDetails, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
-
-    String idOfNewContact = null;
-
-    CreateItemResponseType response = responseHolder.value;
-    ArrayOfResponseMessagesType responses = response.getResponseMessages();
-    for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
-      ItemInfoResponseMessageType itemResponse = (ItemInfoResponseMessageType)responseObject.getValue();
-      NSLog.out.appendln(itemResponse.getResponseCode());
-      ArrayOfRealItemsType items = itemResponse.getItems();
-      for (ItemType item: items.getItemOrMessageOrCalendarItem()) {
-        idOfNewContact = ((ContactItemType)item).getItemId().getId();
-        NSLog.out.appendln(((ContactItemType)item).getItemId().getChangeKey());
+        contact.getImAddresses().setImAddressKey(ImAddressKey.ImAddress1, card.imAddresses().objectAtIndex(0));
       }
     }
+
 
     if (card.photo() != null) {
-      if (idOfNewContact != null) {
-        ItemIdType id = new ItemIdType();
-        id.setId(idOfNewContact);
-        CreateAttachmentType attachment = new CreateAttachmentType();
-        attachment.setParentItemId(id);
-        NonEmptyArrayOfAttachmentsType array = new NonEmptyArrayOfAttachmentsType();
-        FileAttachmentType type = new FileAttachmentType();
-        type.setContent(card.photo().bytes());
-        type.setName("ContactPicture.jpg");
-        array.getItemAttachmentOrFileAttachment().add(type);
-        attachment.setAttachments(array);
-        
-        Holder<CreateAttachmentResponseType> attachmentHolder = new Holder<CreateAttachmentResponseType>(new CreateAttachmentResponseType());
-
-        port.createAttachment(attachment, mailboxCulture, serverVersionForRequest, tzContext, attachmentHolder, null);
-      }
+      contact.getAttachments().addFileAttachment("ContactPicture.jpg", card.photo().bytes());
     }
+    contact.save();
 
   }
 
-  public void createTask(ERGWCalendar calendar, ExchangeTasksFolder folder) {
+  public void createTask(ERGWCalendar calendar, ExchangeTasksFolder folder) throws Exception {
     for (ERGWTask task: calendar.tasks()) {
-      TaskType taskType = new TaskType();
+      Task taskType = new Task(service);
       taskType.setSubject(task.summary());
 
       if (task.dueDate() != null) {
@@ -1318,19 +951,19 @@ public class ExchangeStore {
         if (task.isFullDay()) {
           dueDate.add(Calendar.HOUR_OF_DAY, 5);
         }
-        taskType.setDueDate(dueDate);
+        taskType.setDueDate(dueDate.getTime());
       }
 
       if (task.description() != null) {
-        BodyType bodyType = new BodyType();
-        bodyType.setValue(task.description());
+        MessageBody bodyType = new MessageBody(task.description());
+        taskType.setBody(bodyType);
       }
 
       NSArray<String> categories = task.categories();
       if (categories != null) {
-        ArrayOfStringsType strings = new ArrayOfStringsType();
+        StringList strings = new StringList();
         for (String category: categories) {
-          strings.getString().add(category);
+          strings.add(category);
         }
         taskType.setCategories(strings);
       }
@@ -1341,7 +974,7 @@ public class ExchangeStore {
       if (task.completedOn() != null) {
         Calendar completedDate = GregorianCalendar.getInstance();
         completedDate.setTime(task.completedOn());
-        taskType.setCompleteDate(completedDate);
+        taskType.setCompleteDate(completedDate.getTime());
       }
 
       taskType.setPercentComplete(new Double(task.percentComplete()));
@@ -1352,94 +985,30 @@ public class ExchangeStore {
       if (task.startTime() != null) {
         Calendar startDate = GregorianCalendar.getInstance();
         startDate.setTime(task.startTime());
-        taskType.setStartDate(startDate);
+        taskType.setStartDate(startDate.getTime());
       }
 
       if (task.status() != null)
         taskType.setStatus(task.status().ewsValue());
-      
+
       setAlarms(task, taskType);
-      
-      TaskRecurrenceType recurrence = recurrenceForTask(task, taskType.getStartDate());
+
+      Recurrence recurrence = recurrenceForTask(task, taskType.getStartDate());
       if (recurrence != null)
         taskType.setRecurrence(recurrence);
-      
-      CreateItemType taskDetails = new CreateItemType();
-      NonEmptyArrayOfAllItemsType tasksArray = new NonEmptyArrayOfAllItemsType();
-      tasksArray.getItemOrMessageOrCalendarItem().add(taskType);
-      taskDetails.setItems(tasksArray);
 
-      TargetFolderIdType tasksFolderId = new TargetFolderIdType();
-      FolderIdType tasksFolderType = new FolderIdType();
-      tasksFolderType.setId(folder.id());
-      tasksFolderId.setFolderId(tasksFolderType);
-      taskDetails.setSavedItemFolderId(tasksFolderId);
-
-      Holder<CreateItemResponseType> responseHolder = new Holder<CreateItemResponseType>(new CreateItemResponseType());
-
-      port.createItem(taskDetails, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
-
-      CreateItemResponseType response = responseHolder.value;
-      ArrayOfResponseMessagesType responses = response.getResponseMessages();
-      for (javax.xml.bind.JAXBElement responseObject: responses.getCreateItemResponseMessageOrDeleteItemResponseMessageOrGetItemResponseMessage()) {
-        ItemInfoResponseMessageType itemResponse = (ItemInfoResponseMessageType)responseObject.getValue();
-        NSLog.out.appendln(itemResponse.getResponseCode());
-        ArrayOfRealItemsType items = itemResponse.getItems();
-        for (ItemType item: items.getItemOrMessageOrCalendarItem()) {
-          ((TaskType)item).getItemId().getId();
-          NSLog.out.appendln(((TaskType)item).getItemId().getChangeKey());
-        }
-      }
+      taskType.save();      
     }
   }
-  
-  public void fetchInvitations() {
-    ObjectFactory factory = new ObjectFactory();
 
-//  <m:FindFolder Traversal="Deep" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
-
-    FindFolderType findFolderRequest = new FindFolderType();
-    findFolderRequest.setTraversal(FolderQueryTraversalType.DEEP);
-    
-/*
- * TODO Implement color
-   <m:FolderShape>
-      <t:BaseShape>Default</t:BaseShape>
-      <t:AdditionalProperties>
-        <t:FieldURI FieldURI="folder:ParentFolderId" />
-        <t:ExtendedFieldURI PropertyTag="0x3004" PropertyType="String" />
-        <t:ExtendedFieldURI PropertyName="FolderColor" PropertySetId="A7B529B5-4B75-47A7-A24F-20743D6C55CD" PropertyType="String" />
-        <t:ExtendedFieldURI PropertyName="FolderOrder" PropertySetId="A7B529B5-4B75-47A7-A24F-20743D6C55CD" PropertyType="Integer" />
-      </t:AdditionalProperties>
-    </m:FolderShape>
- */
-    FolderResponseShapeType folderShape = new FolderResponseShapeType();
-    folderShape.setBaseShape(DefaultShapeNamesType.DEFAULT);
-    
-    NonEmptyArrayOfPathsToElementType properties = new NonEmptyArrayOfPathsToElementType();
-    
-    PathToUnindexedFieldType parentFieldType = new PathToUnindexedFieldType();
-    parentFieldType.setFieldURI(UnindexedFieldURIType.FOLDER_PARENT_FOLDER_ID);
-    JAXBElement<PathToUnindexedFieldType> parentFolderId = factory.createFieldURI(parentFieldType);
-    properties.getPath().add(parentFolderId);
+  public void fetchInvitations() throws NotImplementedException {
+    //  <m:FindFolder Traversal="Deep" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types">
 
     /*
-     * (PR_COMMENT)
-     * Comment
-     * ASCII string or Unicode string
-     * Contains a comment about the purpose or content of an object.
-     */
-    PathToExtendedFieldType prCommentField = new PathToExtendedFieldType();
-    prCommentField.setPropertyTag("0x3004");
-    prCommentField.setPropertyType(MapiPropertyTypeType.STRING);
-    JAXBElement<PathToExtendedFieldType> prComment = factory.createExtendedFieldURI(prCommentField);
-    properties.getPath().add(prComment);
 
-    folderShape.setAdditionalProperties(properties);
-    
-    findFolderRequest.setFolderShape(folderShape);
-    
-    /*
+    SearchFolder findFolderRequest = new SearchFolder(service);
+    findFolderRequest.getSearchParameters().setTraversal(SearchFolderTraversal.Deep);
+
     <m:Restriction>
       <t:Or>
         <t:Contains ContainmentMode="FullString" ContainmentComparison="Exact">
@@ -1461,24 +1030,26 @@ public class ExchangeStore {
       </t:Or>
     </m:Restriction>
      */
+
+    /*
     ConstantValueType apptConstant = new ConstantValueType();
     apptConstant.setValue("IPF.Appointment");
 
     ConstantValueType apptConstantPrefix = new ConstantValueType();
     apptConstantPrefix.setValue("IPF.Appointment.");
-    
+
     ConstantValueType taskConstant = new ConstantValueType();
     taskConstant.setValue("IPF.Task");
-    
+
     ConstantValueType taskConstantPrefix = new ConstantValueType();
     taskConstantPrefix.setValue("IPF.Task.");
-    
+
     PathToUnindexedFieldType folderClass = new PathToUnindexedFieldType();
     folderClass.setFieldURI(UnindexedFieldURIType.FOLDER_CHILD_FOLDER_COUNT);
     JAXBElement<PathToUnindexedFieldType> folderClassElement = factory.createFieldURI(parentFieldType);
 
     RestrictionType restriction = new RestrictionType();
-    
+
     OrType searchExprType = new OrType();
 
     ContainsExpressionType apptFullString = new ContainsExpressionType();
@@ -1512,25 +1083,21 @@ public class ExchangeStore {
     taskPrefixed.setPath(folderClassElement);
     JAXBElement<ContainsExpressionType> taskPrefixedExpression = factory.createContains(taskPrefixed);
     searchExprType.getSearchExpression().add(taskPrefixedExpression);
-    
+
     JAXBElement<SearchExpressionType> restrictionExpression = factory.createSearchExpression(searchExprType);
     restriction.setSearchExpression(restrictionExpression);
     findFolderRequest.setRestriction(restriction);
-    
-    /*
-    <m:ParentFolderIds>
-      <t:DistinguishedFolderId Id="msgfolderroot" />
-    </m:ParentFolderIds>
-     */
+
     NonEmptyArrayOfBaseFolderIdsType parentFolderIds = new NonEmptyArrayOfBaseFolderIdsType();
     DistinguishedFolderIdType distinguishedFolderId = new DistinguishedFolderIdType();
     distinguishedFolderId.setId(DistinguishedFolderIdNameType.MSGFOLDERROOT);
     parentFolderIds.getFolderIdOrDistinguishedFolderId().add(distinguishedFolderId);
     findFolderRequest.setParentFolderIds(parentFolderIds);
-    
+
     Holder<FindFolderResponseType> responseHolder = new Holder<FindFolderResponseType>(new FindFolderResponseType());
 
     port.findFolder(findFolderRequest, mailboxCulture, serverVersionForRequest, tzContext, responseHolder, null);
+     */
   }
-  
+
 }

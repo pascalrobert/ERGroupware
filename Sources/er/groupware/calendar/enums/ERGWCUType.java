@@ -4,9 +4,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import microsoft.exchange.webservices.data.MeetingAttendeeType;
 import net.fortuna.ical4j.model.parameter.CuType;
 
-import com.microsoft.schemas.exchange.services._2006.types.MeetingAttendeeType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.zclient.ZInvite.ZCalendarUserType;
 
@@ -16,8 +16,8 @@ public enum ERGWCUType implements ERGWICalendarProperty {
 
   INDIVIDUAL("Individu", CuType.INDIVIDUAL, ZCalendarUserType.IND, null),
   GROUP("Groupe", CuType.GROUP, ZCalendarUserType.GRO, null),
-  RESOURCE("Ressource", CuType.RESOURCE, ZCalendarUserType.RES, MeetingAttendeeType.RESOURCE),
-  ROOM("Salle", CuType.ROOM, ZCalendarUserType.ROO, MeetingAttendeeType.ROOM),
+  RESOURCE("Ressource", CuType.RESOURCE, ZCalendarUserType.RES, MeetingAttendeeType.Resource),
+  ROOM("Salle", CuType.ROOM, ZCalendarUserType.ROO, MeetingAttendeeType.Room),
   UNKNOWN("Inconnu", CuType.UNKNOWN, ZCalendarUserType.UNK, null);
 
   private String localizedDescription;

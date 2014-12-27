@@ -5,9 +5,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import microsoft.exchange.webservices.data.Sensitivity;
 import net.fortuna.ical4j.vcard.property.Clazz;
 
-import com.microsoft.schemas.exchange.services._2006.types.SensitivityChoicesType;
 import com.webobjects.foundation.NSArray;
 
 import er.groupware.calendar.ERGWCalendarPrincipal;
@@ -15,17 +15,17 @@ import er.groupware.calendar.enums.ERGWICalendarProperty;
 
 public enum ERGWContactClassification implements ERGWICalendarProperty {
 
-  PUBLIC("Public", Clazz.PUBLIC, "PUB", SensitivityChoicesType.NORMAL),
-  PRIVATE("Privé", Clazz.PRIVATE, "PRI", SensitivityChoicesType.PRIVATE),
-  CONFIDENTIAL("Confidentiel", Clazz.CONFIDENTIAL, "CON", SensitivityChoicesType.CONFIDENTIAL),
-  PERSONAL("Personnel", Clazz.PRIVATE, "CON", SensitivityChoicesType.PERSONAL);
+  PUBLIC("Public", Clazz.PUBLIC, "PUB", Sensitivity.Normal),
+  PRIVATE("Privé", Clazz.PRIVATE, "PRI", Sensitivity.Private),
+  CONFIDENTIAL("Confidentiel", Clazz.CONFIDENTIAL, "CON", Sensitivity.Confidential),
+  PERSONAL("Personnel", Clazz.PRIVATE, "CON", Sensitivity.Personal);
 
   private String localizedDescription;
   private Clazz rfc2445Value;
   private String zimbraValue;
-  private SensitivityChoicesType ewsValue;
+  private Sensitivity ewsValue;
   
-  private ERGWContactClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue, SensitivityChoicesType ewsValue) {
+  private ERGWContactClassification(String localizedDescription, Clazz rfc2445Value, String zimbraValue, Sensitivity ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
@@ -68,7 +68,7 @@ public enum ERGWContactClassification implements ERGWICalendarProperty {
     return rfc2445Lookup.get(rfcValue); 
   }
 
-  public SensitivityChoicesType ewsValue() {
+  public Sensitivity ewsValue() {
     return ewsValue;
   }
 

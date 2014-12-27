@@ -4,29 +4,27 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.microsoft.schemas.exchange.services._2006.types.DayOfWeekType;
-import com.zimbra.cs.zclient.ZInvite.ZFrequency;
-
+import microsoft.exchange.webservices.data.DayOfTheWeek;
 import net.fortuna.ical4j.model.WeekDay;
 
 public enum ERGWRecurrenceDay implements ERGWICalendarProperty {
 
-  SUNDAY("Sunday",WeekDay.SU.getDay(), "SU", DayOfWeekType.SUNDAY),
-  MONDAY("Monday",WeekDay.MO.getDay(), "MO", DayOfWeekType.MONDAY),
-  TUESDAY("Tuesday",WeekDay.TU.getDay(), "TU", DayOfWeekType.TUESDAY),
-  WEDNESDAY("Wednesday",WeekDay.WE.getDay(), "WE", DayOfWeekType.WEDNESDAY),
-  THURSDAY("Thursday",WeekDay.TH.getDay(), "TH", DayOfWeekType.THURSDAY),
-  FRIDAY("Friday",WeekDay.FR.getDay(), "FR", DayOfWeekType.FRIDAY),
-  SATURDAY("Saturday",WeekDay.SA.getDay(), "SA", DayOfWeekType.SATURDAY);
+  SUNDAY("Sunday",WeekDay.SU.getDay(), "SU", DayOfTheWeek.Sunday),
+  MONDAY("Monday",WeekDay.MO.getDay(), "MO", DayOfTheWeek.Monday),
+  TUESDAY("Tuesday",WeekDay.TU.getDay(), "TU", DayOfTheWeek.Tuesday),
+  WEDNESDAY("Wednesday",WeekDay.WE.getDay(), "WE", DayOfTheWeek.Wednesday),
+  THURSDAY("Thursday",WeekDay.TH.getDay(), "TH", DayOfTheWeek.Thursday),
+  FRIDAY("Friday",WeekDay.FR.getDay(), "FR", DayOfTheWeek.Friday),
+  SATURDAY("Saturday",WeekDay.SA.getDay(), "SA", DayOfTheWeek.Saturday);
   
   private String description;
   private String rfc2445Value;
   private String zimbraValue;
-  private DayOfWeekType ewsValue;
+  private DayOfTheWeek ewsValue;
 
   private static final Map<String,ERGWRecurrenceDay> zimbraLookup = new HashMap<String,ERGWRecurrenceDay>();
   private static final Map<String,ERGWRecurrenceDay> rfc2445Lookup = new HashMap<String,ERGWRecurrenceDay>();
-  private static final Map<DayOfWeekType,ERGWRecurrenceDay> ewsLookup = new HashMap<DayOfWeekType,ERGWRecurrenceDay>();
+  private static final Map<DayOfTheWeek,ERGWRecurrenceDay> ewsLookup = new HashMap<DayOfTheWeek,ERGWRecurrenceDay>();
   
   static {
     for(ERGWRecurrenceDay s : EnumSet.allOf(ERGWRecurrenceDay.class)) {
@@ -36,7 +34,7 @@ public enum ERGWRecurrenceDay implements ERGWICalendarProperty {
     }
   }
   
-  private ERGWRecurrenceDay(String description, String rfc2445Value, String zimbraValue, DayOfWeekType ewsValue) {
+  private ERGWRecurrenceDay(String description, String rfc2445Value, String zimbraValue, DayOfTheWeek ewsValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
@@ -55,7 +53,7 @@ public enum ERGWRecurrenceDay implements ERGWICalendarProperty {
     return rfc2445Value;
   }
 
-  public DayOfWeekType ewsValue() {
+  public DayOfTheWeek ewsValue() {
     return ewsValue;
   }
   
@@ -67,7 +65,7 @@ public enum ERGWRecurrenceDay implements ERGWICalendarProperty {
     return rfc2445Lookup.get(rfc2455Value); 
   }
   
-  public static ERGWRecurrenceDay getByEWSValue(DayOfWeekType ews2455Value) { 
+  public static ERGWRecurrenceDay getByEWSValue(DayOfTheWeek ews2455Value) { 
     return ewsLookup.get(ews2455Value); 
   }
   

@@ -1,10 +1,12 @@
 package er.groupware.exchange.ews;
 
-import com.microsoft.schemas.exchange.services._2006.types.BaseFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.CalendarFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.ContactsFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.ExtendedPropertyType;
-import com.microsoft.schemas.exchange.services._2006.types.TasksFolderType;
+import microsoft.exchange.webservices.data.CalendarFolder;
+import microsoft.exchange.webservices.data.ContactsFolder;
+import microsoft.exchange.webservices.data.ExtendedProperty;
+import microsoft.exchange.webservices.data.Folder;
+import microsoft.exchange.webservices.data.ServiceLocalException;
+import microsoft.exchange.webservices.data.TasksFolder;
+
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 
@@ -141,27 +143,27 @@ public abstract class ExchangeBaseFolder implements IERGWBaseFolder {
     this.isHidden = isHidden;
   }
   
-  public static ExchangeBaseFolder createFromServer(BaseFolderType serverFolder) {
+  public static ExchangeBaseFolder createFromServer(Folder serverFolder) throws NumberFormatException, ServiceLocalException {
     ExchangeBaseFolder localFolder = null;
     
-    if (serverFolder instanceof CalendarFolderType) {
+    if (serverFolder instanceof CalendarFolder) {
       localFolder = new ExchangeCalendarFolder(serverFolder.getDisplayName());
-    } else if (serverFolder instanceof ContactsFolderType) {
+    } else if (serverFolder instanceof ContactsFolder) {
       localFolder = new ExchangeContactsFolder(serverFolder.getDisplayName());
-    } else if (serverFolder instanceof TasksFolderType) {
+    } else if (serverFolder instanceof TasksFolder) {
       localFolder = new ExchangeTasksFolder(serverFolder.getDisplayName());
     } else {
       localFolder = new ExchangeEmailFolder(serverFolder.getDisplayName());
     }
     
-    localFolder.setId(serverFolder.getFolderId().getId());
-    localFolder.setChangeKey(serverFolder.getFolderId().getChangeKey());
+    localFolder.setId(serverFolder.getId().getUniqueId());
+    localFolder.setChangeKey(serverFolder.getId().getChangeKey());
     localFolder.setChildFolderCount(serverFolder.getChildFolderCount());
     localFolder.setTotalCount(serverFolder.getTotalCount());
     
-    for (ExtendedPropertyType extendedProp: serverFolder.getExtendedProperty()) {
+    for (ExtendedProperty extendedProp: serverFolder.getExtendedPropertiesForService()) {
       if ("0x10f4".equals(extendedProp)) {
-        localFolder.setIsHidden(new Boolean(extendedProp.getValue()));
+        localFolder.setIsHidden((Boolean)extendedProp.getValue());
       }
     }
     

@@ -1,35 +1,34 @@
 package er.groupware.enums;
 
-import com.microsoft.schemas.exchange.services._2006.types.BaseFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.CalendarFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.ContactsFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.FolderType;
-import com.microsoft.schemas.exchange.services._2006.types.SearchFolderType;
-import com.microsoft.schemas.exchange.services._2006.types.TasksFolderType;
+import microsoft.exchange.webservices.data.CalendarFolder;
+import microsoft.exchange.webservices.data.ContactsFolder;
+import microsoft.exchange.webservices.data.Folder;
+import microsoft.exchange.webservices.data.SearchFolder;
+import microsoft.exchange.webservices.data.TasksFolder;
 
 public enum ERGWFolderType {
 
-  CALENDAR(CalendarFolderType.class),
-  CONTACTS(ContactsFolderType.class),
-  TASKS(TasksFolderType.class),
-  JOURNAL(FolderType.class),
-  EMAIL(FolderType.class),
-  SEARCH(SearchFolderType.class),
-  ROOT(FolderType.class),
-  PLAIN(FolderType.class),
+  CALENDAR(CalendarFolder.class),
+  CONTACTS(ContactsFolder.class),
+  TASKS(TasksFolder.class),
+  JOURNAL(Folder.class),
+  EMAIL(Folder.class),
+  SEARCH(SearchFolder.class),
+  ROOT(Folder.class),
+  PLAIN(Folder.class),
   CONVERSATION(null),
   TAG(null),
   USER_ROOT(null),
   TRASH(null),
   DOCUMENT(null);
   
-  private Class<? extends BaseFolderType> exchangeType;
+  private Class<? extends Folder> exchangeType;
   
-  private ERGWFolderType(Class<? extends BaseFolderType> exchangeType) {
+  private ERGWFolderType(Class<? extends Folder> exchangeType) {
     this.exchangeType = exchangeType;
   }
   
-  public Class<? extends BaseFolderType> exchangeType() {
+  public Class<? extends Folder> exchangeType() {
     return exchangeType;
   }
   

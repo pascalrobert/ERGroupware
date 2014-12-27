@@ -5,9 +5,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import microsoft.exchange.webservices.data.MeetingResponseType;
 import net.fortuna.ical4j.model.parameter.PartStat;
 
-import com.microsoft.schemas.exchange.services._2006.types.ResponseTypeType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
 
@@ -27,18 +27,18 @@ import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
 
 public enum ERGWParticipantStatus implements ERGWICalendarProperty {
 
-  NEEDS_ACTION("Requiert action", PartStat.NEEDS_ACTION, ZParticipantStatus.NE, ResponseTypeType.NO_RESPONSE_RECEIVED),
-  ACCEPTED("Accepté", PartStat.ACCEPTED, ZParticipantStatus.AC, ResponseTypeType.ACCEPT),
-  DECLINED("Refusé", PartStat.DECLINED, ZParticipantStatus.DE, ResponseTypeType.DECLINE),
-  TENTATIVE("Tentatif", PartStat.TENTATIVE, ZParticipantStatus.TE, ResponseTypeType.TENTATIVE),
-  DELEGATED("Délégué à autrui", PartStat.DELEGATED, ZParticipantStatus.DG, ResponseTypeType.UNKNOWN);
+  NEEDS_ACTION("Requiert action", PartStat.NEEDS_ACTION, ZParticipantStatus.NE, MeetingResponseType.NoResponseReceived),
+  ACCEPTED("Accepté", PartStat.ACCEPTED, ZParticipantStatus.AC, MeetingResponseType.Accept),
+  DECLINED("Refusé", PartStat.DECLINED, ZParticipantStatus.DE, MeetingResponseType.Decline),
+  TENTATIVE("Tentatif", PartStat.TENTATIVE, ZParticipantStatus.TE, MeetingResponseType.Tentative),
+  DELEGATED("Délégué à autrui", PartStat.DELEGATED, ZParticipantStatus.DG, MeetingResponseType.Unknown);
   
   private String description;
   private PartStat rfc2445Value;
   private ZParticipantStatus zimbraValue;
-  private ResponseTypeType ewsValue;
+  private MeetingResponseType ewsValue;
 
-  private ERGWParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue, ResponseTypeType ewsValue) {
+  private ERGWParticipantStatus(String description, PartStat rfc2445Value, ZParticipantStatus zimbraValue, MeetingResponseType ewsValue) {
     this.description = description;
     this.zimbraValue = zimbraValue;
     this.rfc2445Value = rfc2445Value;
@@ -78,7 +78,7 @@ public enum ERGWParticipantStatus implements ERGWICalendarProperty {
     return zimbraLookup.get(zimbraValue); 
   }
 
-  public ResponseTypeType ewsValue() {
+  public MeetingResponseType ewsValue() {
     return ewsValue;
   }
   

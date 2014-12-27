@@ -4,17 +4,17 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.fortuna.ical4j.connector.dav.enums.MediaType;
+import zswi.objects.dav.enums.SupportedData;
 
 public enum ERGWSupportedObjectType {
 
-  ICALENDAR_V2("Calendar and tasks", MediaType.ICALENDAR_2_0),
-  VCARD_V4("Contacts", MediaType.VCARD_4_0);
+  ICALENDAR_V2("Calendar and tasks", SupportedData.ICALENDAR_2_0),
+  VCARD_V3("Contacts", SupportedData.VCARD_3_0);
   
   private String localizedDescription;
-  private MediaType rfc2445Value;
+  private SupportedData rfc2445Value;
 
-  private static final Map<MediaType,ERGWSupportedObjectType> rfc2445Lookup = new HashMap<MediaType,ERGWSupportedObjectType>();
+  private static final Map<SupportedData,ERGWSupportedObjectType> rfc2445Lookup = new HashMap<SupportedData,ERGWSupportedObjectType>();
 
   static {
     for(ERGWSupportedObjectType s : EnumSet.allOf(ERGWSupportedObjectType.class)) {
@@ -22,16 +22,16 @@ public enum ERGWSupportedObjectType {
     }
   }
   
-  private ERGWSupportedObjectType(String localizedDescription, MediaType rfc2445Value) {
+  private ERGWSupportedObjectType(String localizedDescription, SupportedData rfc2445Value) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
   }
   
-  public static ERGWSupportedObjectType getByRFC2445Value(MediaType zimbraValue) { 
+  public static ERGWSupportedObjectType getByRFC2445Value(SupportedData zimbraValue) { 
     return rfc2445Lookup.get(zimbraValue); 
   }
 
-  public MediaType rfc2445Value() {
+  public SupportedData rfc2445Value() {
     return rfc2445Value;
   }
   

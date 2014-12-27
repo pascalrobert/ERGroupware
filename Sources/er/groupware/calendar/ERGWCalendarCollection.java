@@ -1,31 +1,19 @@
 package er.groupware.calendar;
 
-import java.util.ArrayList;
+import java.math.BigInteger;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import net.fortuna.ical4j.connector.dav.CalDavConstants;
-import net.fortuna.ical4j.connector.dav.property.CalDavPropertyName;
-import net.fortuna.ical4j.connector.dav.property.ICalPropertyName;
+import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.property.CalScale;
-import net.fortuna.ical4j.model.property.Version;
-
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.component.VTimeZone;
+import zswi.objects.dav.collections.CalendarCollection;
 
 import com.webobjects.foundation.NSArray;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
-import com.webobjects.foundation.NSValidation;
 
+import er.groupware.caldav.CalDAVCollection;
 import er.groupware.enums.ERGWFolderType;
 import er.groupware.enums.ERGWSupportedObjectType;
 import er.groupware.interfaces.IERGWBaseFolder;
@@ -270,38 +258,25 @@ public class ERGWCalendarCollection implements IERGWBaseFolder {
   public void addChild(IERGWBaseFolder children) {
   }
   
-  public static DavPropertySet convertPropertiesToDavPropertySet(ERGWCalendarCollection collection) throws ParserConfigurationException {
-    if (collection.timeZone() == null) {
-      throw new NSValidation.ValidationException("Timezone can't be null");
-    }
+  public static CalendarCollection convertToCalendarCollection(CalDAVCollection collection) {
+	CalendarCollection convertedCollection = new CalendarCollection(collection.id());
+	convertedCollection.setCalendarColor(collection.color());
+	convertedCollection.setCalendarDescription(collection.description());
+	convertedCollection.setCalendarOrder(new BigInteger(Integer.valueOf(collection.calendarOrder()).toString()));
+	convertedCollection.setDisplayName(collection.displayName());
+	//convertedCollection.setScheduleCalendarTransp(collection.);
+	//convertedCollection.setSupportedFeatures(collection.supportedObjectTypes());
 
-    DavPropertySet properties = new DavPropertySet();
+	CalendarBuilder builder = new CalendarBuilder();
+	TimeZoneRegistry registry = builder.getRegistry();
+	Calendar calendar = new Calendar();
+	VTimeZone tz = registry.getTimeZone(collection.timeZone().getID()).getVTimeZone();
+	calendar.getComponents().add(tz);
+	convertedCollection.setCalendarTimezone(calendar);
 
-    properties.add(new DefaultDavProperty(DavPropertyName.DISPLAYNAME, collection.displayName()));
-    properties.add(new DefaultDavProperty(CalDavPropertyName.CALENDAR_DESCRIPTION, collection.description()));
-    properties.add(new DefaultDavProperty(ICalPropertyName.CALENDAR_COLOR, collection.color()));
-    properties.add(new DefaultDavProperty(ICalPropertyName.CALENDAR_ORDER, collection.calendarOrder()));
-    
-    ArrayList<Element> componentsProperty = new ArrayList<Element>();
-    for (String component: collection.supportedComponents()) {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      DocumentBuilder builder = factory.newDocumentBuilder();
-      Document document = builder.newDocument();
-      Element xmlProp = DomUtil.createElement(document, CalDavPropertyName.COMPONENT.getName(), CalDavConstants.CALDAV_NAMESPACE);
-      xmlProp.setAttribute("name", component);
-      componentsProperty.add(xmlProp);
-    }
-    properties.add(new DefaultDavProperty(CalDavPropertyName.SUPPORTED_CALENDAR_COMPONENT_SET, componentsProperty));
-    
-    Calendar timeZoneCalendar = new Calendar();
-    timeZoneCalendar.getProperties().add(Version.VERSION_2_0);
-    timeZoneCalendar.getProperties().add(CalScale.GREGORIAN);
-    timeZoneCalendar.getProperties().add(ERGWCalendar.defaultProdId);
-    timeZoneCalendar.getComponents().add(collection.timeZone().getVTimeZone());
-    properties.add(new DefaultDavProperty(CalDavPropertyName.CALENDAR_TIMEZONE, timeZoneCalendar.toString()));
-    
-    return properties;
+	convertedCollection.setSupportedCalendarComponentSet(collection.supportedComponents().arrayList());
+	return convertedCollection;
   }
-
+  
 
 }

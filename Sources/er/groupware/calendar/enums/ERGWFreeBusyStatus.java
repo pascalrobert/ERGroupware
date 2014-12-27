@@ -5,9 +5,9 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+import microsoft.exchange.webservices.data.LegacyFreeBusyStatus;
 import net.fortuna.ical4j.model.property.BusyType;
 
-import com.microsoft.schemas.exchange.services._2006.types.LegacyFreeBusyType;
 import com.webobjects.foundation.NSArray;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 
@@ -15,17 +15,17 @@ import er.groupware.calendar.ERGWCalendarPrincipal;
 
 public enum ERGWFreeBusyStatus implements ERGWICalendarProperty {
 
-  FREE("Libre", new BusyType("FREE"), IcalXmlStrMap.FBTYPE_FREE, LegacyFreeBusyType.FREE),
-  BUSY("Occupé", BusyType.BUSY, IcalXmlStrMap.FBTYPE_BUSY, LegacyFreeBusyType.BUSY),
-  BUSY_TENTATIVE("Tentatif", BusyType.BUSY_TENTATIVE, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE, LegacyFreeBusyType.TENTATIVE),
-  BUSY_UNAVAILABLE("Non disponible", BusyType.BUSY_UNAVAILABLE, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE, LegacyFreeBusyType.OOF);
+  FREE("Libre", new BusyType("FREE"), IcalXmlStrMap.FBTYPE_FREE, LegacyFreeBusyStatus.Free),
+  BUSY("Occupé", BusyType.BUSY, IcalXmlStrMap.FBTYPE_BUSY, LegacyFreeBusyStatus.Busy),
+  BUSY_TENTATIVE("Tentatif", BusyType.BUSY_TENTATIVE, IcalXmlStrMap.FBTYPE_BUSY_TENTATIVE, LegacyFreeBusyStatus.Tentative),
+  BUSY_UNAVAILABLE("Non disponible", BusyType.BUSY_UNAVAILABLE, IcalXmlStrMap.FBTYPE_BUSY_UNAVAILABLE, LegacyFreeBusyStatus.OOF);
   
   private String localizedDescription;
   private BusyType rfc2445Value;
   private String zimbraValue;
-  private LegacyFreeBusyType ewsValue;
+  private LegacyFreeBusyStatus ewsValue;
 
-  private ERGWFreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue, LegacyFreeBusyType ewsValue) {
+  private ERGWFreeBusyStatus(String localizedDescription, BusyType rfc2445Value, String zimbraValue, LegacyFreeBusyStatus ewsValue) {
     this.localizedDescription = localizedDescription;
     this.rfc2445Value = rfc2445Value;
     this.zimbraValue = zimbraValue;
@@ -54,7 +54,7 @@ public enum ERGWFreeBusyStatus implements ERGWICalendarProperty {
     return rfc2445Value;
   }
   
-  public LegacyFreeBusyType ewsValue() {
+  public LegacyFreeBusyStatus ewsValue() {
     return ewsValue;
   }
   
