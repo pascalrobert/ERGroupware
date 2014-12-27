@@ -124,7 +124,7 @@ public class ExchangeStore {
   public ExchangeStore(String pathToWS, String username, String password, String ntmlDomain, ExchangeVersion serverVersionInResponse, TimeZone timezone) throws Exception {
 
     if (serverVersionInResponse == null) {
-      serverVersionInResponse = ExchangeVersion.Exchange2007_SP1;
+      serverVersionInResponse = ExchangeVersion.Exchange2010_SP1;
     }
 
     service = new ExchangeService(serverVersionInResponse,timezone);
@@ -134,7 +134,7 @@ public class ExchangeStore {
     if (pathToWS != null) {
       service.setUrl(new URI(pathToWS));
     } else {
-      service.autodiscoverUrl("probert@macti.onmicrosoft.com", new AutoDiscover());
+      service.autodiscoverUrl(username, new AutoDiscover());
     }
 
     //    if (ntmlDomain != null) {
