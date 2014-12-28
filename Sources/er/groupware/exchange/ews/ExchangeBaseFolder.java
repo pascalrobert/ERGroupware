@@ -4,6 +4,7 @@ import microsoft.exchange.webservices.data.CalendarFolder;
 import microsoft.exchange.webservices.data.ContactsFolder;
 import microsoft.exchange.webservices.data.ExtendedProperty;
 import microsoft.exchange.webservices.data.Folder;
+import microsoft.exchange.webservices.data.FolderId;
 import microsoft.exchange.webservices.data.ServiceLocalException;
 import microsoft.exchange.webservices.data.TasksFolder;
 
@@ -23,7 +24,7 @@ public abstract class ExchangeBaseFolder implements IERGWBaseFolder {
   protected NSArray<IERGWBaseFolder> children;
   protected Integer totalCount;
   protected Integer childFolderCount;
-  protected String id;
+  protected FolderId id;
   protected String changeKey;
   protected Integer unreadCount;
   protected boolean isHidden;
@@ -111,11 +112,11 @@ public abstract class ExchangeBaseFolder implements IERGWBaseFolder {
     this.childFolderCount = childFolderCount;
   }
 
-  public String id() {
+  public FolderId id() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(FolderId id) {
     this.id = id;
   }
 
@@ -156,7 +157,7 @@ public abstract class ExchangeBaseFolder implements IERGWBaseFolder {
       localFolder = new ExchangeEmailFolder(serverFolder.getDisplayName());
     }
     
-    localFolder.setId(serverFolder.getId().getUniqueId());
+    localFolder.setId(serverFolder.getId());
     localFolder.setChangeKey(serverFolder.getId().getChangeKey());
     localFolder.setChildFolderCount(serverFolder.getChildFolderCount());
     localFolder.setTotalCount(serverFolder.getTotalCount());

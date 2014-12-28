@@ -54,6 +54,7 @@ import microsoft.exchange.webservices.data.WellKnownFolderName;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.webobjects.foundation.NSArray;
+import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
 import com.webobjects.foundation.NSValidation;
@@ -191,30 +192,27 @@ public class ExchangeStore {
   public NSArray<ExchangeBaseFolder> syncFolders() throws Exception {
     NSMutableArray<ExchangeBaseFolder> folders = this.folders().mutableClone();
 
-    WellKnownFolderName wkFolder = WellKnownFolderName.Inbox;
-    FolderId folderId = new FolderId(wkFolder);
-    IAsyncResult asyncResult = service.beginSyncFolderHierarchy(null, null, folderId, PropertySet.FirstClassProperties, null);
-    ChangeCollection<FolderChange> change = service.endSyncFolderHierarchy(asyncResult);
+    ChangeCollection<FolderChange> change = service.syncFolderHierarchy(PropertySet.FirstClassProperties, this.syncState());
 
     this.setSyncState(change.getSyncState());
 
     for (FolderChange aChange: change) {
-      if (aChange.getFolder().getFolderClass().equals(CalendarFolder.class.getName())) {
+      if ("IPF.Appointment".equals(aChange.getFolder().getFolderClass())) {
         ExchangeCalendarFolder calendarFolder = (ExchangeCalendarFolder) ExchangeCalendarFolder.createFromServer(aChange.getFolder());
         if (aChange.getChangeType() == ChangeType.Create)
           folders.addObject(calendarFolder);
-      }
-
-      if (aChange.getFolder().getFolderClass().equals(ContactsFolder.class.getName())) {
+      } else if ("IPF.Contact".equals(aChange.getFolder().getFolderClass())) {
         ExchangeContactsFolder contactsFolder = (ExchangeContactsFolder) ExchangeContactsFolder.createFromServer(aChange.getFolder());
         if (aChange.getChangeType() == ChangeType.Create)
           folders.addObject(contactsFolder);
-      }
-
-      if (aChange.getFolder().getFolderClass().equals(TasksFolder.class.getName())) {
+      } else if ("IPF.Task".equals(aChange.getFolder().getFolderClass())) {
         ExchangeTasksFolder tasksFolder = (ExchangeTasksFolder) ExchangeTasksFolder.createFromServer(aChange.getFolder());
         if (aChange.getChangeType() == ChangeType.Create)
           folders.addObject(tasksFolder);
+      } else if ("IPF.Note".equals(aChange.getFolder().getFolderClass())) {
+        ExchangeEmailFolder emailFolder = (ExchangeEmailFolder) ExchangeEmailFolder.createFromServer(aChange.getFolder());
+        if (aChange.getChangeType() == ChangeType.Create)
+          folders.addObject(emailFolder);
       }
     }
     return folders.immutableClone();
@@ -264,7 +262,7 @@ public class ExchangeStore {
    * @throws Throwable 
    * @throws FolderAlreadyExistsException 
    */
-  public void createCalendarFolder(String displayName) throws FolderAlreadyExistsException, Throwable {
+  public void createCalendarFolder(String displayName) throws Throwable {
     createFolder(displayName, ERGWFolderType.CALENDAR);
   }
 
@@ -274,7 +272,7 @@ public class ExchangeStore {
    * @throws Throwable 
    * @throws FolderAlreadyExistsException 
    */
-  public void createContactsFolder(String displayName) throws FolderAlreadyExistsException, Throwable {
+  public void createContactsFolder(String displayName) throws Throwable {
     createFolder(displayName, ERGWFolderType.CALENDAR);
   }
 
@@ -284,7 +282,7 @@ public class ExchangeStore {
    * @param typeOfFolder The type of calendar (Calendar, Tasks, Search, etc.) to create
    * @throws Throwable, FolderAlreadyExistsException 
    */
-  public void createFolder(String folderDisplayName, ERGWFolderType typeOfFolder) throws Throwable, FolderAlreadyExistsException {
+  public void createFolder(String folderDisplayName, ERGWFolderType typeOfFolder) throws Throwable {
 
     Folder newFolder = null;
     if (typeOfFolder.equals(ERGWFolderType.CALENDAR)) {
@@ -302,14 +300,6 @@ public class ExchangeStore {
     newFolder.setDisplayName(folderDisplayName);
 
     newFolder.save(WellKnownFolderName.Inbox); 
-
-  }
-
-  public class FolderAlreadyExistsException extends NSValidation.ValidationException {
-
-    public FolderAlreadyExistsException(String arg0) {
-      super(arg0);
-    }
 
   }
 
@@ -729,6 +719,26 @@ public class ExchangeStore {
     }
   }
 
+  /**
+   * Create a contact in the default Contacts folder
+   * @param card
+   * @throws Exception
+   */
+  public void createContact(ERGWContact card) throws Exception {
+    WellKnownFolderName contactsFolder = WellKnownFolderName.Contacts;
+    FolderId folderId = new FolderId(contactsFolder);
+    Folder folder = Folder.bind(service, folderId);
+    ExchangeContactsFolder exchangeFolder = new ExchangeContactsFolder("Contacts");
+    exchangeFolder.setId(folderId);
+    createContact(card, exchangeFolder);
+  }
+  
+  /**
+   * Create a contact in a specific contacts folder
+   * @param card
+   * @param folder
+   * @throws Exception
+   */
   public void createContact(ERGWContact card, ExchangeContactsFolder folder) throws Exception {
     Contact contact = new Contact(service);
 
@@ -902,9 +912,6 @@ public class ExchangeStore {
       contact.setChildren(strings);      
     }
 
-    //if (card.photo() != null)
-    //contact.setPhoto(card.photo().bytes());
-
     String manager = card.manager();
     if (manager != null)
       contact.setManager(manager);
@@ -927,12 +934,11 @@ public class ExchangeStore {
       }
     }
 
-
     if (card.photo() != null) {
       contact.getAttachments().addFileAttachment("ContactPicture.jpg", card.photo().bytes());
     }
-    contact.save();
-
+    
+    contact.save(folder.id());
   }
 
   public void createTask(ERGWCalendar calendar, ExchangeTasksFolder folder) throws Exception {
