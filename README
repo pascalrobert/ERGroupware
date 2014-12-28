@@ -61,3 +61,13 @@ Basic Exchange support was added. It's raw right now, but you can use it like th
     event.setSummary("Some event");
     calendar.setEvents(new NSArray<ERGWEvent>(event));
     store.createCalendarEvent(calendar);
+    
+ or to delete a folder:
+ 
+	  NSArray<ExchangeBaseFolder> calendarFolders = ERXArrayUtilities.objectsWithValueForKeyPath(store.folders(), "Calendar", "displayName");
+    try {
+      store.deleteFolder(calendarFolders.objectAtIndex(0), DeleteMode.HardDelete);
+    } catch (ServiceResponseException ex) {
+      if (ex.getErrorCode().equals(ServiceError.ErrorDeleteDistinguishedFolder))
+        NSLog.out.appendln("Can't delete a default folder");
+    }

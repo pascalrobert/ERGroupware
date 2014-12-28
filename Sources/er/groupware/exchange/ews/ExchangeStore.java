@@ -1,7 +1,6 @@
 package er.groupware.exchange.ews;
 
 import java.net.URI;
-import java.net.URL;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
@@ -20,6 +19,7 @@ import microsoft.exchange.webservices.data.Contact;
 import microsoft.exchange.webservices.data.ContactsFolder;
 import microsoft.exchange.webservices.data.DayOfTheWeek;
 import microsoft.exchange.webservices.data.DayOfTheWeekIndex;
+import microsoft.exchange.webservices.data.DeleteMode;
 import microsoft.exchange.webservices.data.EmailAddress;
 import microsoft.exchange.webservices.data.EmailAddressKey;
 import microsoft.exchange.webservices.data.ExchangeCredentials;
@@ -28,7 +28,6 @@ import microsoft.exchange.webservices.data.ExchangeVersion;
 import microsoft.exchange.webservices.data.Folder;
 import microsoft.exchange.webservices.data.FolderChange;
 import microsoft.exchange.webservices.data.FolderId;
-import microsoft.exchange.webservices.data.IAsyncResult;
 import microsoft.exchange.webservices.data.IAutodiscoverRedirectionUrl;
 import microsoft.exchange.webservices.data.ImAddressKey;
 import microsoft.exchange.webservices.data.Importance;
@@ -45,6 +44,8 @@ import microsoft.exchange.webservices.data.Recurrence.WeeklyPattern;
 import microsoft.exchange.webservices.data.SearchFolder;
 import microsoft.exchange.webservices.data.SendInvitationsMode;
 import microsoft.exchange.webservices.data.Sensitivity;
+import microsoft.exchange.webservices.data.ServiceError;
+import microsoft.exchange.webservices.data.ServiceResponseException;
 import microsoft.exchange.webservices.data.StringList;
 import microsoft.exchange.webservices.data.Task;
 import microsoft.exchange.webservices.data.TasksFolder;
@@ -54,10 +55,9 @@ import microsoft.exchange.webservices.data.WellKnownFolderName;
 import org.apache.commons.lang.NotImplementedException;
 
 import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSLog;
 import com.webobjects.foundation.NSMutableArray;
 import com.webobjects.foundation.NSTimestamp;
-import com.webobjects.foundation.NSValidation;
+import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 
 import er.groupware.calendar.ERGWAlarm;
 import er.groupware.calendar.ERGWAttendee;
@@ -103,15 +103,15 @@ public class ExchangeStore {
   static {
     Locale.setDefault(Locale.US);
   }
-  
+
   public class AutoDiscover implements IAutodiscoverRedirectionUrl {
 
     public boolean autodiscoverRedirectionUrlValidationCallback(String arg0) throws AutodiscoverLocalException {
       return true;
     }
-    
+
   }
-  
+
   /**
    * This constructor will connect to a Microsoft Exchange server and authenticate the user.
    * 
@@ -303,6 +303,17 @@ public class ExchangeStore {
 
   }
 
+  public void deleteFolder(ExchangeBaseFolder folder, DeleteMode typeOfDelete) throws ServiceResponseException, Exception {
+    Folder folderToDelete = Folder.bind(service, folder.id());
+    try {
+      folderToDelete.delete(typeOfDelete);
+    } catch (ServiceResponseException serviceException) {
+      throw serviceException;
+    } catch (Exception e) {
+      throw e;
+    }
+  }
+  
   protected Recurrence recurrenceForEvent(ERGWCalendarObject component, Calendar startDate) throws ArgumentOutOfRangeException, ArgumentException {
     ERGWRecurrenceRule recurrenceRule = component.recurrenceRule();
 
@@ -596,7 +607,7 @@ public class ExchangeStore {
     exchangeFolder.setId(folderId);
     createCalendarEvent(calendar, exchangeFolder);
   }
-  
+
   public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) throws Exception {   
     for (ERGWEvent event: calendar.getEvents()) {
       Appointment calendarItem = new Appointment(service);
@@ -739,7 +750,7 @@ public class ExchangeStore {
     exchangeFolder.setId(folderId);
     createContact(card, exchangeFolder);
   }
-  
+
   /**
    * Create a contact in a specific contacts folder
    * @param card
@@ -944,7 +955,7 @@ public class ExchangeStore {
     if (card.photo() != null) {
       contact.getAttachments().addFileAttachment("ContactPicture.jpg", card.photo().bytes());
     }
-    
+
     contact.save(folder.id());
   }
 
