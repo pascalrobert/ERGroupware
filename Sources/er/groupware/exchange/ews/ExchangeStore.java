@@ -589,6 +589,14 @@ public class ExchangeStore {
     }
   }
 
+  public void createCalendarEvent(ERGWCalendar calendar) throws Exception {   
+    WellKnownFolderName calendarFolder = WellKnownFolderName.Calendar;
+    FolderId folderId = new FolderId(calendarFolder);
+    ExchangeCalendarFolder exchangeFolder = new ExchangeCalendarFolder("Contacts");
+    exchangeFolder.setId(folderId);
+    createCalendarEvent(calendar, exchangeFolder);
+  }
+  
   public void createCalendarEvent(ERGWCalendar calendar, ExchangeCalendarFolder calendarFolder) throws Exception {   
     for (ERGWEvent event: calendar.getEvents()) {
       Appointment calendarItem = new Appointment(service);
@@ -727,7 +735,6 @@ public class ExchangeStore {
   public void createContact(ERGWContact card) throws Exception {
     WellKnownFolderName contactsFolder = WellKnownFolderName.Contacts;
     FolderId folderId = new FolderId(contactsFolder);
-    Folder folder = Folder.bind(service, folderId);
     ExchangeContactsFolder exchangeFolder = new ExchangeContactsFolder("Contacts");
     exchangeFolder.setId(folderId);
     createContact(card, exchangeFolder);
